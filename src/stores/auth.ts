@@ -130,23 +130,37 @@ export const useAuthStore = create<AuthState>((set) => ({
     } = await supabase.auth.getSession();
 
     if (session?.user) {
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", session.user.id)
         .single();
 
-      if (profile) {
+      if (profileError) {
+        console.error("Profile fetch error during init:", profileError);
+        set({ user: session.user, profile: null, loading: false });
+        return;
+      }
+
+      console.log("Initialized profile:", profile);
+
+      if (profile && profile.tenant_id) {
         // Fetch tenant separately
-        const { data: tenant } = await supabase
+        const { data: tenant, error: tenantError } = await supabase
           .from("tenants")
           .select("*")
           .eq("id", profile.tenant_id)
           .single();
 
-        profile.tenant = tenant;
+        if (tenantError) {
+          console.error("Tenant fetch error during init:", tenantError);
+        } else {
+          console.log("Initialized tenant:", tenant);
+          profile.tenant = tenant;
+        }
       }
 
+      console.log("Final initialized profile with tenant:", profile);
       set({ user: session.user, profile, loading: false });
     } else {
       set({ user: null, profile: null, loading: false });
@@ -154,6 +168,8 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     // Listen for auth changes
     supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change:", event, session?.user?.id);
+
       if (session?.user) {
         const { data: profile } = await supabase
           .from("profiles")
@@ -161,7 +177,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           .eq("id", session.user.id)
           .single();
 
-        if (profile) {
+        if (profile && profile.tenant_id) {
           // Fetch tenant separately
           const { data: tenant } = await supabase
             .from("tenants")
