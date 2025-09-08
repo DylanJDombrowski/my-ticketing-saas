@@ -134,14 +134,36 @@ export const useAuthStore = create<AuthState>((set) => ({
         .from("profiles")
         .select(
           `
-          *,
-          tenant:tenants(*)
+          id,
+          tenant_id,
+          email,
+          first_name,
+          last_name,
+          created_at,
+          updated_at,
+          tenant:tenants!tenant_id(
+            id,
+            name,
+            subscription_plan,
+            created_at,
+            updated_at
+          )
         `
         )
         .eq("id", session.user.id)
         .single();
 
-      set({ user: session.user, profile, loading: false });
+      // Handle the tenant array/object issue
+      const processedProfile = profile
+        ? {
+            ...profile,
+            tenant: Array.isArray(profile.tenant)
+              ? profile.tenant[0]
+              : profile.tenant,
+          }
+        : null;
+
+      set({ user: session.user, profile: processedProfile, loading: false });
     } else {
       set({ user: null, profile: null, loading: false });
     }
@@ -153,14 +175,36 @@ export const useAuthStore = create<AuthState>((set) => ({
           .from("profiles")
           .select(
             `
-            *,
-            tenant:tenants(*)
+            id,
+            tenant_id,
+            email,
+            first_name,
+            last_name,
+            created_at,
+            updated_at,
+            tenant:tenants!tenant_id(
+              id,
+              name,
+              subscription_plan,
+              created_at,
+              updated_at
+            )
           `
           )
           .eq("id", session.user.id)
           .single();
 
-        set({ user: session.user, profile });
+        // Handle the tenant array/object issue
+        const processedProfile = profile
+          ? {
+              ...profile,
+              tenant: Array.isArray(profile.tenant)
+                ? profile.tenant[0]
+                : profile.tenant,
+            }
+          : null;
+
+        set({ user: session.user, profile: processedProfile });
       } else {
         set({ user: null, profile: null });
       }
