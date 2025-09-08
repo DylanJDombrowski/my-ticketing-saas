@@ -20,6 +20,7 @@ import {
   BarChart3,
   LogOut,
   User,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,11 @@ const navigation = [
     name: "Tickets",
     href: "/dashboard/tickets",
     icon: Ticket,
+  },
+  {
+    name: "Time Entries",
+    href: "/dashboard/time-entries",
+    icon: Clock,
   },
   {
     name: "Reports",

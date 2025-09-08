@@ -56,6 +56,7 @@ export async function middleware(req: NextRequest) {
     req.nextUrl.pathname.startsWith("/dashboard") ||
     req.nextUrl.pathname.startsWith("/clients") ||
     req.nextUrl.pathname.startsWith("/tickets") ||
+    req.nextUrl.pathname.startsWith("/time-entries") ||
     req.nextUrl.pathname.startsWith("/reports")
   ) {
     if (!user) {
