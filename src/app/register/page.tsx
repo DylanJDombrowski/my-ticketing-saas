@@ -60,10 +60,14 @@ export default function RegisterPage() {
     );
 
     if (error) {
+      console.error("Registration error:", error);
       setError(error);
-    } else {
-      router.push("/dashboard");
+      setLoading(false);
+      return;
     }
+
+    // Registration successful - redirect to dashboard
+    router.push("/dashboard");
 
     setLoading(false);
   };
