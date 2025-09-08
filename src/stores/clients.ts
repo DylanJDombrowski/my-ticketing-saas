@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { createBrowserClient } from "@/lib/supabase";
 import type { Client, CreateClientForm } from "@/lib/types";
@@ -19,6 +20,9 @@ interface ClientsState {
   setSelectedClient: (client: Client | null) => void;
 }
 
+// Create a single supabase instance for the store
+const supabase = createBrowserClient();
+
 export const useClientsStore = create<ClientsState>((set) => ({
   clients: [],
   loading: false,
@@ -26,7 +30,6 @@ export const useClientsStore = create<ClientsState>((set) => ({
 
   fetchClients: async (tenantId: string) => {
     set({ loading: true });
-    const supabase = createBrowserClient();
 
     try {
       const { data, error } = await supabase
@@ -45,8 +48,6 @@ export const useClientsStore = create<ClientsState>((set) => ({
   },
 
   createClient: async (tenantId: string, clientData: CreateClientForm) => {
-    const supabase = createBrowserClient();
-
     try {
       const { data, error } = await supabase
         .from("clients")
@@ -73,15 +74,12 @@ export const useClientsStore = create<ClientsState>((set) => ({
       }));
 
       return {};
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       return { error: error.message || "Failed to create client" };
     }
   },
 
   updateClient: async (id: string, clientData: Partial<CreateClientForm>) => {
-    const supabase = createBrowserClient();
-
     try {
       const { data, error } = await supabase
         .from("clients")
@@ -107,15 +105,12 @@ export const useClientsStore = create<ClientsState>((set) => ({
       }));
 
       return {};
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       return { error: error.message || "Failed to update client" };
     }
   },
 
   deleteClient: async (id: string) => {
-    const supabase = createBrowserClient();
-
     try {
       // Check if client has tickets
       const { data: tickets } = await supabase
@@ -140,7 +135,6 @@ export const useClientsStore = create<ClientsState>((set) => ({
       }));
 
       return {};
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       return { error: error.message || "Failed to delete client" };
     }
