@@ -49,7 +49,12 @@ export interface Ticket {
   created_by?: string;
   created_at: string;
   updated_at: string;
-  client?: Client;
+  client?: {
+    id: string;
+    name: string;
+    email: string;
+    company?: string;
+  };
   assigned_user?: Profile;
   created_user?: Profile;
 }
