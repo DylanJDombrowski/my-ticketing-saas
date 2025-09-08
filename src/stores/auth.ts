@@ -132,38 +132,22 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (session?.user) {
       const { data: profile } = await supabase
         .from("profiles")
-        .select(
-          `
-          id,
-          tenant_id,
-          email,
-          first_name,
-          last_name,
-          created_at,
-          updated_at,
-          tenant:tenants!tenant_id(
-            id,
-            name,
-            subscription_plan,
-            created_at,
-            updated_at
-          )
-        `
-        )
+        .select("*")
         .eq("id", session.user.id)
         .single();
 
-      // Handle the tenant array/object issue
-      const processedProfile = profile
-        ? {
-            ...profile,
-            tenant: Array.isArray(profile.tenant)
-              ? profile.tenant[0]
-              : profile.tenant,
-          }
-        : null;
+      if (profile) {
+        // Fetch tenant separately
+        const { data: tenant } = await supabase
+          .from("tenants")
+          .select("*")
+          .eq("id", profile.tenant_id)
+          .single();
 
-      set({ user: session.user, profile: processedProfile, loading: false });
+        profile.tenant = tenant;
+      }
+
+      set({ user: session.user, profile, loading: false });
     } else {
       set({ user: null, profile: null, loading: false });
     }
@@ -173,38 +157,22 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (session?.user) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select(
-            `
-            id,
-            tenant_id,
-            email,
-            first_name,
-            last_name,
-            created_at,
-            updated_at,
-            tenant:tenants!tenant_id(
-              id,
-              name,
-              subscription_plan,
-              created_at,
-              updated_at
-            )
-          `
-          )
+          .select("*")
           .eq("id", session.user.id)
           .single();
 
-        // Handle the tenant array/object issue
-        const processedProfile = profile
-          ? {
-              ...profile,
-              tenant: Array.isArray(profile.tenant)
-                ? profile.tenant[0]
-                : profile.tenant,
-            }
-          : null;
+        if (profile) {
+          // Fetch tenant separately
+          const { data: tenant } = await supabase
+            .from("tenants")
+            .select("*")
+            .eq("id", profile.tenant_id)
+            .single();
 
-        set({ user: session.user, profile: processedProfile });
+          profile.tenant = tenant;
+        }
+
+        set({ user: session.user, profile });
       } else {
         set({ user: null, profile: null });
       }
