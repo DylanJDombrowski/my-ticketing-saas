@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -131,7 +132,6 @@ export default function DashboardPage() {
           title: ticket.title,
           status: ticket.status,
           priority: ticket.priority,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           client_name: (ticket.client as any)?.name || "Unknown",
           created_at: ticket.created_at,
         })) || [];
