@@ -1,11 +1,12 @@
 import Mustache from "mustache";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 
 export async function GET(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
+  _req: Request,
+  context: { params: { id: string } }
 ) {
+  const { params } = context;
   const supabase = await createServerClient();
 
   const { data: invoice, error } = await supabase
