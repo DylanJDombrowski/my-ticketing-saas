@@ -1,9 +1,19 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { createBrowserClient } from "@/lib/supabase";
 import { notify } from "@/lib/notifications";
-import type { Invoice, CreateInvoiceForm, InvoiceStatus, InvoiceLineItem } from "@/lib/types";
+import type {
+  Invoice,
+  CreateInvoiceForm,
+  InvoiceStatus,
+  InvoiceLineItem,
+  TimeEntry,
+} from "@/lib/types";
 import { useTimeEntriesStore } from "./time-entries";
+
+interface TimeEntryWithRates extends TimeEntry {
+  ticket?: { client?: { id: string; hourly_rate: number | null } };
+  user?: { id: string; default_hourly_rate: number | null };
+}
 
 interface InvoicesState {
   invoices: Invoice[];
@@ -43,7 +53,7 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
     try {
       let query = supabase
         .from("invoices")
-        .select(
+        .select<Invoice>(
           `*, client:clients(*), line_items:invoice_line_items(*, time_entry:time_entries(*))`
         )
         .eq("tenant_id", tenantId);
@@ -79,7 +89,7 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from("invoices")
-        .select(
+        .select<Invoice>(
           `*, client:clients(*), line_items:invoice_line_items(*, time_entry:time_entries(*))`
         )
         .eq("id", id)
@@ -98,14 +108,14 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
     try {
       const { data: entries, error: entriesError } = await supabase
         .from("time_entries")
-        .select(
+        .select<TimeEntryWithRates>(
           `id, description, hours, ticket:tickets(client:clients(id, hourly_rate)), user:profiles(id, default_hourly_rate)`
         )
         .in("id", invoiceData.time_entry_ids);
 
       if (entriesError) throw entriesError;
 
-      const lineItems: InvoiceLineItem[] = (entries || []).map((entry: any) => {
+      const lineItems: InvoiceLineItem[] = (entries || []).map((entry) => {
         const rate =
           entry.ticket?.client?.hourly_rate ?? entry.user?.default_hourly_rate ?? 0;
         const amount = rate * entry.hours;
@@ -142,7 +152,7 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
           payment_instructions: invoiceData.payment_instructions,
           notes: invoiceData.notes,
         })
-        .select()
+        .select<Invoice>()
         .single();
 
       if (invoiceError) throw invoiceError;
@@ -172,10 +182,12 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
 
       notify.success("Invoice created successfully");
       return { invoice: fullInvoice };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error creating invoice:", error);
-      notify.error(error.message || "Failed to create invoice");
-      return { error: error.message || "Failed to create invoice" };
+      const message =
+        error instanceof Error ? error.message : "Failed to create invoice";
+      notify.error(message);
+      return { error: message };
     }
   },
 
@@ -200,10 +212,12 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
 
       notify.success("Invoice status updated");
       return {};
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error updating invoice status:", error);
-      notify.error(error.message || "Failed to update invoice status");
-      return { error: error.message || "Failed to update invoice status" };
+      const message =
+        error instanceof Error ? error.message : "Failed to update invoice status";
+      notify.error(message);
+      return { error: message };
     }
   },
 
@@ -220,10 +234,12 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
 
       notify.success("Invoice deleted successfully");
       return {};
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error deleting invoice:", error);
-      notify.error(error.message || "Failed to delete invoice");
-      return { error: error.message || "Failed to delete invoice" };
+      const message =
+        error instanceof Error ? error.message : "Failed to delete invoice";
+      notify.error(message);
+      return { error: message };
     }
   },
 
@@ -232,7 +248,7 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
     const prefix = `INV-${year}-`;
     const { data, error } = await supabase
       .from("invoices")
-      .select("invoice_number")
+      .select<Pick<Invoice, "invoice_number">>("invoice_number")
       .eq("tenant_id", tenantId)
       .like("invoice_number", `${prefix}%`)
       .order("invoice_number", { ascending: false })
