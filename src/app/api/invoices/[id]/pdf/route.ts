@@ -4,9 +4,9 @@ import { createServerClient } from "@/lib/supabase-server";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { params } = context;
+  const { id } = context.params;
   const supabase = await createServerClient();
 
   const { data: invoice, error } = await supabase
@@ -14,7 +14,7 @@ export async function GET(
     .select(
       "*, client:clients(name)"
     )
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (error || !invoice) {
