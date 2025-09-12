@@ -4,9 +4,9 @@ import { createServerClient } from "@/lib/supabase-server";
 
 export async function GET(
   _req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = context.params;
+  const { id } = await params;
   const supabase = await createServerClient();
 
   const { data: invoice, error } = await supabase
@@ -46,4 +46,3 @@ export async function GET(
     headers: { "Content-Type": "text/html" },
   });
 }
-
