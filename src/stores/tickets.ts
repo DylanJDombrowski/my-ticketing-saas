@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { createBrowserClient } from "@/lib/supabase";
 import { notify } from "@/lib/notifications";
@@ -50,7 +49,7 @@ export const useTicketsStore = create<TicketsState>((set) => ({
     try {
       let query = supabase
         .from("tickets")
-        .select(
+        .select<Ticket>(
           `
           *,
           client:clients(id, name, email, company),
@@ -94,7 +93,7 @@ export const useTicketsStore = create<TicketsState>((set) => ({
     try {
       const { data, error } = await supabase
         .from("tickets")
-        .select(
+        .select<Ticket>(
           `
           *,
           client:clients(id, name, email, company),
@@ -124,7 +123,7 @@ export const useTicketsStore = create<TicketsState>((set) => ({
           tenant_id: tenantId,
           ...ticketData,
         })
-        .select(
+        .select<Ticket>(
           `
           *,
           client:clients(id, name, email, company),
@@ -146,9 +145,11 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
       notify.success("Ticket created successfully");
       return {};
-    } catch (error: any) {
-      notify.error(error.message || "Failed to create ticket");
-      return { error: error.message || "Failed to create ticket" };
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to create ticket";
+      notify.error(message);
+      return { error: message };
     }
   },
 
@@ -160,7 +161,7 @@ export const useTicketsStore = create<TicketsState>((set) => ({
         .from("tickets")
         .update(ticketData)
         .eq("id", id)
-        .select(
+        .select<Ticket>(
           `
           *,
           client:clients(id, name, email, company),
@@ -186,9 +187,11 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
       notify.success("Ticket updated successfully");
       return {};
-    } catch (error: any) {
-      notify.error(error.message || "Failed to update ticket");
-      return { error: error.message || "Failed to update ticket" };
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update ticket";
+      notify.error(message);
+      return { error: message };
     }
   },
 
@@ -200,7 +203,7 @@ export const useTicketsStore = create<TicketsState>((set) => ({
         .from("tickets")
         .update({ status })
         .eq("id", id)
-        .select(
+        .select<Ticket>(
           `
           *,
           client:clients(id, name, email, company),
@@ -226,9 +229,13 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
       notify.success("Ticket status updated");
       return {};
-    } catch (error: any) {
-      notify.error(error.message || "Failed to update ticket status");
-      return { error: error.message || "Failed to update ticket status" };
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to update ticket status";
+      notify.error(message);
+      return { error: message };
     }
   },
 
@@ -252,9 +259,11 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
       notify.success("Ticket deleted successfully");
       return {};
-    } catch (error: any) {
-      notify.error(error.message || "Failed to delete ticket");
-      return { error: error.message || "Failed to delete ticket" };
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to delete ticket";
+      notify.error(message);
+      return { error: message };
     }
   },
 

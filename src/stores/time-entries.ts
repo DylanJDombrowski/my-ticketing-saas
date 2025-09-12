@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { createBrowserClient } from "@/lib/supabase";
 import { notify } from "@/lib/notifications";
@@ -54,7 +53,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
     try {
       let query = supabase
         .from("time_entries")
-        .select(
+        .select<TimeEntry>(
           `
           *,
           ticket:tickets(id, title, client:clients(id, name)),
@@ -101,7 +100,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
     try {
       let query = supabase
         .from("time_entries")
-        .select(
+        .select<TimeEntry>(
           `
           *,
           ticket:tickets(id, title, client:clients(id, name, hourly_rate)),
@@ -146,7 +145,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
           user_id: userId,
           ...timeEntryData,
         })
-        .select(
+        .select<TimeEntry>(
           `
           *,
           ticket:tickets(id, title, client:clients(id, name)),
@@ -167,9 +166,11 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
 
       notify.success("Time entry created successfully");
       return {};
-    } catch (error: any) {
-      notify.error(error.message || "Failed to create time entry");
-      return { error: error.message || "Failed to create time entry" };
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to create time entry";
+      notify.error(message);
+      return { error: message };
     }
   },
 
@@ -184,7 +185,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
         .from("time_entries")
         .update(timeEntryData)
         .eq("id", id)
-        .select(
+        .select<TimeEntry>(
           `
           *,
           ticket:tickets(id, title, client:clients(id, name)),
@@ -207,9 +208,11 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
 
       notify.success("Time entry updated successfully");
       return {};
-    } catch (error: any) {
-      notify.error(error.message || "Failed to update time entry");
-      return { error: error.message || "Failed to update time entry" };
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update time entry";
+      notify.error(message);
+      return { error: message };
     }
   },
 
@@ -234,9 +237,11 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
 
       notify.success("Time entry deleted successfully");
       return {};
-    } catch (error: any) {
-      notify.error(error.message || "Failed to delete time entry");
-      return { error: error.message || "Failed to delete time entry" };
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to delete time entry";
+      notify.error(message);
+      return { error: message };
     }
   },
 

@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { createBrowserClient } from "@/lib/supabase";
 import { notify } from "@/lib/notifications";
-import type { Client, CreateClientForm } from "@/lib/types";
+import type { Client, CreateClientForm, Ticket } from "@/lib/types";
 
 interface ClientsState {
   clients: Client[];
@@ -35,7 +34,7 @@ export const useClientsStore = create<ClientsState>((set) => ({
     try {
       const { data, error } = await supabase
         .from("clients")
-        .select("*")
+        .select<Client>("*")
         .eq("tenant_id", tenantId)
         .order("name", { ascending: true });
 
@@ -57,7 +56,7 @@ export const useClientsStore = create<ClientsState>((set) => ({
           tenant_id: tenantId,
           ...clientData,
         })
-        .select()
+        .select<Client>()
         .single();
 
       if (error) {
@@ -78,9 +77,11 @@ export const useClientsStore = create<ClientsState>((set) => ({
 
       notify.success("Client created successfully");
       return {};
-    } catch (error: any) {
-      notify.error(error.message || "Failed to create client");
-      return { error: error.message || "Failed to create client" };
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to create client";
+      notify.error(message);
+      return { error: message };
     }
   },
 
@@ -90,7 +91,7 @@ export const useClientsStore = create<ClientsState>((set) => ({
         .from("clients")
         .update(clientData)
         .eq("id", id)
-        .select()
+        .select<Client>()
         .single();
 
       if (error) {
@@ -113,9 +114,11 @@ export const useClientsStore = create<ClientsState>((set) => ({
 
       notify.success("Client updated successfully");
       return {};
-    } catch (error: any) {
-      notify.error(error.message || "Failed to update client");
-      return { error: error.message || "Failed to update client" };
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update client";
+      notify.error(message);
+      return { error: message };
     }
   },
 
@@ -124,7 +127,7 @@ export const useClientsStore = create<ClientsState>((set) => ({
       // Check if client has tickets
       const { data: tickets } = await supabase
         .from("tickets")
-        .select("id")
+        .select<Pick<Ticket, "id">>("id")
         .eq("client_id", id)
         .limit(1);
 
@@ -149,9 +152,11 @@ export const useClientsStore = create<ClientsState>((set) => ({
 
       notify.success("Client deleted successfully");
       return {};
-    } catch (error: any) {
-      notify.error(error.message || "Failed to delete client");
-      return { error: error.message || "Failed to delete client" };
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Failed to delete client";
+      notify.error(message);
+      return { error: message };
     }
   },
 
