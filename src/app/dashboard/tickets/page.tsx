@@ -107,12 +107,10 @@ export default function TicketsPage() {
 
     const { error } = await deleteTicket(deletingTicket.id);
 
-    if (error) {
-      alert(error);
+    if (!error) {
+      setDeletingTicket(null);
+      setShowConfirmModal(false);
     }
-
-    setDeletingTicket(null);
-    setShowConfirmModal(false);
   };
 
   const handleStatusChange = async (
@@ -121,7 +119,8 @@ export default function TicketsPage() {
   ) => {
     const { error } = await updateTicketStatus(ticketId, newStatus);
     if (error) {
-      alert(error);
+      // Error notification handled in store
+      return;
     }
   };
 

@@ -29,7 +29,9 @@ export function DebugAuth() {
         .eq("id", user!.id)
         .single();
 
-      console.log("Profile only:", profileOnly);
+      if (process.env.NODE_ENV !== "production") {
+        console.log("Profile only:", profileOnly);
+      }
 
       if (profileError) {
         setError(`Profile error: ${profileError.message}`);
@@ -44,7 +46,9 @@ export function DebugAuth() {
           .eq("id", profileOnly.tenant_id)
           .single();
 
-        console.log("Tenant:", tenant);
+        if (process.env.NODE_ENV !== "production") {
+          console.log("Tenant:", tenant);
+        }
 
         if (tenantError) {
           setError(`Tenant error: ${tenantError.message}`);

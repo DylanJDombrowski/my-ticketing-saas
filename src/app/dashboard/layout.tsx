@@ -21,6 +21,8 @@ import {
   LogOut,
   User,
   Clock,
+  Receipt,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AuthGuard } from "@/components/auth-guard";
@@ -47,9 +49,19 @@ const navigation = [
     icon: Clock,
   },
   {
+    name: "Invoices",
+    href: "/dashboard/invoices",
+    icon: Receipt,
+  },
+  {
     name: "Reports",
     href: "/dashboard/reports",
     icon: BarChart3,
+  },
+  {
+    name: "Settings",
+    href: "/dashboard/settings",
+    icon: Settings,
   },
 ];
 

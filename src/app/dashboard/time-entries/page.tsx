@@ -115,12 +115,10 @@ export default function TimeEntriesPage() {
 
     const { error } = await deleteTimeEntry(deletingTimeEntry.id);
 
-    if (error) {
-      alert(error);
+    if (!error) {
+      setDeletingTimeEntry(null);
+      setShowConfirmModal(false);
     }
-
-    setDeletingTimeEntry(null);
-    setShowConfirmModal(false);
   };
 
   const handleCloseModal = () => {

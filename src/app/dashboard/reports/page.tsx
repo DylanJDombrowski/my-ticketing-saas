@@ -1,108 +1,162 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { BarChart3, Clock, Users, Ticket } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuthStore } from "@/stores/auth";
+import { useInvoicesStore } from "@/stores/invoices";
+import { useTimeEntriesStore } from "@/stores/time-entries";
+import { useClientsStore } from "@/stores/clients";
+
+const RevenueChart = dynamic(
+  () => import("@/components/charts/revenue-chart"),
+  { ssr: false }
+);
+const TimeEntryChart = dynamic(
+  () => import("@/components/charts/time-entry-chart"),
+  { ssr: false }
+);
 
 export default function ReportsPage() {
+  const { profile } = useAuthStore();
+  const { invoiceStats, fetchInvoiceStats } = useInvoicesStore();
+  const { timeEntryStats, fetchTimeEntryStats } = useTimeEntriesStore();
+  const { clients, fetchClients } = useClientsStore();
+
+  const [filters, setFilters] = useState({
+    startDate: "",
+    endDate: "",
+    clientId: "",
+  });
+
+  useEffect(() => {
+    if (profile?.tenant_id) {
+      fetchClients(profile.tenant_id);
+    }
+  }, [profile?.tenant_id, fetchClients]);
+
+  useEffect(() => {
+    if (profile?.tenant_id) {
+      fetchInvoiceStats(profile.tenant_id, filters);
+      fetchTimeEntryStats(profile.tenant_id, filters);
+    }
+  }, [profile?.tenant_id, filters, fetchInvoiceStats, fetchTimeEntryStats]);
+
+  const handleFilterChange = (name: string, value: string) => {
+    setFilters((prev) => ({ ...prev, [name]: value }));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Reports</h1>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="flex flex-wrap gap-4">
+        <Input
+          type="date"
+          name="startDate"
+          value={filters.startDate}
+          onChange={(e) => handleFilterChange(e.target.name, e.target.value)}
+          className="w-48"
+        />
+        <Input
+          type="date"
+          name="endDate"
+          value={filters.endDate}
+          onChange={(e) => handleFilterChange(e.target.name, e.target.value)}
+          className="w-48"
+        />
+        <Select
+          name="clientId"
+          value={filters.clientId}
+          onValueChange={(val) => handleFilterChange("clientId", val)}
+        >
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="All Clients" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Clients</SelectItem>
+            {clients.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$12,234</div>
-            <p className="text-xs text-muted-foreground">
-              +20.1% from last month
-            </p>
+            <div className="text-2xl font-bold">
+              ${invoiceStats?.totalRevenue.toFixed(2) || "0.00"}
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Billable Hours
-            </CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>Outstanding</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">145.5</div>
-            <p className="text-xs text-muted-foreground">
-              +15% from last month
-            </p>
+            <div className="text-2xl font-bold">
+              ${invoiceStats?.outstandingAmount.toFixed(2) || "0.00"}
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Active Clients
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>Billable Hours</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">23</div>
-            <p className="text-xs text-muted-foreground">+3 new this month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Resolved Tickets
-            </CardTitle>
-            <Ticket className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">89</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from last month
-            </p>
+            <div className="text-2xl font-bold">
+              {timeEntryStats?.billableHours.toFixed(2) || "0"}
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Reports Coming Soon</CardTitle>
-          <CardDescription>
-            Advanced reporting features are in development
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12">
-            <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Advanced Reports Coming Soon
-            </h3>
-            <p className="text-gray-500 mb-4">
-              We&apos;re working on detailed analytics, time tracking reports,
-              and client insights.
-            </p>
-            <div className="text-sm text-gray-400">
-              Features in development:
-              <ul className="mt-2 space-y-1">
-                <li>• Time tracking analytics</li>
-                <li>• Client profitability reports</li>
-                <li>• Team performance metrics</li>
-                <li>• Custom report builder</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Revenue by Month</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {invoiceStats && (
+              <RevenueChart data={invoiceStats.revenueByMonth} />
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Hours by Day</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {timeEntryStats && (
+              <TimeEntryChart data={timeEntryStats.hoursByDay} />
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
