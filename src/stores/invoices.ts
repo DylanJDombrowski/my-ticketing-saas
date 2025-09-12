@@ -10,16 +10,17 @@ interface InvoicesState {
   selectedInvoice: Invoice | null;
   loading: boolean;
   fetchInvoices: (tenantId: string, filters?: InvoiceFilters) => Promise<void>;
-  fetchInvoice: (id: string) => Promise<void>;
+  fetchInvoice: (tenantId: string, id: string) => Promise<void>;
   createInvoice: (
     tenantId: string,
     invoiceData: CreateInvoiceForm
   ) => Promise<{ error?: string; invoice?: Invoice }>;
   updateInvoiceStatus: (
+    tenantId: string,
     id: string,
     status: InvoiceStatus
   ) => Promise<{ error?: string }>;
-  deleteInvoice: (id: string) => Promise<{ error?: string }>;
+  deleteInvoice: (tenantId: string, id: string) => Promise<{ error?: string }>;
   generateInvoiceNumber: (tenantId: string) => Promise<string>;
   setSelectedInvoice: (invoice: Invoice | null) => void;
 }
@@ -74,7 +75,7 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
     }
   },
 
-  fetchInvoice: async (id: string) => {
+  fetchInvoice: async (tenantId: string, id: string) => {
     set({ loading: true });
     try {
       const { data, error } = await supabase
@@ -82,6 +83,7 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
         .select(
           `*, client:clients(*), line_items:invoice_line_items(*, time_entry:time_entries(*))`
         )
+        .eq("tenant_id", tenantId)
         .eq("id", id)
         .single();
 
@@ -179,11 +181,16 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
     }
   },
 
-  updateInvoiceStatus: async (id: string, status: InvoiceStatus) => {
+  updateInvoiceStatus: async (
+    tenantId: string,
+    id: string,
+    status: InvoiceStatus
+  ) => {
     try {
       const { error } = await supabase
         .from("invoices")
         .update({ status })
+        .eq("tenant_id", tenantId)
         .eq("id", id);
 
       if (error) throw error;
@@ -207,9 +214,13 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
     }
   },
 
-  deleteInvoice: async (id: string) => {
+  deleteInvoice: async (tenantId: string, id: string) => {
     try {
-      const { error } = await supabase.from("invoices").delete().eq("id", id);
+      const { error } = await supabase
+        .from("invoices")
+        .delete()
+        .eq("tenant_id", tenantId)
+        .eq("id", id);
       if (error) throw error;
 
       set((state) => ({
