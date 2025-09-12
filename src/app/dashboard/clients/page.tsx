@@ -79,12 +79,10 @@ export default function ClientsPage() {
 
     const { error } = await deleteClient(deletingClient.id);
 
-    if (error) {
-      alert(error); // In a real app, use a proper toast notification
+    if (!error) {
+      setDeletingClient(null);
+      setShowConfirmModal(false);
     }
-
-    setDeletingClient(null);
-    setShowConfirmModal(false);
   };
 
   const handleCloseModal = () => {

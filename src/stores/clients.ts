@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { createBrowserClient } from "@/lib/supabase";
+import { notify } from "@/lib/notifications";
 import type { Client, CreateClientForm } from "@/lib/types";
 
 interface ClientsState {
@@ -43,6 +44,7 @@ export const useClientsStore = create<ClientsState>((set) => ({
       set({ clients: data || [], loading: false });
     } catch (error) {
       console.error("Error fetching clients:", error);
+      notify.error("Failed to fetch clients");
       set({ loading: false });
     }
   },
@@ -60,9 +62,10 @@ export const useClientsStore = create<ClientsState>((set) => ({
 
       if (error) {
         if (error.code === "23505") {
-          // Unique constraint violation
+          notify.error("A client with this email already exists");
           return { error: "A client with this email already exists" };
         }
+        notify.error(error.message);
         return { error: error.message };
       }
 
@@ -73,8 +76,10 @@ export const useClientsStore = create<ClientsState>((set) => ({
         ),
       }));
 
+      notify.success("Client created successfully");
       return {};
     } catch (error: any) {
+      notify.error(error.message || "Failed to create client");
       return { error: error.message || "Failed to create client" };
     }
   },
@@ -90,8 +95,10 @@ export const useClientsStore = create<ClientsState>((set) => ({
 
       if (error) {
         if (error.code === "23505") {
+          notify.error("A client with this email already exists");
           return { error: "A client with this email already exists" };
         }
+        notify.error(error.message);
         return { error: error.message };
       }
 
@@ -104,8 +111,10 @@ export const useClientsStore = create<ClientsState>((set) => ({
           state.selectedClient?.id === id ? data : state.selectedClient,
       }));
 
+      notify.success("Client updated successfully");
       return {};
     } catch (error: any) {
+      notify.error(error.message || "Failed to update client");
       return { error: error.message || "Failed to update client" };
     }
   },
@@ -120,12 +129,16 @@ export const useClientsStore = create<ClientsState>((set) => ({
         .limit(1);
 
       if (tickets && tickets.length > 0) {
+        notify.error("Cannot delete client with existing tickets");
         return { error: "Cannot delete client with existing tickets" };
       }
 
       const { error } = await supabase.from("clients").delete().eq("id", id);
 
-      if (error) return { error: error.message };
+      if (error) {
+        notify.error(error.message);
+        return { error: error.message };
+      }
 
       // Remove from local state
       set((state) => ({
@@ -134,8 +147,10 @@ export const useClientsStore = create<ClientsState>((set) => ({
           state.selectedClient?.id === id ? null : state.selectedClient,
       }));
 
+      notify.success("Client deleted successfully");
       return {};
     } catch (error: any) {
+      notify.error(error.message || "Failed to delete client");
       return { error: error.message || "Failed to delete client" };
     }
   },

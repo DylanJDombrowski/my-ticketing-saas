@@ -16,6 +16,7 @@ export interface Profile {
   email: string;
   first_name?: string;
   last_name?: string;
+  default_hourly_rate?: number;
   created_at: string;
   updated_at: string;
   tenant?: Tenant;
@@ -28,6 +29,7 @@ export interface Client {
   email: string;
   phone?: string;
   company?: string;
+  hourly_rate?: number;
   is_active: boolean;
   created_by?: string;
   created_at: string;
@@ -108,4 +110,77 @@ export interface CreateTimeEntryForm {
   hours: number;
   is_billable: boolean;
   entry_date: string;
+}
+
+export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
+
+export interface Invoice {
+  id: string;
+  tenant_id: string;
+  client_id: string;
+  invoice_number: string;
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  total_amount: number;
+  status: InvoiceStatus;
+  due_date?: string;
+  payment_instructions?: string;
+  notes?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  client?: Client;
+  line_items?: InvoiceLineItem[];
+}
+
+export interface InvoiceLineItem {
+  id: string;
+  invoice_id: string;
+  time_entry_id: string;
+  description?: string;
+  hours: number;
+  rate: number;
+  amount: number;
+  created_at: string;
+  time_entry?: TimeEntry;
+}
+
+export interface PaymentMethod {
+  id: string;
+  tenant_id: string;
+  method_type: string;
+  display_name: string;
+  instructions?: string;
+  payment_link_template?: string;
+  is_active: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface CreateInvoiceForm {
+  client_id: string;
+  time_entry_ids: string[];
+  due_date?: string;
+  tax_rate?: number;
+  payment_instructions?: string;
+  notes?: string;
+}
+
+export interface InvoiceFormData {
+  client_id: string;
+  selectedTimeEntries: TimeEntry[];
+  due_date: string;
+  tax_rate: number;
+  payment_instructions: string;
+  notes: string;
+}
+
+export interface PaymentMethodForm {
+  method_type: string;
+  display_name: string;
+  instructions?: string;
+  payment_link_template?: string;
+  is_active: boolean;
+  sort_order: number;
 }
