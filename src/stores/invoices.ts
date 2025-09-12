@@ -33,6 +33,15 @@ interface InvoiceFilters {
 
 const supabase = createBrowserClient();
 
+async function queueInvoiceReminder(
+  invoiceId: string,
+  dueDate?: string | null
+) {
+  return supabase.functions.invoke("queue-invoice-reminder", {
+    body: { invoiceId, dueDate },
+  });
+}
+
 export const useInvoicesStore = create<InvoicesState>((set, get) => ({
   invoices: [],
   selectedInvoice: null,
@@ -169,6 +178,16 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
       const fullInvoice = { ...invoice, line_items: itemsToInsert } as Invoice;
 
       set((state) => ({ invoices: [fullInvoice, ...state.invoices] }));
+
+      const { error: reminderError } = await queueInvoiceReminder(
+        invoice.id,
+        invoice.due_date
+      );
+      if (reminderError) {
+        notify.error(
+          reminderError.message || "Failed to queue invoice reminder"
+        );
+      }
 
       notify.success("Invoice created successfully");
       return { invoice: fullInvoice };
