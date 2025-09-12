@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { createBrowserClient } from "@/lib/supabase";
+import { notify } from "@/lib/notifications";
 import type {
   Ticket,
   CreateTicketForm,
@@ -82,6 +83,7 @@ export const useTicketsStore = create<TicketsState>((set) => ({
       set({ tickets: data || [], loading: false });
     } catch (error) {
       console.error("Error fetching tickets:", error);
+      notify.error("Failed to fetch tickets");
       set({ loading: false });
     }
   },
@@ -108,6 +110,7 @@ export const useTicketsStore = create<TicketsState>((set) => ({
       set({ selectedTicket: data });
     } catch (error) {
       console.error("Error fetching ticket:", error);
+      notify.error("Failed to fetch ticket");
     }
   },
 
@@ -131,15 +134,20 @@ export const useTicketsStore = create<TicketsState>((set) => ({
         )
         .single();
 
-      if (error) return { error: error.message };
+      if (error) {
+        notify.error(error.message);
+        return { error: error.message };
+      }
 
       // Add to local state
       set((state) => ({
         tickets: [data, ...state.tickets],
       }));
 
+      notify.success("Ticket created successfully");
       return {};
     } catch (error: any) {
+      notify.error(error.message || "Failed to create ticket");
       return { error: error.message || "Failed to create ticket" };
     }
   },
@@ -162,7 +170,10 @@ export const useTicketsStore = create<TicketsState>((set) => ({
         )
         .single();
 
-      if (error) return { error: error.message };
+      if (error) {
+        notify.error(error.message);
+        return { error: error.message };
+      }
 
       // Update local state
       set((state) => ({
@@ -173,8 +184,10 @@ export const useTicketsStore = create<TicketsState>((set) => ({
           state.selectedTicket?.id === id ? data : state.selectedTicket,
       }));
 
+      notify.success("Ticket updated successfully");
       return {};
     } catch (error: any) {
+      notify.error(error.message || "Failed to update ticket");
       return { error: error.message || "Failed to update ticket" };
     }
   },
@@ -197,7 +210,10 @@ export const useTicketsStore = create<TicketsState>((set) => ({
         )
         .single();
 
-      if (error) return { error: error.message };
+      if (error) {
+        notify.error(error.message);
+        return { error: error.message };
+      }
 
       // Update local state
       set((state) => ({
@@ -208,8 +224,10 @@ export const useTicketsStore = create<TicketsState>((set) => ({
           state.selectedTicket?.id === id ? data : state.selectedTicket,
       }));
 
+      notify.success("Ticket status updated");
       return {};
     } catch (error: any) {
+      notify.error(error.message || "Failed to update ticket status");
       return { error: error.message || "Failed to update ticket status" };
     }
   },
@@ -220,7 +238,10 @@ export const useTicketsStore = create<TicketsState>((set) => ({
     try {
       const { error } = await supabase.from("tickets").delete().eq("id", id);
 
-      if (error) return { error: error.message };
+      if (error) {
+        notify.error(error.message);
+        return { error: error.message };
+      }
 
       // Remove from local state
       set((state) => ({
@@ -229,8 +250,10 @@ export const useTicketsStore = create<TicketsState>((set) => ({
           state.selectedTicket?.id === id ? null : state.selectedTicket,
       }));
 
+      notify.success("Ticket deleted successfully");
       return {};
     } catch (error: any) {
+      notify.error(error.message || "Failed to delete ticket");
       return { error: error.message || "Failed to delete ticket" };
     }
   },

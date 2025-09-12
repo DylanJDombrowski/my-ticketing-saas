@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { createBrowserClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/types";
+import { notify } from "@/lib/notifications";
 
 interface AuthState {
   user: User | null;
@@ -33,6 +34,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
 
     if (error) {
+      notify.error(error.message);
       return { error: error.message };
     }
 
@@ -50,6 +52,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         .single();
 
       set({ user: data.user, profile });
+      notify.success("Signed in successfully");
     }
 
     return {};
@@ -70,6 +73,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     });
 
     if (error) {
+      notify.error(error.message);
       return { error: error.message };
     }
 
@@ -82,6 +86,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         .single();
 
       if (tenantError) {
+        notify.error(tenantError.message);
         return { error: tenantError.message };
       }
 
@@ -95,6 +100,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       if (profileError) {
+        notify.error(profileError.message);
         return { error: profileError.message };
       }
 
@@ -111,6 +117,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         .single();
 
       set({ user: data.user, profile });
+      notify.success("Account created successfully");
     }
 
     return {};
@@ -120,6 +127,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     const supabase = createBrowserClient();
     await supabase.auth.signOut();
     set({ user: null, profile: null });
+    notify.success("Signed out successfully");
   },
 
   initialize: async () => {
@@ -138,11 +146,10 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (profileError) {
         console.error("Profile fetch error during init:", profileError);
+        notify.error("Failed to load profile");
         set({ user: session.user, profile: null, loading: false });
         return;
       }
-
-      console.log("Initialized profile:", profile);
 
       if (profile && profile.tenant_id) {
         // Fetch tenant separately
@@ -154,22 +161,18 @@ export const useAuthStore = create<AuthState>((set) => ({
 
         if (tenantError) {
           console.error("Tenant fetch error during init:", tenantError);
+          notify.error("Failed to load tenant");
         } else {
-          console.log("Initialized tenant:", tenant);
           profile.tenant = tenant;
         }
       }
-
-      console.log("Final initialized profile with tenant:", profile);
       set({ user: session.user, profile, loading: false });
     } else {
       set({ user: null, profile: null, loading: false });
     }
 
     // Listen for auth changes
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state change:", event, session?.user?.id);
-
+    supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const { data: profile } = await supabase
           .from("profiles")
