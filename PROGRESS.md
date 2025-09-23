@@ -1,9 +1,9 @@
 # Project Progress Tracker
 
-## Current Status: Sprint 3 In Progress 🚀
-**Last Updated:** 2025-09-22
-**Phase:** User Experience & Performance
-**Sprint Start:** 2025-09-22
+## Current Status: Sprint 4 Planning 🎯
+**Last Updated:** 2025-09-23
+**Phase:** Business Logic & Automation
+**Sprint Start:** TBD
 
 ---
 
@@ -96,7 +96,155 @@
 
 ---
 
-## Sprint 3 Planning: Advanced Features & Polish
+## Sprint 4: Business Logic & Automation (Planning Phase)
+**Focus:** Intelligent workflows and business process automation
+**Duration:** TBD - Estimated 5-7 days
+**Priority:** High-impact features that differentiate the SaaS offering
+
+### Goals
+1. **Automate Invoice Creation**: Streamline billing process from time tracking to invoice generation
+2. **Smart Notifications**: Keep clients and team members informed automatically
+3. **Workflow Automation**: Reduce manual tasks and improve efficiency
+4. **Client Portal**: Provide self-service capabilities for clients
+5. **Payment Integration**: Enable seamless online payments
+
+### Sprint 4 Tasks
+- [ ] Implement automated invoice generation from time entries
+- [ ] Build email notification system (invoice sent, overdue, etc.)
+- [ ] Create client portal for invoice viewing and payment
+- [ ] Add time tracking approval workflows
+- [ ] Implement SLA monitoring and automated alerts
+- [ ] Set up basic payment integration (Stripe or PayPal)
+
+### Sprint 4 Success Criteria
+- [ ] Users can auto-generate invoices from approved time entries
+- [ ] Clients receive automated email notifications for new/overdue invoices
+- [ ] Client portal allows viewing invoices and payment status
+- [ ] Time entries require approval before billable invoice generation
+- [ ] SLA violations trigger automatic notifications
+- [ ] Basic online payment processing is functional
+
+### Key Features to Implement
+
+#### 1. **Automated Invoice Generation** 🤖
+- **Trigger**: Manual or scheduled (weekly/monthly)
+- **Logic**: Gather approved billable time entries for a client in date range
+- **Output**: Generate invoice with line items, send to client automatically
+- **UI**: Bulk invoice generation interface with preview
+
+#### 2. **Email Notification System** 📧
+- **Invoice Notifications**: New invoice, payment received, overdue reminders
+- **Ticket Notifications**: New comment, status change, assignment
+- **SLA Alerts**: Approaching deadline, overdue tickets
+- **Integration**: Use Supabase Edge Functions + email service
+
+#### 3. **Client Portal** 🏛️
+- **Features**: View invoices, download PDFs, check payment status, view tickets
+- **Authentication**: Separate client login or magic links
+- **Access Control**: Clients only see their own data
+- **Mobile**: Responsive design for mobile access
+
+#### 4. **Time Tracking Workflows** ⏱️
+- **Approval Process**: Time entries require manager approval before billing
+- **Bulk Operations**: Approve/reject multiple entries at once
+- **Status Tracking**: Draft → Submitted → Approved → Invoiced
+- **Notifications**: Notify when entries need approval
+
+#### 5. **SLA Monitoring** 📊
+- **Configuration**: Set SLA rules per client/ticket type
+- **Monitoring**: Track time to resolution, response times
+- **Alerts**: Automated notifications when SLAs are at risk
+- **Reporting**: SLA compliance dashboards
+
+#### 6. **Payment Integration** 💳
+- **Provider**: Start with Stripe (most popular)
+- **Features**: One-time payments, payment status tracking
+- **Webhook**: Handle payment confirmations
+- **UI**: Payment buttons in client portal and invoices
+
+### Architecture Considerations
+
+#### New Database Tables/Columns
+```sql
+-- Invoice approval workflow
+ALTER TABLE invoices ADD COLUMN approval_status TEXT DEFAULT 'draft';
+ALTER TABLE invoices ADD COLUMN approved_by UUID REFERENCES profiles(id);
+ALTER TABLE invoices ADD COLUMN approved_at TIMESTAMP;
+
+-- Time entry approval
+ALTER TABLE time_entries ADD COLUMN approval_status TEXT DEFAULT 'submitted';
+ALTER TABLE time_entries ADD COLUMN approved_by UUID REFERENCES profiles(id);
+ALTER TABLE time_entries ADD COLUMN approved_at TIMESTAMP;
+
+-- SLA configuration
+CREATE TABLE sla_rules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id),
+  client_id UUID REFERENCES clients(id),
+  ticket_priority TEXT NOT NULL,
+  response_time_hours INTEGER,
+  resolution_time_hours INTEGER,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+-- Client portal access
+CREATE TABLE client_portal_access (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID NOT NULL REFERENCES clients(id),
+  access_token TEXT UNIQUE NOT NULL,
+  expires_at TIMESTAMP,
+  last_accessed TIMESTAMP,
+  created_at TIMESTAMP DEFAULT now()
+);
+
+-- Email notifications log
+CREATE TABLE notification_log (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id),
+  recipient_email TEXT NOT NULL,
+  notification_type TEXT NOT NULL,
+  subject TEXT,
+  status TEXT DEFAULT 'pending',
+  sent_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT now()
+);
+```
+
+#### New API Routes
+- `POST /api/invoices/auto-generate` - Auto-generate invoice from time entries
+- `POST /api/notifications/send` - Send email notifications
+- `GET /api/client-portal/[token]` - Client portal access
+- `POST /api/time-entries/approve` - Approve time entries
+- `GET /api/sla/status` - SLA monitoring dashboard
+- `POST /api/payments/stripe-webhook` - Handle payment confirmations
+
+#### New Components
+- `src/components/invoice-auto-generator.tsx` - Bulk invoice creation
+- `src/components/client-portal-layout.tsx` - Separate layout for clients
+- `src/components/time-entry-approval.tsx` - Approval workflow UI
+- `src/components/sla-monitor.tsx` - SLA dashboard
+- `src/components/notification-center.tsx` - Notification management
+- `src/app/client-portal/` - Client-facing pages
+- `src/app/api/notifications/` - Email notification API
+
+### Implementation Priority
+1. **Week 1**: Email notifications + Auto invoice generation
+2. **Week 2**: Time entry approval workflows + Client portal
+3. **Week 3**: SLA monitoring + Payment integration
+
+### Risks & Mitigation
+- **Risk**: Email delivery issues
+  **Mitigation**: Start with Supabase Edge Functions + Resend.com for reliability
+
+- **Risk**: Payment integration complexity
+  **Mitigation**: Start with basic Stripe integration, expand later
+
+- **Risk**: Client portal security
+  **Mitigation**: Use secure token-based access, limit data exposure
+
+---
+
+## Sprint 3 Planning: Advanced Features & Polish (COMPLETED)
 
 ### Proposed Focus Areas
 
