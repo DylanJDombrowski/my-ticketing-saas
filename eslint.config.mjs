@@ -12,12 +12,23 @@ const compat = new FlatCompat({
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    files: ["**/*.{js,jsx,ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "prefer-const": "error",
+      "no-console": "warn",
+      "react-hooks/exhaustive-deps": "warn",
+    },
+  },
+  {
     ignores: [
       "node_modules/**",
       ".next/**",
       "out/**",
       "build/**",
       "next-env.d.ts",
+      "tailwind.config.js",
     ],
   },
 ];

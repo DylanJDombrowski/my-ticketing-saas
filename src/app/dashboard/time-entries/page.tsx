@@ -39,6 +39,7 @@ import { useTimeEntriesStore } from "@/stores/time-entries";
 import { useTicketsStore } from "@/stores/tickets";
 import { TimeEntryModal } from "@/components/modals/time-entry-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
+import { TimeTracker } from "@/components/time-tracker";
 import {
   Plus,
   MoreHorizontal,
@@ -165,6 +166,9 @@ export default function TimeEntriesPage() {
           Log Time
         </Button>
       </div>
+
+      {/* Time Tracker Widget */}
+      <TimeTracker />
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">

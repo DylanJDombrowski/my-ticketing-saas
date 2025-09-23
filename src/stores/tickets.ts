@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { createBrowserClient } from "@/lib/supabase";
 import { notify } from "@/lib/notifications";
+import { handleError } from "@/lib/error-handling";
 import type {
   Ticket,
   CreateTicketForm,
@@ -37,6 +38,9 @@ interface TicketFilters {
   assignedTo?: string;
 }
 
+// Create a single supabase instance for the store
+const supabase = createBrowserClient();
+
 export const useTicketsStore = create<TicketsState>((set) => ({
   tickets: [],
   loading: false,
@@ -44,7 +48,6 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
   fetchTickets: async (tenantId: string, filters?: TicketFilters) => {
     set({ loading: true });
-    const supabase = createBrowserClient();
 
     try {
       let query = supabase
@@ -81,15 +84,19 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
       set({ tickets: data || [], loading: false });
     } catch (error) {
-      console.error("Error fetching tickets:", error);
-      notify.error("Failed to fetch tickets");
+      handleError("Failed to fetch tickets", {
+        operation: "fetchTickets",
+        tenantId,
+        details: { filters },
+        error,
+      }, {
+        toastMessage: "Failed to load tickets. Please try again."
+      });
       set({ loading: false });
     }
   },
 
   fetchTicket: async (id: string) => {
-    const supabase = createBrowserClient();
-
     try {
       const { data, error } = await supabase
         .from("tickets")
@@ -108,14 +115,17 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
       set({ selectedTicket: data });
     } catch (error) {
-      console.error("Error fetching ticket:", error);
-      notify.error("Failed to fetch ticket");
+      handleError("Failed to fetch ticket details", {
+        operation: "fetchTicket",
+        details: { ticketId: id },
+        error,
+      }, {
+        toastMessage: "Failed to load ticket details. Please try again."
+      });
     }
   },
 
   createTicket: async (tenantId: string, ticketData: CreateTicketForm) => {
-    const supabase = createBrowserClient();
-
     try {
       const { data, error } = await supabase
         .from("tickets")
@@ -154,8 +164,6 @@ export const useTicketsStore = create<TicketsState>((set) => ({
   },
 
   updateTicket: async (id: string, ticketData: Partial<CreateTicketForm>) => {
-    const supabase = createBrowserClient();
-
     try {
       const { data, error } = await supabase
         .from("tickets")
@@ -196,8 +204,6 @@ export const useTicketsStore = create<TicketsState>((set) => ({
   },
 
   updateTicketStatus: async (id: string, status: TicketStatus) => {
-    const supabase = createBrowserClient();
-
     try {
       const { data, error } = await supabase
         .from("tickets")
@@ -240,8 +246,6 @@ export const useTicketsStore = create<TicketsState>((set) => ({
   },
 
   deleteTicket: async (id: string) => {
-    const supabase = createBrowserClient();
-
     try {
       const { error } = await supabase.from("tickets").delete().eq("id", id);
 

@@ -21,9 +21,11 @@ import {
   LogOut,
   User,
   Clock,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AuthGuard } from "@/components/auth-guard";
+import { TimerWidget } from "@/components/timer-widget";
 
 const navigation = [
   {
@@ -45,6 +47,11 @@ const navigation = [
     name: "Time Entries",
     href: "/dashboard/time-entries",
     icon: Clock,
+  },
+  {
+    name: "Invoices",
+    href: "/dashboard/invoices",
+    icon: FileText,
   },
   {
     name: "Reports",
@@ -124,6 +131,11 @@ export default function DashboardLayout({
           <div className="sticky top-0 z-40 bg-white border-b border-gray-200">
             <div className="flex h-16 items-center justify-between px-6">
               <div className="flex-1" />
+
+              {/* Timer Widget */}
+              <div className="mr-4">
+                <TimerWidget />
+              </div>
 
               {/* User menu */}
               <DropdownMenu>

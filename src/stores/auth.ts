@@ -3,6 +3,7 @@ import { createBrowserClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/types";
 import { notify } from "@/lib/notifications";
+import { handleError, getErrorMessage } from "@/lib/error-handling";
 
 interface AuthState {
   user: User | null;
@@ -145,8 +146,13 @@ export const useAuthStore = create<AuthState>((set) => ({
         .single();
 
       if (profileError) {
-        console.error("Profile fetch error during init:", profileError);
-        notify.error("Failed to load profile");
+        handleError("Profile fetch error during initialization", {
+          operation: "fetchProfile",
+          userId: session.user.id,
+          error: profileError,
+        }, {
+          toastMessage: "Failed to load profile"
+        });
         set({ user: session.user, profile: null, loading: false });
         return;
       }
@@ -160,8 +166,14 @@ export const useAuthStore = create<AuthState>((set) => ({
           .single();
 
         if (tenantError) {
-          console.error("Tenant fetch error during init:", tenantError);
-          notify.error("Failed to load tenant");
+          handleError("Tenant fetch error during initialization", {
+            operation: "fetchTenant",
+            userId: session.user.id,
+            tenantId: profile.tenant_id,
+            error: tenantError,
+          }, {
+            toastMessage: "Failed to load tenant information"
+          });
         } else {
           profile.tenant = tenant;
         }

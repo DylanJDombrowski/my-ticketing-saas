@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -273,16 +274,18 @@ export default function TicketsPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredTickets.map((ticket) => (
-                    <TableRow key={ticket.id}>
+                    <TableRow key={ticket.id} className="cursor-pointer hover:bg-muted/50">
                       <TableCell>
-                        <div className="space-y-1">
-                          <div className="font-medium">{ticket.title}</div>
+                        <Link href={`/dashboard/tickets/${ticket.id}`} className="block">
+                          <div className="space-y-1">
+                            <div className="font-medium hover:text-blue-600">{ticket.title}</div>
                           {ticket.description && (
                             <div className="text-sm text-gray-600 truncate max-w-[200px]">
                               {ticket.description}
                             </div>
                           )}
-                        </div>
+                          </div>
+                        </Link>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center">
