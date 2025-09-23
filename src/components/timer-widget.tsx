@@ -92,30 +92,31 @@ export function TimerWidget() {
         <Button
           variant="ghost"
           size="sm"
-          className="h-8 px-2 font-mono text-sm"
+          className="h-8 px-1 sm:px-2 font-mono text-xs sm:text-sm"
         >
-          <Clock className="h-4 w-4 mr-2" />
-          {formatTime(displayTime)}
+          <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+          <span className="hidden xs:inline">{formatTime(displayTime)}</span>
+          <span className="xs:hidden">{formatTime(displayTime).replace(/^0:/, '')}</span>
           {timerData.isRunning && (
-            <div className="ml-2 h-2 w-2 bg-red-500 rounded-full animate-pulse" />
+            <div className="ml-1 sm:ml-2 h-2 w-2 bg-red-500 rounded-full animate-pulse flex-shrink-0" />
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80" align="end">
-        <div className="space-y-4">
+      <PopoverContent className="w-72 sm:w-80" align="end" sideOffset={8}>
+        <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="font-medium">Active Timer</h4>
-            <Badge variant={timerData.isRunning ? "default" : "secondary"}>
+            <h4 className="font-medium text-sm sm:text-base">Active Timer</h4>
+            <Badge variant={timerData.isRunning ? "default" : "secondary"} className="text-xs">
               {timerData.isRunning ? "Running" : "Paused"}
             </Badge>
           </div>
 
           <div className="space-y-2">
             <div className="text-center">
-              <div className="text-2xl font-mono font-bold">
+              <div className="text-xl sm:text-2xl font-mono font-bold">
                 {formatTime(displayTime)}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                 {timerData.ticketTitle || "Active time tracking"}
               </div>
             </div>
@@ -126,15 +127,15 @@ export function TimerWidget() {
               size="sm"
               variant="outline"
               onClick={navigateToTimeEntries}
-              className="flex-1"
+              className="flex-1 text-xs sm:text-sm"
             >
-              <Clock className="h-4 w-4 mr-1" />
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
               Open Timer
             </Button>
           </div>
 
           <p className="text-xs text-muted-foreground text-center">
-            Click "Open Timer" to manage your time tracking session
+            Tap to manage your time tracking session
           </p>
         </div>
       </PopoverContent>

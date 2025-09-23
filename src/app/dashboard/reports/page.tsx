@@ -32,8 +32,21 @@ import {
   Calendar,
   Download,
   Filter,
-  RefreshCw
+  RefreshCw,
+  FileDown,
+  ChevronDown
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  exportReports,
+  exportClientActivity,
+  exportTeamTimeTracking
+} from "@/lib/csv-export";
 
 interface ReportData {
   totalRevenue: number;
@@ -399,6 +412,27 @@ export default function ReportsPage() {
     fetchReportData();
   };
 
+  const handleExportSummary = () => {
+    if (reportData) {
+      const filename = `reports-summary-${currentDateRange.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
+      exportReports(reportData, filename);
+    }
+  };
+
+  const handleExportClientActivity = () => {
+    if (clientData.length > 0) {
+      const filename = `client-activity-${currentDateRange.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
+      exportClientActivity(clientData, filename);
+    }
+  };
+
+  const handleExportTeamTracking = () => {
+    if (timeTrackingData.length > 0) {
+      const filename = `team-time-tracking-${currentDateRange.label.toLowerCase().replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.csv`;
+      exportTeamTimeTracking(timeTrackingData, filename);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -408,10 +442,29 @@ export default function ReportsPage() {
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Export Data
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                <FileDown className="h-4 w-4 mr-2" />
+                Export Data
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={handleExportSummary} disabled={!reportData}>
+                <Download className="h-4 w-4 mr-2" />
+                Export Summary Report
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportTeamTracking} disabled={timeTrackingData.length === 0}>
+                <Download className="h-4 w-4 mr-2" />
+                Export Team Time Tracking
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportClientActivity} disabled={clientData.length === 0}>
+                <Download className="h-4 w-4 mr-2" />
+                Export Client Activity
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

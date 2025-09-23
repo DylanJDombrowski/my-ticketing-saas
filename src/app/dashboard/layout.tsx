@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -22,10 +23,14 @@ import {
   User,
   Clock,
   FileText,
+  Menu,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AuthGuard } from "@/components/auth-guard";
 import { TimerWidget } from "@/components/timer-widget";
+import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
+import { useGlobalKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
 const navigation = [
   {
@@ -67,6 +72,10 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const { profile, signOut } = useAuthStore();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Initialize global keyboard shortcuts
+  useGlobalKeyboardShortcuts();
 
   const getInitials = (firstName?: string, lastName?: string) => {
     if (firstName && lastName) {
@@ -81,8 +90,69 @@ export default function DashboardLayout({
   return (
     <AuthGuard>
       <div className="min-h-screen bg-gray-50">
-        {/* Sidebar */}
-        <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
+        {/* Mobile sidebar overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 z-50 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <div className="fixed inset-0 bg-gray-900/80" aria-hidden="true" />
+            <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
+              <div className="flex h-16 items-center justify-between px-6 border-b">
+                <h1 className="text-lg font-bold text-gray-900 truncate">
+                  {profile?.tenant?.name || "Ticketing SaaS"}
+                </h1>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSidebarOpen(false)}
+                  className="lg:hidden"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+
+              <nav className="mt-6 px-3">
+                <ul className="space-y-1">
+                  {navigation.map((item) => {
+                    const isActive =
+                      pathname === item.href ||
+                      (item.href !== "/dashboard" &&
+                        pathname.startsWith(item.href));
+
+                    return (
+                      <li key={item.name}>
+                        <Link
+                          href={item.href}
+                          onClick={() => setSidebarOpen(false)}
+                          className={cn(
+                            "group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                            isActive
+                              ? "bg-blue-100 text-blue-700"
+                              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          )}
+                        >
+                          <item.icon
+                            className={cn(
+                              "mr-3 h-5 w-5 flex-shrink-0",
+                              isActive
+                                ? "text-blue-500"
+                                : "text-gray-400 group-hover:text-gray-500"
+                            )}
+                          />
+                          {item.name}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </nav>
+            </div>
+          </div>
+        )}
+
+        {/* Desktop sidebar */}
+        <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:w-64 lg:bg-white lg:shadow-lg">
           <div className="flex h-16 items-center px-6 border-b">
             <h1 className="text-xl font-bold text-gray-900">
               {profile?.tenant?.name || "Ticketing SaaS"}
@@ -126,14 +196,24 @@ export default function DashboardLayout({
         </div>
 
         {/* Main content */}
-        <div className="pl-64">
+        <div className="lg:pl-64">
           {/* Top bar */}
           <div className="sticky top-0 z-40 bg-white border-b border-gray-200">
-            <div className="flex h-16 items-center justify-between px-6">
-              <div className="flex-1" />
+            <div className="flex h-16 items-center justify-between px-4 sm:px-6">
+              {/* Mobile menu button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+
+              <div className="flex-1 lg:flex-none" />
 
               {/* Timer Widget */}
-              <div className="mr-4">
+              <div className="mr-2 sm:mr-4">
                 <TimerWidget />
               </div>
 
@@ -180,8 +260,11 @@ export default function DashboardLayout({
           </div>
 
           {/* Page content */}
-          <main className="p-6">{children}</main>
+          <main className="p-4 sm:p-6">{children}</main>
         </div>
+
+        {/* Keyboard Shortcuts Modal */}
+        <KeyboardShortcutsModal />
       </div>
     </AuthGuard>
   );

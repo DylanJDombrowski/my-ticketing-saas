@@ -40,6 +40,7 @@ import { useTicketsStore } from "@/stores/tickets";
 import { TimeEntryModal } from "@/components/modals/time-entry-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { TimeTracker } from "@/components/time-tracker";
+import { useKeyboardShortcuts, pageShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
   Plus,
   MoreHorizontal,
@@ -48,8 +49,10 @@ import {
   Clock,
   Calendar,
   User,
+  FileDown,
 } from "lucide-react";
 import type { TimeEntry } from "@/lib/types";
+import { exportTimeEntries } from "@/lib/csv-export";
 
 export default function TimeEntriesPage() {
   const [dateFilter, setDateFilter] = useState(() => {
@@ -101,6 +104,45 @@ export default function TimeEntriesPage() {
     loadTimeEntries();
   }, [dateFilter, endDateFilter, ticketFilter, billableFilter]);
 
+  // Set up keyboard shortcuts for this page
+  useKeyboardShortcuts([
+    {
+      key: 'n',
+      action: () => setShowTimeEntryModal(true),
+      description: 'Create New Time Entry'
+    },
+    {
+      key: 'e',
+      ctrlKey: true,
+      action: handleExportTimeEntries,
+      description: 'Export Time Entries'
+    },
+    {
+      key: 'f',
+      action: () => {
+        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      },
+      description: 'Focus Search'
+    }
+  ]);
+
+  // Listen for custom events from keyboard shortcuts
+  useEffect(() => {
+    const handleCreateTimeEntry = () => setShowTimeEntryModal(true);
+    const handleExportEvent = () => handleExportTimeEntries();
+
+    window.addEventListener('create-time-entry', handleCreateTimeEntry);
+    window.addEventListener('export-time-entries', handleExportEvent);
+
+    return () => {
+      window.removeEventListener('create-time-entry', handleCreateTimeEntry);
+      window.removeEventListener('export-time-entries', handleExportEvent);
+    };
+  }, []);
+
   const handleEditTimeEntry = (timeEntry: TimeEntry) => {
     setEditingTimeEntry(timeEntry);
     setShowTimeEntryModal(true);
@@ -125,6 +167,27 @@ export default function TimeEntriesPage() {
   const handleCloseModal = () => {
     setShowTimeEntryModal(false);
     setEditingTimeEntry(null);
+  };
+
+  const handleExportTimeEntries = () => {
+    // Format time entries for export
+    const exportData = timeEntries.map((entry) => ({
+      entry_date: entry.entry_date,
+      ticket_title: (entry.ticket as any)?.title || "Unknown",
+      client_name: (entry.ticket as any)?.client?.name || "Unknown Client",
+      description: entry.description || "",
+      hours: entry.hours,
+      is_billable: entry.is_billable,
+      user_name: (entry.user as any)?.first_name && (entry.user as any)?.last_name
+        ? `${(entry.user as any).first_name} ${(entry.user as any).last_name}`
+        : (entry.user as any)?.email || "Unknown",
+      created_at: entry.created_at,
+    }));
+
+    const dateRangeLabel = `${dateFilter}-to-${endDateFilter}`;
+    const filename = `time-entries-${dateRangeLabel}-${new Date().toISOString().split('T')[0]}.csv`;
+
+    exportTimeEntries(exportData, filename);
   };
 
   const formatDate = (dateString: string) => {
@@ -161,10 +224,20 @@ export default function TimeEntriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Time Entries</h1>
-        <Button onClick={() => setShowTimeEntryModal(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Log Time
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleExportTimeEntries}
+            disabled={timeEntries.length === 0}
+          >
+            <FileDown className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+          <Button onClick={() => setShowTimeEntryModal(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Log Time
+          </Button>
+        </div>
       </div>
 
       {/* Time Tracker Widget */}
@@ -222,8 +295,8 @@ export default function TimeEntriesPage() {
         </CardHeader>
         <CardContent>
           {/* Filters */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="grid grid-cols-2 gap-2 flex-1">
+          <div className="space-y-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <label className="text-sm font-medium">Start Date</label>
                 <Input
@@ -242,124 +315,135 @@ export default function TimeEntriesPage() {
               </div>
             </div>
 
-            <Select value={ticketFilter} onValueChange={setTicketFilter}>
-              <SelectTrigger className="w-full md:w-[200px]">
-                <SelectValue placeholder="Filter by ticket" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Tickets</SelectItem>
-                {tickets.map((ticket) => (
-                  <SelectItem key={ticket.id} value={ticket.id}>
-                    {ticket.title} ({ticket.client?.name})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
+              <Select value={ticketFilter} onValueChange={setTicketFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by ticket" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Tickets</SelectItem>
+                  {tickets.map((ticket) => (
+                    <SelectItem key={ticket.id} value={ticket.id}>
+                      {ticket.title} ({ticket.client?.name})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            <Select value={billableFilter} onValueChange={setBillableFilter}>
-              <SelectTrigger className="w-full md:w-[150px]">
-                <SelectValue placeholder="Billable" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Entries</SelectItem>
-                <SelectItem value="billable">Billable Only</SelectItem>
-                <SelectItem value="non-billable">Non-Billable Only</SelectItem>
-              </SelectContent>
-            </Select>
+              <Select value={billableFilter} onValueChange={setBillableFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Billable" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Entries</SelectItem>
+                  <SelectItem value="billable">Billable Only</SelectItem>
+                  <SelectItem value="non-billable">Non-Billable Only</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Time Entries Table */}
           {timeEntries.length > 0 ? (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Ticket</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Hours</TableHead>
-                    <TableHead>Billable</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead className="w-[70px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {timeEntries.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Calendar className="mr-2 h-3 w-3 text-gray-400" />
-                          {formatDate(entry.entry_date)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="font-medium">
-                            {(entry.ticket as any)?.title || "Unknown"}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            {(entry.ticket as any)?.client?.name ||
-                              "Unknown Client"}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-[200px] truncate">
-                          {entry.description || "-"}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <Clock className="mr-2 h-3 w-3 text-gray-400" />
-                          {formatHours(entry.hours)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={entry.is_billable ? "default" : "secondary"}
-                        >
-                          {entry.is_billable ? "Billable" : "Non-billable"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center">
-                          <User className="mr-2 h-3 w-3 text-gray-400" />
-                          {(entry.user as any)?.first_name &&
-                          (entry.user as any)?.last_name
-                            ? `${(entry.user as any).first_name} ${
-                                (entry.user as any).last_name
-                              }`
-                            : (entry.user as any)?.email || "Unknown"}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => handleEditTimeEntry(entry)}
-                            >
-                              <Edit className="mr-2 h-4 w-4" />
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteTimeEntry(entry)}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+            <div className="overflow-x-auto">
+              <div className="rounded-md border min-w-full">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[100px]">Date</TableHead>
+                      <TableHead className="min-w-[150px]">Ticket</TableHead>
+                      <TableHead className="min-w-[120px]">Description</TableHead>
+                      <TableHead className="min-w-[80px]">Hours</TableHead>
+                      <TableHead className="min-w-[90px]">Billable</TableHead>
+                      <TableHead className="min-w-[120px]">User</TableHead>
+                      <TableHead className="w-[70px]"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {timeEntries.map((entry) => (
+                      <TableRow key={entry.id}>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <Calendar className="mr-2 h-3 w-3 text-gray-400 flex-shrink-0" />
+                            <span className="text-xs sm:text-sm">
+                              {formatDate(entry.entry_date)}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-medium text-xs sm:text-sm line-clamp-2">
+                              {(entry.ticket as any)?.title || "Unknown"}
+                            </div>
+                            <div className="text-xs text-gray-600">
+                              {(entry.ticket as any)?.client?.name ||
+                                "Unknown Client"}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="max-w-[150px] sm:max-w-[200px] truncate text-xs sm:text-sm">
+                            {entry.description || "-"}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <Clock className="mr-2 h-3 w-3 text-gray-400 flex-shrink-0" />
+                            <span className="text-xs sm:text-sm font-mono">
+                              {formatHours(entry.hours)}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={entry.is_billable ? "default" : "secondary"}
+                            className="text-xs"
+                          >
+                            {entry.is_billable ? "Billable" : "Non-billable"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <User className="mr-2 h-3 w-3 text-gray-400 flex-shrink-0" />
+                            <span className="text-xs sm:text-sm truncate max-w-[100px]">
+                              {(entry.user as any)?.first_name &&
+                              (entry.user as any)?.last_name
+                                ? `${(entry.user as any).first_name} ${
+                                    (entry.user as any).last_name
+                                  }`
+                                : (entry.user as any)?.email || "Unknown"}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => handleEditTimeEntry(entry)}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteTimeEntry(entry)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           ) : (
             <div className="text-center py-12">
