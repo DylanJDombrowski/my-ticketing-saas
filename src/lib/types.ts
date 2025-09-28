@@ -173,3 +173,87 @@ export interface InvoiceFormData {
   payment_instructions: string;
   notes: string;
 }
+
+// Sprint 4: Business Automation Types
+export type ApprovalStatus = "draft" | "submitted" | "approved" | "rejected";
+export type NotificationType = "invoice_sent" | "invoice_overdue" | "ticket_comment" | "sla_warning" | "time_entry_approval";
+export type NotificationStatus = "pending" | "sent" | "failed";
+
+// Enhanced Invoice with automation features
+export interface InvoiceWithAutomation extends Invoice {
+  recurrence_rule?: string;
+  next_run_at?: string;
+  approval_status: ApprovalStatus;
+  approved_by?: string;
+  approved_at?: string;
+}
+
+// Enhanced TimeEntry with approval workflow
+export interface TimeEntryWithApproval extends TimeEntry {
+  approval_status: ApprovalStatus;
+  approved_by?: string;
+  approved_at?: string;
+}
+
+// SLA Rules for monitoring
+export interface SLARule {
+  id: string;
+  tenant_id: string;
+  client_id?: string;
+  ticket_priority: TicketPriority;
+  response_time_hours?: number;
+  resolution_time_hours?: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  client?: Client;
+}
+
+// Client Portal Access
+export interface ClientPortalAccess {
+  id: string;
+  client_id: string;
+  access_token: string;
+  expires_at?: string;
+  last_accessed?: string;
+  is_active: boolean;
+  created_at: string;
+  client?: Client;
+}
+
+// Notification Log
+export interface NotificationLog {
+  id: string;
+  tenant_id: string;
+  recipient_email: string;
+  notification_type: NotificationType;
+  subject?: string;
+  message_body?: string;
+  status: NotificationStatus;
+  sent_at?: string;
+  error_message?: string;
+  created_at: string;
+}
+
+// Forms for Sprint 4 features
+export interface CreateSLARuleForm {
+  client_id?: string;
+  ticket_priority: TicketPriority;
+  response_time_hours?: number;
+  resolution_time_hours?: number;
+}
+
+export interface AutoInvoiceGenerationForm {
+  client_id: string;
+  date_range_start: string;
+  date_range_end: string;
+  include_non_billable: boolean;
+  auto_approve: boolean;
+  send_notification: boolean;
+}
+
+export interface BulkTimeEntryApprovalForm {
+  time_entry_ids: string[];
+  action: "approve" | "reject";
+  notes?: string;
+}

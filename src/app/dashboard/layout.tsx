@@ -25,6 +25,9 @@ import {
   FileText,
   Menu,
   X,
+  Bell,
+  CheckCircle,
+  Timer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AuthGuard } from "@/components/auth-guard";
@@ -54,6 +57,11 @@ const navigation = [
     icon: Clock,
   },
   {
+    name: "Approvals",
+    href: "/dashboard/approvals",
+    icon: CheckCircle,
+  },
+  {
     name: "Invoices",
     href: "/dashboard/invoices",
     icon: FileText,
@@ -62,6 +70,16 @@ const navigation = [
     name: "Reports",
     href: "/dashboard/reports",
     icon: BarChart3,
+  },
+  {
+    name: "SLA",
+    href: "/dashboard/sla",
+    icon: Timer,
+  },
+  {
+    name: "Notifications",
+    href: "/dashboard/notifications",
+    icon: Bell,
   },
 ];
 

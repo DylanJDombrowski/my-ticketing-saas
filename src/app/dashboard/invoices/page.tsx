@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/stores/auth";
 import { useInvoicesStore } from "@/stores/invoices";
+import { useClientsStore } from "@/stores/clients";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -41,9 +42,12 @@ import {
   Trash2,
   Eye,
   Filter,
-  Calendar
+  Calendar,
+  Zap
 } from "lucide-react";
 import { InvoiceModal } from "@/components/modals/invoice-modal";
+import { AutoInvoiceGenerator } from "@/components/auto-invoice-generator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Invoice, InvoiceStatus } from "@/lib/types";
 
 const statusColors = {
@@ -68,12 +72,14 @@ export default function InvoicesPage() {
     updateInvoiceStatus,
     deleteInvoice
   } = useInvoicesStore();
+  const { clients, fetchClients } = useClientsStore();
 
   useEffect(() => {
     if (profile?.tenant_id) {
       fetchInvoices(profile.tenant_id);
+      fetchClients(profile.tenant_id);
     }
-  }, [profile?.tenant_id, fetchInvoices]);
+  }, [profile?.tenant_id, fetchInvoices, fetchClients]);
 
   const filteredInvoices = invoices.filter(invoice =>
     statusFilter === "all" || invoice.status === statusFilter
@@ -165,8 +171,19 @@ export default function InvoicesPage() {
         </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Tabs */}
+      <Tabs defaultValue="invoices" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="invoices">Invoice Management</TabsTrigger>
+          <TabsTrigger value="auto-generate" className="flex items-center gap-2">
+            <Zap className="h-4 w-4" />
+            Auto Generate
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="invoices" className="space-y-6">
+          {/* Summary Cards */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Amount</CardTitle>
@@ -391,6 +408,12 @@ export default function InvoicesPage() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="auto-generate">
+          <AutoInvoiceGenerator />
+        </TabsContent>
+      </Tabs>
 
       {/* Invoice Modal */}
       <InvoiceModal
