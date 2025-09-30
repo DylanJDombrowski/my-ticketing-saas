@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run lint)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)",
+      "Bash(npx jest:*)",
+      "Bash(supabase migration:*)",
+      "Bash(npm run dev:*)",
+      "Read(//home/dylan/**)",
+      "Bash(rsync:*)",
+      "Bash(time npm run dev)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
