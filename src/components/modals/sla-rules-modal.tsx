@@ -1,206 +1,227 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
-import { Plus, Trash2, Edit } from 'lucide-react'
-import { useAuthStore } from '@/stores/auth'
-import { supabase } from '@/lib/supabase'
-import { toast } from 'sonner'
+import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Trash2, Edit } from "lucide-react";
+import { useAuthStore } from "@/stores/auth";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface SLARule {
-  id: string
-  client_id: string | null
-  ticket_priority: 'low' | 'medium' | 'high' | 'urgent'
-  response_time_hours: number | null
-  resolution_time_hours: number | null
-  is_active: boolean
+  id: string;
+  client_id: string | null;
+  ticket_priority: "low" | "medium" | "high" | "urgent";
+  response_time_hours: number | null;
+  resolution_time_hours: number | null;
+  is_active: boolean;
   client?: {
-    id: string
-    name: string
-  }
+    id: string;
+    name: string;
+  };
 }
 
 interface Client {
-  id: string
-  name: string
+  id: string;
+  name: string;
 }
 
 interface SLARulesModalProps {
-  open: boolean
-  onClose: () => void
-  onSuccess: () => void
+  open: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
 }
 
-export function SLARulesModal({ open, onClose, onSuccess }: SLARulesModalProps) {
-  const { profile } = useAuthStore()
-  const [slaRules, setSlaRules] = useState<SLARule[]>([])
-  const [clients, setClients] = useState<Client[]>([])
-  const [loading, setLoading] = useState(false)
-  const [editingRule, setEditingRule] = useState<SLARule | null>(null)
+export function SLARulesModal({
+  open,
+  onClose,
+  onSuccess,
+}: SLARulesModalProps) {
+  const { profile } = useAuthStore();
+  const [slaRules, setSlaRules] = useState<SLARule[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [editingRule, setEditingRule] = useState<SLARule | null>(null);
   const [formData, setFormData] = useState({
-    client_id: '',
-    ticket_priority: 'medium' as 'low' | 'medium' | 'high' | 'urgent',
-    response_time_hours: '',
-    resolution_time_hours: '',
-    is_active: true
-  })
+    client_id: "",
+    ticket_priority: "medium" as "low" | "medium" | "high" | "urgent",
+    response_time_hours: "",
+    resolution_time_hours: "",
+    is_active: true,
+  });
 
   useEffect(() => {
     if (open && profile?.tenant_id) {
-      loadData()
+      loadData();
     }
-  }, [open, profile?.tenant_id])
+  }, [open, profile?.tenant_id]);
 
   const loadData = async () => {
-    if (!profile?.tenant_id) return
+    if (!profile?.tenant_id) return;
 
     try {
-      setLoading(true)
+      setLoading(true);
 
       // Load SLA rules
       const { data: rules, error: rulesError } = await supabase
-        .from('sla_rules')
-        .select(`
+        .from("sla_rules")
+        .select(
+          `
           *,
           client:clients(id, name)
-        `)
-        .order('ticket_priority', { ascending: false })
+        `
+        )
+        .order("ticket_priority", { ascending: false });
 
-      if (rulesError) throw rulesError
+      if (rulesError) throw rulesError;
 
       // Load clients
       const { data: clientsData, error: clientsError } = await supabase
-        .from('clients')
-        .select('id, name')
-        .order('name')
+        .from("clients")
+        .select("id, name")
+        .order("name");
 
-      if (clientsError) throw clientsError
+      if (clientsError) throw clientsError;
 
-      setSlaRules(rules || [])
-      setClients(clientsData || [])
-
+      setSlaRules(rules || []);
+      setClients(clientsData || []);
     } catch (error) {
-      console.error('Error loading SLA rules data:', error)
-      toast.error('Failed to load SLA rules')
+      console.error("Error loading SLA rules data:", error);
+      toast.error("Failed to load SLA rules");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!profile?.tenant_id) return
+    if (!profile?.tenant_id) return;
 
     try {
-      setLoading(true)
+      setLoading(true);
 
       const ruleData = {
         tenant_id: profile.tenant_id,
         client_id: formData.client_id || null,
         ticket_priority: formData.ticket_priority,
-        response_time_hours: formData.response_time_hours ? parseInt(formData.response_time_hours) : null,
-        resolution_time_hours: formData.resolution_time_hours ? parseInt(formData.resolution_time_hours) : null,
-        is_active: formData.is_active
-      }
+        response_time_hours: formData.response_time_hours
+          ? parseInt(formData.response_time_hours)
+          : null,
+        resolution_time_hours: formData.resolution_time_hours
+          ? parseInt(formData.resolution_time_hours)
+          : null,
+        is_active: formData.is_active,
+      };
 
       if (editingRule) {
         // Update existing rule
         const { error } = await supabase
-          .from('sla_rules')
+          .from("sla_rules")
           .update(ruleData)
-          .eq('id', editingRule.id)
+          .eq("id", editingRule.id);
 
-        if (error) throw error
+        if (error) throw error;
 
-        toast.success('SLA rule updated successfully')
+        toast.success("SLA rule updated successfully");
       } else {
         // Create new rule
-        const { error } = await supabase
-          .from('sla_rules')
-          .insert([ruleData])
+        const { error } = await supabase.from("sla_rules").insert([ruleData]);
 
-        if (error) throw error
+        if (error) throw error;
 
-        toast.success('SLA rule created successfully')
+        toast.success("SLA rule created successfully");
       }
 
       // Reset form and reload data
-      resetForm()
-      await loadData()
-      onSuccess()
-
+      resetForm();
+      await loadData();
+      onSuccess();
     } catch (error) {
-      console.error('Error saving SLA rule:', error)
-      toast.error('Failed to save SLA rule')
+      console.error("Error saving SLA rule:", error);
+      toast.error("Failed to save SLA rule");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleEdit = (rule: SLARule) => {
-    setEditingRule(rule)
+    setEditingRule(rule);
     setFormData({
-      client_id: rule.client_id || '',
+      client_id: rule.client_id || "",
       ticket_priority: rule.ticket_priority,
-      response_time_hours: rule.response_time_hours?.toString() || '',
-      resolution_time_hours: rule.resolution_time_hours?.toString() || '',
-      is_active: rule.is_active
-    })
-  }
+      response_time_hours: rule.response_time_hours?.toString() || "",
+      resolution_time_hours: rule.resolution_time_hours?.toString() || "",
+      is_active: rule.is_active,
+    });
+  };
 
   const handleDelete = async (ruleId: string) => {
-    if (!confirm('Are you sure you want to delete this SLA rule?')) return
+    if (!confirm("Are you sure you want to delete this SLA rule?")) return;
 
     try {
-      setLoading(true)
+      setLoading(true);
 
       const { error } = await supabase
-        .from('sla_rules')
+        .from("sla_rules")
         .delete()
-        .eq('id', ruleId)
+        .eq("id", ruleId);
 
-      if (error) throw error
+      if (error) throw error;
 
-      toast.success('SLA rule deleted successfully')
-      await loadData()
-      onSuccess()
-
+      toast.success("SLA rule deleted successfully");
+      await loadData();
+      onSuccess();
     } catch (error) {
-      console.error('Error deleting SLA rule:', error)
-      toast.error('Failed to delete SLA rule')
+      console.error("Error deleting SLA rule:", error);
+      toast.error("Failed to delete SLA rule");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const resetForm = () => {
-    setEditingRule(null)
+    setEditingRule(null);
     setFormData({
-      client_id: '',
-      ticket_priority: 'medium',
-      response_time_hours: '',
-      resolution_time_hours: '',
-      is_active: true
-    })
-  }
+      client_id: "",
+      ticket_priority: "medium",
+      response_time_hours: "",
+      resolution_time_hours: "",
+      is_active: true,
+    });
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800'
-      case 'high': return 'bg-orange-100 text-orange-800'
-      case 'medium': return 'bg-yellow-100 text-yellow-800'
-      case 'low': return 'bg-green-100 text-green-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case "urgent":
+        return "bg-red-100 text-red-800";
+      case "high":
+        return "bg-orange-100 text-orange-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "low":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -214,7 +235,7 @@ export function SLARulesModal({ open, onClose, onSuccess }: SLARulesModalProps) 
           <Card>
             <CardHeader>
               <CardTitle>
-                {editingRule ? 'Edit SLA Rule' : 'Create New SLA Rule'}
+                {editingRule ? "Edit SLA Rule" : "Create New SLA Rule"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -223,14 +244,16 @@ export function SLARulesModal({ open, onClose, onSuccess }: SLARulesModalProps) 
                   <Label htmlFor="client">Client (Optional)</Label>
                   <Select
                     value={formData.client_id}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, client_id: value }))}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, client_id: value }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="All clients" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="">All clients</SelectItem>
-                      {clients.map(client => (
+                      {clients.map((client) => (
                         <SelectItem key={client.id} value={client.id}>
                           {client.name}
                         </SelectItem>
@@ -243,7 +266,12 @@ export function SLARulesModal({ open, onClose, onSuccess }: SLARulesModalProps) 
                   <Label htmlFor="priority">Ticket Priority</Label>
                   <Select
                     value={formData.ticket_priority}
-                    onValueChange={(value: any) => setFormData(prev => ({ ...prev, ticket_priority: value }))}
+                    onValueChange={(value: any) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        ticket_priority: value,
+                      }))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -265,19 +293,31 @@ export function SLARulesModal({ open, onClose, onSuccess }: SLARulesModalProps) 
                     min="1"
                     placeholder="e.g., 4"
                     value={formData.response_time_hours}
-                    onChange={(e) => setFormData(prev => ({ ...prev, response_time_hours: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        response_time_hours: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="resolution_time">Resolution Time (hours)</Label>
+                  <Label htmlFor="resolution_time">
+                    Resolution Time (hours)
+                  </Label>
                   <Input
                     id="resolution_time"
                     type="number"
                     min="1"
                     placeholder="e.g., 24"
                     value={formData.resolution_time_hours}
-                    onChange={(e) => setFormData(prev => ({ ...prev, resolution_time_hours: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        resolution_time_hours: e.target.value,
+                      }))
+                    }
                   />
                 </div>
 
@@ -285,14 +325,16 @@ export function SLARulesModal({ open, onClose, onSuccess }: SLARulesModalProps) 
                   <Switch
                     id="is_active"
                     checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, is_active: checked }))
+                    }
                   />
                   <Label htmlFor="is_active">Active</Label>
                 </div>
 
                 <div className="flex gap-2">
                   <Button type="submit" disabled={loading}>
-                    {editingRule ? 'Update Rule' : 'Create Rule'}
+                    {editingRule ? "Update Rule" : "Create Rule"}
                   </Button>
                   {editingRule && (
                     <Button type="button" variant="outline" onClick={resetForm}>
@@ -312,7 +354,7 @@ export function SLARulesModal({ open, onClose, onSuccess }: SLARulesModalProps) 
             <CardContent>
               {loading ? (
                 <div className="space-y-3">
-                  {[1, 2, 3].map(i => (
+                  {[1, 2, 3].map((i) => (
                     <div key={i} className="animate-pulse">
                       <div className="h-16 bg-gray-200 rounded"></div>
                     </div>
@@ -324,11 +366,16 @@ export function SLARulesModal({ open, onClose, onSuccess }: SLARulesModalProps) 
                 </div>
               ) : (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {slaRules.map(rule => (
-                    <div key={rule.id} className="border rounded-lg p-3 space-y-2">
+                  {slaRules.map((rule) => (
+                    <div
+                      key={rule.id}
+                      className="border rounded-lg p-3 space-y-2"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <Badge className={getPriorityColor(rule.ticket_priority)}>
+                          <Badge
+                            className={getPriorityColor(rule.ticket_priority)}
+                          >
                             {rule.ticket_priority}
                           </Badge>
                           {!rule.is_active && (
@@ -355,12 +402,16 @@ export function SLARulesModal({ open, onClose, onSuccess }: SLARulesModalProps) 
 
                       <div className="text-sm">
                         <div className="font-medium">
-                          {rule.client?.name || 'All Clients'}
+                          {rule.client?.name || "All Clients"}
                         </div>
                         <div className="text-muted-foreground">
-                          {rule.response_time_hours && `Response: ${rule.response_time_hours}h`}
-                          {rule.response_time_hours && rule.resolution_time_hours && ' • '}
-                          {rule.resolution_time_hours && `Resolution: ${rule.resolution_time_hours}h`}
+                          {rule.response_time_hours &&
+                            `Response: ${rule.response_time_hours}h`}
+                          {rule.response_time_hours &&
+                            rule.resolution_time_hours &&
+                            " • "}
+                          {rule.resolution_time_hours &&
+                            `Resolution: ${rule.resolution_time_hours}h`}
                         </div>
                       </div>
                     </div>
@@ -378,5 +429,5 @@ export function SLARulesModal({ open, onClose, onSuccess }: SLARulesModalProps) 
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

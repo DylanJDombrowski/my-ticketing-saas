@@ -30,7 +30,7 @@ import {
   Building,
   Edit,
   BarChart3,
-  MessageSquare
+  MessageSquare,
 } from "lucide-react";
 import type { Ticket, TicketStatus, TicketPriority } from "@/lib/types";
 
@@ -55,7 +55,8 @@ export default function TicketDetailPage() {
 
   const ticketId = params.id as string;
   const { profile } = useAuthStore();
-  const { selectedTicket, loading, fetchTicket, updateTicketStatus } = useTicketsStore();
+  const { selectedTicket, loading, fetchTicket, updateTicketStatus } =
+    useTicketsStore();
 
   useEffect(() => {
     if (profile?.tenant_id && ticketId) {
@@ -70,20 +71,20 @@ export default function TicketDetailPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -119,7 +120,8 @@ export default function TicketDetailPage() {
               Ticket not found
             </h3>
             <p className="text-gray-500">
-              The ticket you're looking for doesn't exist or you don't have permission to view it.
+              The ticket you&apos;re looking for doesn&apos;t exist or you
+              don&apos;t have permission to view it.
             </p>
           </CardContent>
         </Card>
@@ -138,9 +140,7 @@ export default function TicketDetailPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">{selectedTicket.title}</h1>
-            <p className="text-muted-foreground">
-              Ticket details and activity
-            </p>
+            <p className="text-muted-foreground">Ticket details and activity</p>
           </div>
         </div>
         <Button onClick={() => setShowEditModal(true)}>
@@ -159,7 +159,7 @@ export default function TicketDetailPage() {
                 <CardTitle>Ticket Information</CardTitle>
                 <div className="flex items-center space-x-2">
                   <Badge className={statusColors[selectedTicket.status]}>
-                    {selectedTicket.status.replace('_', ' ')}
+                    {selectedTicket.status.replace("_", " ")}
                   </Badge>
                   <Badge className={priorityColors[selectedTicket.priority]}>
                     {selectedTicket.priority}
@@ -183,7 +183,7 @@ export default function TicketDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Client</p>
                     <p className="font-medium">
-                      {selectedTicket.client?.name || 'Unknown Client'}
+                      {selectedTicket.client?.name || "Unknown Client"}
                       {selectedTicket.client?.company && (
                         <span className="text-sm text-muted-foreground ml-1">
                           ({selectedTicket.client.company})
@@ -197,9 +197,12 @@ export default function TicketDetailPage() {
                   <div className="flex items-center space-x-2">
                     <User className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Assigned to</p>
+                      <p className="text-sm text-muted-foreground">
+                        Assigned to
+                      </p>
                       <p className="font-medium">
-                        {selectedTicket.assigned_user.first_name} {selectedTicket.assigned_user.last_name}
+                        {selectedTicket.assigned_user.first_name}{" "}
+                        {selectedTicket.assigned_user.last_name}
                       </p>
                     </div>
                   </div>
@@ -210,7 +213,9 @@ export default function TicketDetailPage() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm text-muted-foreground">Due Date</p>
-                      <p className="font-medium">{formatDate(selectedTicket.due_date)}</p>
+                      <p className="font-medium">
+                        {formatDate(selectedTicket.due_date)}
+                      </p>
                     </div>
                   </div>
                 )}
@@ -218,7 +223,9 @@ export default function TicketDetailPage() {
                 <div className="flex items-center space-x-2">
                   <Clock className="h-4 w-4 text-muted-foreground" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Time Tracking</p>
+                    <p className="text-sm text-muted-foreground">
+                      Time Tracking
+                    </p>
                     <p className="font-medium">
                       {selectedTicket.actual_hours}h logged
                       {selectedTicket.estimated_hours && (
@@ -234,15 +241,18 @@ export default function TicketDetailPage() {
               <div className="pt-4 border-t">
                 <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
                   <div>
-                    <span className="font-medium">Created:</span> {formatDateTime(selectedTicket.created_at)}
+                    <span className="font-medium">Created:</span>{" "}
+                    {formatDateTime(selectedTicket.created_at)}
                     {selectedTicket.created_user && (
                       <span className="ml-1">
-                        by {selectedTicket.created_user.first_name} {selectedTicket.created_user.last_name}
+                        by {selectedTicket.created_user.first_name}{" "}
+                        {selectedTicket.created_user.last_name}
                       </span>
                     )}
                   </div>
                   <div>
-                    <span className="font-medium">Last Updated:</span> {formatDateTime(selectedTicket.updated_at)}
+                    <span className="font-medium">Last Updated:</span>{" "}
+                    {formatDateTime(selectedTicket.updated_at)}
                   </div>
                 </div>
               </div>
@@ -273,7 +283,9 @@ export default function TicketDetailPage() {
                 <label className="text-sm font-medium">Update Status</label>
                 <Select
                   value={selectedTicket.status}
-                  onValueChange={(value: TicketStatus) => handleStatusChange(value)}
+                  onValueChange={(value: TicketStatus) =>
+                    handleStatusChange(value)
+                  }
                 >
                   <SelectTrigger className="mt-1">
                     <SelectValue />
@@ -299,7 +311,12 @@ export default function TicketDetailPage() {
                   <div className="flex justify-between text-sm">
                     <span>Progress:</span>
                     <span>
-                      {Math.round((selectedTicket.actual_hours / selectedTicket.estimated_hours) * 100)}%
+                      {Math.round(
+                        (selectedTicket.actual_hours /
+                          selectedTicket.estimated_hours) *
+                          100
+                      )}
+                      %
                     </span>
                   </div>
                 )}
@@ -327,7 +344,10 @@ export default function TicketDetailPage() {
                 className="w-full justify-start"
                 onClick={() => {
                   // This would scroll to comments or focus comment input
-                  document.querySelector('[placeholder="Add a comment..."]')?.focus();
+                  const input = document.querySelector(
+                    '[placeholder="Add a comment..."]'
+                  ) as HTMLInputElement | null;
+                  input?.focus();
                 }}
               >
                 <MessageSquare className="h-4 w-4 mr-2" />
@@ -337,7 +357,7 @@ export default function TicketDetailPage() {
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => router.push('/dashboard/time-entries')}
+                onClick={() => router.push("/dashboard/time-entries")}
               >
                 <Clock className="h-4 w-4 mr-2" />
                 Log Time

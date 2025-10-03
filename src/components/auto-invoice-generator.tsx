@@ -9,8 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { notify } from "@/lib/notifications";
@@ -45,8 +50,10 @@ export function AutoInvoiceGenerator() {
   const form = useForm<AutoInvoiceGenerationForm>({
     defaultValues: {
       client_id: "",
-      date_range_start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
-      date_range_end: new Date().toISOString().split('T')[0], // today
+      date_range_start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0], // 30 days ago
+      date_range_end: new Date().toISOString().split("T")[0], // today
       include_non_billable: false,
       auto_approve: false,
       send_notification: false,
@@ -76,7 +83,9 @@ export function AutoInvoiceGenerator() {
       notify.success(result.message);
     } catch (error) {
       console.error("Error generating invoices:", error);
-      notify.error(error instanceof Error ? error.message : "Failed to generate invoices");
+      notify.error(
+        error instanceof Error ? error.message : "Failed to generate invoices"
+      );
     } finally {
       setLoading(false);
     }
@@ -91,7 +100,8 @@ export function AutoInvoiceGenerator() {
             Automated Invoice Generation
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Generate invoices automatically from unbilled time entries. Select criteria and let the system create professional invoices for you.
+            Generate invoices automatically from unbilled time entries. Select
+            criteria and let the system create professional invoices for you.
           </p>
         </CardHeader>
         <CardContent>
@@ -117,7 +127,8 @@ export function AutoInvoiceGenerator() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Leave empty to generate invoices for all clients with unbilled time
+                  Leave empty to generate invoices for all clients with unbilled
+                  time
                 </p>
               </div>
             </div>
@@ -177,7 +188,8 @@ export function AutoInvoiceGenerator() {
                     }
                   />
                   <Label htmlFor="auto-approve" className="text-sm">
-                    Auto-approve and mark as "Sent" (otherwise saved as "Draft")
+                    Auto-approve and mark as &quot;Sent&quot; (otherwise saved
+                    as &quot;Draft&quot;)
                   </Label>
                 </div>
 
@@ -189,7 +201,10 @@ export function AutoInvoiceGenerator() {
                       form.setValue("send_notification", checked as boolean)
                     }
                   />
-                  <Label htmlFor="send-notification" className="text-sm flex items-center gap-1">
+                  <Label
+                    htmlFor="send-notification"
+                    className="text-sm flex items-center gap-1"
+                  >
                     <Mail className="h-4 w-4" />
                     Queue email notifications to clients
                   </Label>
@@ -225,22 +240,34 @@ export function AutoInvoiceGenerator() {
                 <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
                   <FileText className="h-5 w-5 text-blue-500" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Invoices Created</p>
-                    <p className="text-lg font-semibold">{results.summary.total_invoices}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Invoices Created
+                    </p>
+                    <p className="text-lg font-semibold">
+                      {results.summary.total_invoices}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg">
                   <DollarSign className="h-5 w-5 text-green-500" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Amount</p>
-                    <p className="text-lg font-semibold">${results.summary.total_amount.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Amount
+                    </p>
+                    <p className="text-lg font-semibold">
+                      ${results.summary.total_amount.toFixed(2)}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-lg">
                   <Users className="h-5 w-5 text-purple-500" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Clients Billed</p>
-                    <p className="text-lg font-semibold">{results.summary.clients_billed}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Clients Billed
+                    </p>
+                    <p className="text-lg font-semibold">
+                      {results.summary.clients_billed}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -251,9 +278,14 @@ export function AutoInvoiceGenerator() {
                   <h4 className="font-medium">Generated Invoices:</h4>
                   <div className="space-y-2">
                     {results.invoices.map((invoice) => (
-                      <div key={invoice.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div
+                        key={invoice.id}
+                        className="flex items-center justify-between p-3 border rounded-lg"
+                      >
                         <div>
-                          <p className="font-medium">{invoice.invoice_number}</p>
+                          <p className="font-medium">
+                            {invoice.invoice_number}
+                          </p>
                           <p className="text-sm text-muted-foreground">
                             {invoice.client.name} ({invoice.client.email})
                           </p>
