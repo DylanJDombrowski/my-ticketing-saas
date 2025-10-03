@@ -44,10 +44,6 @@ export default function DashboardPage() {
 
   const supabase = createBrowserClient();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
-
   const fetchDashboardData = useCallback(async () => {
     if (!profile?.tenant_id) return;
 
@@ -176,6 +172,10 @@ export default function DashboardPage() {
       setLoading(false);
     }
   }, [profile?.tenant_id, supabase]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   // Memoize color functions to avoid recreating on every render
   const getStatusColor = useCallback((status: string) => {

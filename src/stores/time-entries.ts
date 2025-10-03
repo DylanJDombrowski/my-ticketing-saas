@@ -57,7 +57,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
           `
           *,
           ticket:tickets(id, title, client:clients(id, name)),
-          user:profiles(id, first_name, last_name, email)
+          user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email)
         `
         )
         .eq("tenant_id", tenantId);
@@ -104,7 +104,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
           `
           *,
           ticket:tickets(id, title, client:clients(id, name, hourly_rate)),
-          user:profiles(id, first_name, last_name, email, default_hourly_rate),
+          user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email, default_hourly_rate),
           invoice_line_items!left(id)
         `
         )
@@ -149,7 +149,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
           `
           *,
           ticket:tickets(id, title, client:clients(id, name)),
-          user:profiles(id, first_name, last_name, email)
+          user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email)
         `
         )
         .single();
@@ -189,7 +189,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
           `
           *,
           ticket:tickets(id, title, client:clients(id, name)),
-          user:profiles(id, first_name, last_name, email)
+          user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email)
         `
         )
         .single();

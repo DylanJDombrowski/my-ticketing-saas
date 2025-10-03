@@ -104,6 +104,23 @@ export default function TimeEntriesPage() {
     loadTimeEntries();
   }, [dateFilter, endDateFilter, ticketFilter, billableFilter]);
 
+  const handleExportTimeEntries = () => {
+    // Format time entries for export
+    const exportData = timeEntries.map((entry) => ({
+      entry_date: entry.entry_date,
+      ticket_title: (entry.ticket as any)?.title || "Unknown",
+      client_name: (entry.ticket as any)?.client?.name || "Unknown Client",
+      description: entry.description || "",
+      hours: entry.hours,
+      is_billable: entry.is_billable ? "Yes" : "No",
+      user_name: (entry.user as any)?.email || "Unknown User",
+    }));
+
+    exportTimeEntries(exportData, {
+      filename: `time-entries-${dateFilter}-to-${endDateFilter}`,
+    });
+  };
+
   // Set up keyboard shortcuts for this page
   useKeyboardShortcuts([
     {
@@ -167,27 +184,6 @@ export default function TimeEntriesPage() {
   const handleCloseModal = () => {
     setShowTimeEntryModal(false);
     setEditingTimeEntry(null);
-  };
-
-  const handleExportTimeEntries = () => {
-    // Format time entries for export
-    const exportData = timeEntries.map((entry) => ({
-      entry_date: entry.entry_date,
-      ticket_title: (entry.ticket as any)?.title || "Unknown",
-      client_name: (entry.ticket as any)?.client?.name || "Unknown Client",
-      description: entry.description || "",
-      hours: entry.hours,
-      is_billable: entry.is_billable,
-      user_name: (entry.user as any)?.first_name && (entry.user as any)?.last_name
-        ? `${(entry.user as any).first_name} ${(entry.user as any).last_name}`
-        : (entry.user as any)?.email || "Unknown",
-      created_at: entry.created_at,
-    }));
-
-    const dateRangeLabel = `${dateFilter}-to-${endDateFilter}`;
-    const filename = `time-entries-${dateRangeLabel}-${new Date().toISOString().split('T')[0]}.csv`;
-
-    exportTimeEntries(exportData, filename);
   };
 
   const formatDate = (dateString: string) => {

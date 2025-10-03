@@ -257,3 +257,32 @@ export interface BulkTimeEntryApprovalForm {
   action: "approve" | "reject";
   notes?: string;
 }
+
+// Stripe Payment Types
+export type PaymentStatus = "pending" | "processing" | "succeeded" | "failed" | "refunded";
+
+export interface Payment {
+  id: string;
+  tenant_id: string;
+  invoice_id: string;
+  stripe_payment_intent_id?: string;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  payment_method?: string;
+  paid_at?: string;
+  created_at: string;
+  updated_at: string;
+  invoice?: Invoice;
+}
+
+export interface StripeCheckoutSession {
+  sessionId: string;
+  url: string;
+}
+
+export interface CreatePaymentIntentRequest {
+  invoice_id: string;
+  amount: number;
+  currency?: string;
+}

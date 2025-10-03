@@ -120,7 +120,7 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
       const { data: entries, error: entriesError } = await supabase
         .from("time_entries")
         .select<TimeEntryWithRates>(
-          `id, description, hours, ticket:tickets(client:clients(id, hourly_rate)), user:profiles(id, default_hourly_rate)`
+          `id, description, hours, ticket:tickets(client:clients(id, hourly_rate)), user:profiles!time_entries_user_id_fkey(id, default_hourly_rate)`
         )
         .in("id", invoiceData.time_entry_ids);
 

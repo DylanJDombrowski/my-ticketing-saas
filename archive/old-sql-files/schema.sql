@@ -323,36 +323,6 @@ CREATE TABLE IF NOT EXISTS "public"."payment_methods" (
 ALTER TABLE "public"."payment_methods" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."payments" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "tenant_id" "uuid" NOT NULL,
-    "invoice_id" "uuid" NOT NULL,
-    "stripe_payment_intent_id" "text",
-    "amount" numeric(10,2) NOT NULL,
-    "currency" character varying(3) DEFAULT 'usd'::character varying,
-    "status" "text" DEFAULT 'pending'::"text",
-    "payment_method" "text",
-    "paid_at" timestamp with time zone,
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"()
-);
-
-
-ALTER TABLE "public"."payments" OWNER TO "postgres";
-
-
-COMMENT ON TABLE "public"."payments" IS 'Stripe payment records linked to invoices';
-
-
-
-COMMENT ON COLUMN "public"."payments"."stripe_payment_intent_id" IS 'Stripe PaymentIntent ID';
-
-
-
-COMMENT ON COLUMN "public"."payments"."status" IS 'Payment status: pending, processing, succeeded, failed, refunded';
-
-
-
 CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "id" "uuid" NOT NULL,
     "tenant_id" "uuid",
@@ -491,11 +461,6 @@ ALTER TABLE ONLY "public"."payment_methods"
 
 
 
-ALTER TABLE ONLY "public"."payments"
-    ADD CONSTRAINT "payments_pkey" PRIMARY KEY ("id");
-
-
-
 ALTER TABLE ONLY "public"."profiles"
     ADD CONSTRAINT "profiles_pkey" PRIMARY KEY ("id");
 
@@ -574,22 +539,6 @@ CREATE INDEX "idx_payment_methods_tenant_id" ON "public"."payment_methods" USING
 
 
 
-CREATE INDEX "idx_payments_invoice_id" ON "public"."payments" USING "btree" ("invoice_id");
-
-
-
-CREATE INDEX "idx_payments_status" ON "public"."payments" USING "btree" ("status");
-
-
-
-CREATE INDEX "idx_payments_stripe_payment_intent_id" ON "public"."payments" USING "btree" ("stripe_payment_intent_id");
-
-
-
-CREATE INDEX "idx_payments_tenant_id" ON "public"."payments" USING "btree" ("tenant_id");
-
-
-
 CREATE INDEX "idx_profiles_tenant_id" ON "public"."profiles" USING "btree" ("tenant_id");
 
 
@@ -659,10 +608,6 @@ CREATE OR REPLACE TRIGGER "update_clients_updated_at" BEFORE UPDATE ON "public".
 
 
 CREATE OR REPLACE TRIGGER "update_invoices_updated_at" BEFORE UPDATE ON "public"."invoices" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
-
-
-
-CREATE OR REPLACE TRIGGER "update_payments_updated_at" BEFORE UPDATE ON "public"."payments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
@@ -750,16 +695,6 @@ ALTER TABLE ONLY "public"."notification_log"
 
 ALTER TABLE ONLY "public"."payment_methods"
     ADD CONSTRAINT "payment_methods_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."payments"
-    ADD CONSTRAINT "payments_invoice_id_fkey" FOREIGN KEY ("invoice_id") REFERENCES "public"."invoices"("id") ON DELETE CASCADE;
-
-
-
-ALTER TABLE ONLY "public"."payments"
-    ADD CONSTRAINT "payments_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
 
 
 
@@ -976,17 +911,6 @@ ALTER TABLE "public"."payment_methods" ENABLE ROW LEVEL SECURITY;
 
 
 CREATE POLICY "payment_methods_tenant_policy" ON "public"."payment_methods" TO "authenticated" USING (("tenant_id" = ( SELECT "profiles"."tenant_id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"())))) WITH CHECK (("tenant_id" = ( SELECT "profiles"."tenant_id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"()))));
-
-
-
-ALTER TABLE "public"."payments" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "payments_tenant_policy" ON "public"."payments" TO "authenticated" USING (("tenant_id" = ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
   WHERE ("profiles"."id" = "auth"."uid"())))) WITH CHECK (("tenant_id" = ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
@@ -1320,12 +1244,6 @@ GRANT ALL ON TABLE "public"."notification_log" TO "service_role";
 GRANT ALL ON TABLE "public"."payment_methods" TO "anon";
 GRANT ALL ON TABLE "public"."payment_methods" TO "authenticated";
 GRANT ALL ON TABLE "public"."payment_methods" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."payments" TO "anon";
-GRANT ALL ON TABLE "public"."payments" TO "authenticated";
-GRANT ALL ON TABLE "public"."payments" TO "service_role";
 
 
 

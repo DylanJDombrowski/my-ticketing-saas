@@ -1,0 +1,15 @@
+{
+  "projectContext": {
+    "description": "Ticketing SaaS with Supabase backend",
+    "stack": ["Next.js", "Supabase", "TypeScript"],
+    "supabase": {
+      "localDevelopment": true,
+      "commands": {
+        "start": "supabase start",
+        "stop": "supabase stop",
+        "status": "supabase status",
+        "reset": "supabase db reset"
+      }
+    }
+  }
+}

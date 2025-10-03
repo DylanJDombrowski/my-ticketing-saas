@@ -68,9 +68,17 @@ export const useAuthStore = create<AuthState>((set) => ({
   ) => {
     const supabase = createBrowserClient();
 
+    // Pass metadata to trigger - handle_new_user will create tenant and profile
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          company_name: tenantName,
+          first_name: firstName,
+          last_name: lastName,
+        },
+      },
     });
 
     if (error) {
@@ -79,43 +87,48 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     if (data.user) {
-      // Create tenant first
-      const { data: tenant, error: tenantError } = await supabase
-        .from("tenants")
-        .insert({ name: tenantName })
-        .select()
-        .single();
+      // Wait for trigger to complete and retry fetching profile
+      let profile = null;
+      let attempts = 0;
+      const maxAttempts = 5;
 
-      if (tenantError) {
-        notify.error(tenantError.message);
-        return { error: tenantError.message };
+      while (!profile && attempts < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        const { data: fetchedProfile, error: fetchError } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", data.user.id)
+          .single();
+
+        if (fetchedProfile?.tenant_id) {
+          // Fetch tenant separately to avoid join issues
+          const { data: tenant } = await supabase
+            .from("tenants")
+            .select("*")
+            .eq("id", fetchedProfile.tenant_id)
+            .single();
+
+          if (tenant) {
+            fetchedProfile.tenant = tenant;
+          }
+
+          profile = fetchedProfile;
+          break;
+        }
+
+        // Log error on last attempt
+        if (attempts === maxAttempts - 1 && fetchError) {
+          console.error("Profile fetch error:", fetchError);
+        }
+
+        attempts++;
       }
 
-      // Create profile
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: data.user.id,
-        tenant_id: tenant.id,
-        email,
-        first_name: firstName,
-        last_name: lastName,
-      });
-
-      if (profileError) {
-        notify.error(profileError.message);
-        return { error: profileError.message };
+      if (!profile || !profile.tenant_id) {
+        notify.error("Account created but setup incomplete. Please contact support.");
+        return { error: "Profile creation failed" };
       }
-
-      // Fetch complete profile with tenant
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select(
-          `
-          *,
-          tenant:tenants(*)
-        `
-        )
-        .eq("id", data.user.id)
-        .single();
 
       set({ user: data.user, profile });
       notify.success("Account created successfully");

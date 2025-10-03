@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Clock, AlertTriangle, CheckCircle, XCircle, Settings } from 'lucide-react'
 import { useAuthStore } from '@/stores/auth'
-import { supabase } from '@/lib/supabase'
+import { createBrowserClient } from '@/lib/supabase'
 import { toast } from 'sonner'
 
 interface SLARule {
@@ -56,6 +56,8 @@ export function SLAMonitor({ onManageRules }: SLAMonitorProps) {
     compliance_rate: 0
   })
 
+  const supabase = createBrowserClient()
+
   useEffect(() => {
     if (profile?.tenant_id) {
       loadSLAData()
@@ -91,8 +93,7 @@ export function SLAMonitor({ onManageRules }: SLAMonitorProps) {
           priority,
           status,
           created_at,
-          first_response_at,
-          resolved_at,
+          updated_at,
           client:clients(name)
         `)
         .in('status', ['open', 'in_progress'])
@@ -136,27 +137,24 @@ export function SLAMonitor({ onManageRules }: SLAMonitorProps) {
       let resolutionSLAStatus: 'compliant' | 'at_risk' | 'breached' | 'n/a' = 'n/a'
 
       // Calculate response SLA status
+      // Note: first_response_at tracking would require additional schema changes
       if (rule?.response_time_hours) {
-        if (ticket.first_response_at) {
-          const responseTime = (new Date(ticket.first_response_at).getTime() - createdAt.getTime()) / (1000 * 60 * 60)
-          responseSLAStatus = responseTime <= rule.response_time_hours ? 'compliant' : 'breached'
-          responseProgress = 100
+        responseProgress = Math.min(100, (timeSinceCreated / rule.response_time_hours) * 100)
+        if (responseProgress >= 100) {
+          responseSLAStatus = 'breached'
+        } else if (responseProgress >= 80) {
+          responseSLAStatus = 'at_risk'
         } else {
-          responseProgress = Math.min(100, (timeSinceCreated / rule.response_time_hours) * 100)
-          if (responseProgress >= 100) {
-            responseSLAStatus = 'breached'
-          } else if (responseProgress >= 80) {
-            responseSLAStatus = 'at_risk'
-          } else {
-            responseSLAStatus = 'compliant'
-          }
+          responseSLAStatus = 'compliant'
         }
       }
 
       // Calculate resolution SLA status
+      // For open/in_progress tickets, check time since creation
       if (rule?.resolution_time_hours) {
-        if (ticket.resolved_at) {
-          const resolutionTime = (new Date(ticket.resolved_at).getTime() - createdAt.getTime()) / (1000 * 60 * 60)
+        if (ticket.status === 'resolved' || ticket.status === 'closed') {
+          // Use updated_at as proxy for resolution time
+          const resolutionTime = (new Date(ticket.updated_at).getTime() - createdAt.getTime()) / (1000 * 60 * 60)
           resolutionSLAStatus = resolutionTime <= rule.resolution_time_hours ? 'compliant' : 'breached'
           resolutionProgress = 100
         } else {

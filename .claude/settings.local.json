@@ -12,7 +12,12 @@
       "Bash(npm run dev:*)",
       "Read(//home/dylan/**)",
       "Bash(rsync:*)",
-      "Bash(time npm run dev)"
+      "Bash(time npm run dev)",
+      "Bash(cat:*)",
+      "Bash(supabase status:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

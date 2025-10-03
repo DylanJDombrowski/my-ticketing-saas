@@ -1,36 +1,342 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TryBillable.com
 
-## Getting Started
+**Time tracking that actually gets you paid.**
 
-First, run the development server:
+A modern, all-in-one platform for consultants and freelancers to track billable hours, generate professional invoices, and collect payments instantly.
+
+---
+
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your Supabase and Stripe keys
+
+# Run database migrations
+# Open Supabase Dashboard > SQL Editor
+# Run: supabase/migrations/*.sql (in order)
+
+# Start development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to see the app.
+
+---
+
+## 📚 Documentation
+
+- **[VISION.md](VISION.md)** - Product vision, roadmap, and go-to-market strategy
+- **[LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md)** - Step-by-step guide from development to beta launch
+- **[STRIPE_SETUP.md](STRIPE_SETUP.md)** - Complete Stripe payment integration setup
+- **[PROGRESS.md](PROGRESS.md)** - Sprint tracking and development history
+- **[CLAUDE.md](CLAUDE.md)** - AI coding assistant instructions
+- **[TESTING.md](TESTING.md)** - Testing framework and best practices
+
+---
+
+## ✨ Features
+
+### Core Functionality
+- ✅ **Multi-tenant SaaS** - Secure tenant isolation with Row Level Security
+- ✅ **Client Management** - Track customers and their contact information
+- ✅ **Ticket System** - Organize work with 4 statuses and 4 priority levels
+- ✅ **Time Tracking** - Real-time timer with pause/resume and manual entries
+- ✅ **Time Approval Workflows** - Manager approval before billing
+
+### Billing & Invoicing
+- ✅ **Invoice Generation** - Create professional invoices from time entries
+- ✅ **Automated Bulk Invoicing** - Generate multiple invoices at once
+- ✅ **PDF Export** - Professional invoice PDFs with custom branding
+- ✅ **Stripe Payments** - Accept credit card payments directly
+- ✅ **Client Portal** - Clients can view invoices and pay online
+
+### Analytics & Reports
+- ✅ **Real-time Dashboard** - Revenue, hours, and ticket metrics
+- ✅ **Advanced Filtering** - Date ranges, presets, custom periods
+- ✅ **CSV Exports** - Export data for accounting software
+- ✅ **SLA Monitoring** - Track and alert on service level agreements
+
+### User Experience
+- ✅ **Mobile Responsive** - Works beautifully on all devices
+- ✅ **Keyboard Shortcuts** - Alt+1-9 for quick navigation
+- ✅ **Timer Widget** - Persistent header timer across all pages
+- ✅ **Email Notifications** - Automated alerts for invoices, SLAs, payments
+- ✅ **Dark Mode Ready** - Component library supports theming
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+- **Framework:** Next.js 15 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS 4
+- **Components:** Radix UI primitives
+- **State:** Zustand stores
+- **Forms:** React Hook Form + Zod validation
+- **Icons:** Lucide React
+
+### Backend
+- **Database:** Supabase (PostgreSQL)
+- **Auth:** Supabase Auth with middleware
+- **Payments:** Stripe
+- **API:** Next.js API Routes
+- **Real-time:** Supabase Realtime (ready to use)
+
+### DevOps
+- **Hosting:** Vercel (recommended)
+- **Database:** Supabase Cloud
+- **Payments:** Stripe
+- **Email:** Resend (optional)
+- **Testing:** Jest + React Testing Library
+
+---
+
+## 📁 Project Structure
+
+```
+src/
+├── app/
+│   ├── api/                      # API routes
+│   │   ├── invoices/            # Invoice generation & PDF
+│   │   ├── notifications/       # Email notifications
+│   │   └── payments/            # Stripe checkout & webhooks
+│   ├── dashboard/               # Main app pages
+│   │   ├── clients/            # Client management
+│   │   ├── tickets/            # Ticket tracking
+│   │   ├── time-entries/       # Time tracking
+│   │   ├── invoices/           # Invoice management
+│   │   ├── reports/            # Analytics & reports
+│   │   ├── sla/                # SLA monitoring
+│   │   ├── approvals/          # Time entry approvals
+│   │   └── notifications/      # Notification center
+│   ├── client-portal/          # Client-facing portal
+│   └── auth/                   # Authentication pages
+├── components/
+│   ├── ui/                     # Reusable UI components
+│   ├── modals/                 # Feature-specific modals
+│   ├── home/                   # Landing page sections
+│   └── *.tsx                   # Feature components
+├── lib/
+│   ├── supabase.ts            # Browser Supabase client
+│   ├── supabase-server.ts     # Server Supabase client
+│   ├── stripe.ts              # Stripe configuration
+│   ├── types.ts               # TypeScript interfaces
+│   └── utils.ts               # Utility functions
+└── stores/
+    ├── auth.ts                # Authentication state
+    ├── clients.ts             # Client management
+    ├── tickets.ts             # Ticket operations
+    ├── time-entries.ts        # Time tracking
+    └── invoices.ts            # Invoice generation
+
+supabase/
+├── migrations/                # Database migrations
+│   ├── 20250923000001_initial_schema.sql
+│   ├── 20250923000006_production_aligned_migration.sql
+│   ├── 20250927223301_sprint_4_business_automation.sql
+│   └── 20251002000001_add_payments_table.sql
+├── config.toml               # Supabase local config
+└── seed.sql                  # Sample data (optional)
+```
+
+---
+
+## 🔧 Environment Variables
+
+Create a `.env.local` file with the following variables:
+
+```bash
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+
+# App
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# Stripe
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_key_here
+STRIPE_SECRET_KEY=sk_test_your_key_here
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+```
+
+See [.env.example](.env.example) for complete reference.
+
+---
+
+## 🗄 Database Setup
+
+### Option 1: Supabase CLI (Recommended)
+
+```bash
+# Install Supabase CLI
+npm install -g supabase
+
+# Link to your project
+supabase link --project-ref your-project-ref
+
+# Run migrations
+supabase db push
+```
+
+### Option 2: Manual Migration
+
+1. Go to Supabase Dashboard > SQL Editor
+2. Run each migration file in `supabase/migrations/` in order
+3. Verify tables are created
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+npm test
+
+# Watch mode
+npm run test:watch
+
+# Coverage report
+npm run test:coverage
+```
+
+See [TESTING.md](TESTING.md) for testing best practices.
+
+---
+
+## 📦 Available Scripts
+
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm test             # Run Jest tests
+npm run test:watch   # Run tests in watch mode
+npm run test:coverage # Generate coverage report
+```
+
+---
+
+## 🚀 Deployment
+
+### Deploy to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/trybillable)
+
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Deploy
+vercel
+
+# Set environment variables in Vercel Dashboard
+# Add production Stripe webhook: https://yourdomain.com/api/payments/webhook
+```
+
+### Production Checklist
+
+- [ ] Set all environment variables in Vercel
+- [ ] Run database migrations on production Supabase
+- [ ] Configure production Stripe webhook
+- [ ] Set up custom domain (trybillable.com)
+- [ ] Enable Vercel Analytics
+- [ ] Test payment flow with real card ($1 test)
+
+---
+
+## 📊 Current Status
+
+**Version:** 1.0.0-beta
+**Status:** 95% Complete - Ready for Beta Launch
+**Last Updated:** October 2, 2025
+
+### Completed Sprints
+- ✅ Sprint 1: Security & Foundation
+- ✅ Sprint 2: Core Features
+- ✅ Sprint 3: UX & Performance
+- ✅ Sprint 4: Business Automation
+
+### Remaining for Launch
+- [ ] Stripe keys configuration
+- [ ] User onboarding flow
+- [ ] Email service integration
+- [ ] Legal pages (Terms, Privacy)
+
+See [LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md) for detailed next steps.
+
+---
+
+## 🎯 Roadmap
+
+### Phase 1: Beta Launch (Now - Week 4)
+- Complete Stripe setup
+- Launch to 50 beta users
+- Collect feedback and testimonials
+
+### Phase 2: Public Launch (Months 2-3)
+- Payment improvements (ACH, recurring)
+- Integrations (QuickBooks, Zapier)
+- Advanced reporting
+- Team collaboration features
+
+### Phase 3: Growth (Months 4-12)
+- Mobile apps (iOS/Android)
+- Chrome extension
+- AI-powered features
+- International expansion
+
+See [VISION.md](VISION.md) for full product roadmap.
+
+---
+
+## 🤝 Contributing
+
+This is currently a solo project, but contributions are welcome!
+
+1. Fork the repository
+2. Create a feature branch
+3. Run tests and linting
+4. Submit a pull request
+
+---
+
+## 📄 License
+
+Proprietary - All Rights Reserved
+
+---
+
+## 📞 Support
+
+- **Website:** https://trybillable.com
+- **Email:** support@trybillable.com
+- **Documentation:** [docs.trybillable.com](https://docs.trybillable.com)
+
+---
+
+## 🙏 Acknowledgments
+
+Built with:
+- [Next.js](https://nextjs.org)
+- [Supabase](https://supabase.com)
+- [Stripe](https://stripe.com)
+- [Tailwind CSS](https://tailwindcss.com)
+- [Radix UI](https://radix-ui.com)
+
+---
+
+**Ready to get billable?** 💪
+
+Start tracking time, sending invoices, and collecting payments today.
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

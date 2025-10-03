@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -28,8 +28,15 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const signUp = useAuthStore((state) => state.signUp);
+  const { signUp, user, profile } = useAuthStore();
   const router = useRouter();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && profile?.tenant_id) {
+      router.push("/dashboard");
+    }
+  }, [user, profile, router]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));

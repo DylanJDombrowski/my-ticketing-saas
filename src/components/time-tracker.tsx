@@ -77,6 +77,9 @@ export function TimeTracker() {
     }
   }, [profile?.tenant_id, fetchTickets]);
 
+  // Find current ticket
+  const currentTicket = session ? tickets.find(t => t.id === session.ticketId) : null;
+
   // Save timer state to localStorage whenever session changes
   useEffect(() => {
     if (session) {
@@ -224,8 +227,6 @@ export function TimeTracker() {
     resetTimer();
     setShowSaveDialog(false);
   };
-
-  const currentTicket = session ? tickets.find(t => t.id === session.ticketId) : null;
 
   return (
     <>
