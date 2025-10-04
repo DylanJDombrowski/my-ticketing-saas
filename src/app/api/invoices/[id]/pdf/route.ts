@@ -19,7 +19,7 @@ export async function GET(
   // SECURITY: Get user's tenant_id for isolation
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("tenant_id")
+    .select("tenant_id, tenant:tenants(id, name)")
     .eq("id", user.id)
     .single();
 

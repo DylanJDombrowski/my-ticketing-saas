@@ -25,6 +25,11 @@ interface InvoicesState {
     tenantId: string,
     invoiceData: CreateInvoiceForm
   ) => Promise<{ error?: string; invoice?: Invoice }>;
+  sendInvoice: (
+    tenantId: string,
+    id: string,
+    clientEmail: string
+  ) => Promise<{ error?: string }>;
   updateInvoiceStatus: (
     tenantId: string,
     id: string,
@@ -191,15 +196,16 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
 
       set((state) => ({ invoices: [fullInvoice, ...state.invoices] }));
 
-      const { error: reminderError } = await queueInvoiceReminder(
-        invoice.id,
-        invoice.due_date
-      );
-      if (reminderError) {
-        notify.error(
-          reminderError.message || "Failed to queue invoice reminder"
-        );
-      }
+      // TODO: Enable invoice reminders after deploying Supabase Edge Function
+      // const { error: reminderError } = await queueInvoiceReminder(
+      //   invoice.id,
+      //   invoice.due_date
+      // );
+      // if (reminderError) {
+      //   notify.error(
+      //     reminderError.message || "Failed to queue invoice reminder"
+      //   );
+      // }
 
       notify.success("Invoice created successfully");
       return { invoice: fullInvoice };
@@ -207,6 +213,50 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
       console.error("Error creating invoice:", error);
       const message =
         error instanceof Error ? error.message : "Failed to create invoice";
+      notify.error(message);
+      return { error: message };
+    }
+  },
+
+  sendInvoice: async (
+    tenantId: string,
+    id: string,
+    clientEmail: string
+  ) => {
+    try {
+      // Call API route to send email via Resend
+      const response = await fetch("/api/invoices/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ invoiceId: id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send invoice email");
+      }
+
+      // Update local state
+      const now = new Date().toISOString();
+      set((state) => ({
+        invoices: state.invoices.map((inv) =>
+          inv.id === id ? { ...inv, status: "sent", sent_at: now, sent_to_email: clientEmail } : inv
+        ),
+        selectedInvoice:
+          state.selectedInvoice?.id === id
+            ? { ...state.selectedInvoice, status: "sent", sent_at: now, sent_to_email: clientEmail }
+            : state.selectedInvoice,
+      }));
+
+      notify.success(`Invoice sent to ${clientEmail}`);
+      return {};
+    } catch (error: unknown) {
+      console.error("Error sending invoice:", error);
+      const message =
+        error instanceof Error ? error.message : "Failed to send invoice";
       notify.error(message);
       return { error: message };
     }

@@ -101,4 +101,4 @@ describe('Auth Store', () => {
     expect(result.current.profile).toBeNull()
     expect(mockSupabase.auth.signOut).toHaveBeenCalled()
   })
-}
+})

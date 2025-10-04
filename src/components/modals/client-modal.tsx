@@ -29,6 +29,7 @@ export function ClientModal({ isOpen, onClose, client }: ClientModalProps) {
     email: "",
     phone: "",
     company: "",
+    hourly_rate: undefined,
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -45,6 +46,7 @@ export function ClientModal({ isOpen, onClose, client }: ClientModalProps) {
         email: client.email,
         phone: client.phone || "",
         company: client.company || "",
+        hourly_rate: client.hourly_rate || undefined,
       });
     } else {
       setFormData({
@@ -52,6 +54,7 @@ export function ClientModal({ isOpen, onClose, client }: ClientModalProps) {
         email: "",
         phone: "",
         company: "",
+        hourly_rate: undefined,
       });
     }
     setError("");
@@ -164,6 +167,25 @@ export function ClientModal({ isOpen, onClose, client }: ClientModalProps) {
                 onChange={(e) => handleInputChange("phone", e.target.value)}
                 placeholder="Phone number"
               />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="hourly_rate">Hourly Rate ($)</Label>
+              <Input
+                id="hourly_rate"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.hourly_rate || ""}
+                onChange={(e) => {
+                  const value = e.target.value ? parseFloat(e.target.value) : undefined;
+                  setFormData((prev) => ({ ...prev, hourly_rate: value }));
+                }}
+                placeholder="150.00"
+              />
+              <p className="text-sm text-muted-foreground">
+                Default hourly rate for billing this client&apos;s work
+              </p>
             </div>
           </div>
 

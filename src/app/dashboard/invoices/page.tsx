@@ -43,19 +43,24 @@ import {
   Eye,
   Filter,
   Calendar,
-  Zap
+  Zap,
+  Send,
+  Check,
+  CreditCard
 } from "lucide-react";
 import { InvoiceModal } from "@/components/modals/invoice-modal";
 import { AutoInvoiceGenerator } from "@/components/auto-invoice-generator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { notify } from "@/lib/notifications";
 import type { Invoice, InvoiceStatus } from "@/lib/types";
 
 const statusColors = {
   draft: "bg-gray-100 text-gray-800",
   sent: "bg-blue-100 text-blue-800",
   paid: "bg-green-100 text-green-800",
+  partial: "bg-yellow-100 text-yellow-800",
   overdue: "bg-red-100 text-red-800",
-  cancelled: "bg-gray-100 text-gray-800"
+  cancelled: "bg-gray-400 text-gray-800"
 };
 
 export default function InvoicesPage() {
@@ -69,6 +74,7 @@ export default function InvoicesPage() {
     invoices,
     loading,
     fetchInvoices,
+    sendInvoice,
     updateInvoiceStatus,
     deleteInvoice
   } = useInvoicesStore();
@@ -96,19 +102,42 @@ export default function InvoicesPage() {
     return new Date(dateString).toLocaleDateString();
   };
 
+  const handleSendInvoice = async (invoice: Invoice) => {
+    if (!profile?.tenant_id) return;
+
+    const clientEmail = invoice.client?.email;
+    if (!clientEmail) {
+      alert("Client email not found. Please update the client's email address.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Send invoice ${invoice.invoice_number} to ${clientEmail}?`
+    );
+
+    if (confirmed) {
+      await sendInvoice(profile.tenant_id, invoice.id, clientEmail);
+      // Optionally refresh invoices
+      await fetchInvoices(profile.tenant_id);
+    }
+  };
+
   const handleStatusChange = async (invoiceId: string, newStatus: InvoiceStatus) => {
-    await updateInvoiceStatus(invoiceId, newStatus);
+    if (!profile?.tenant_id) return;
+    await updateInvoiceStatus(profile.tenant_id, invoiceId, newStatus);
   };
 
   const handleDeleteInvoice = async (invoiceId: string) => {
+    if (!profile?.tenant_id) return;
     if (window.confirm("Are you sure you want to delete this invoice?")) {
-      await deleteInvoice(invoiceId);
+      await deleteInvoice(profile.tenant_id, invoiceId);
     }
   };
 
   const handleBulkStatusChange = async (newStatus: InvoiceStatus) => {
+    if (!profile?.tenant_id) return;
     for (const invoiceId of selectedInvoices) {
-      await updateInvoiceStatus(invoiceId, newStatus);
+      await updateInvoiceStatus(profile.tenant_id, invoiceId, newStatus);
     }
     setSelectedInvoices([]);
   };
@@ -125,6 +154,34 @@ export default function InvoicesPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handlePayInvoice = async (invoice: Invoice) => {
+    try {
+      const response = await fetch("/api/stripe/create-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ invoiceId: invoice.id }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to create payment session");
+      }
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (error) {
+      console.error("Payment error:", error);
+      notify.error(
+        error instanceof Error ? error.message : "Failed to initiate payment"
+      );
+    }
   };
 
   const toggleInvoiceSelection = (invoiceId: string) => {
@@ -354,6 +411,24 @@ export default function InvoicesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          {invoice.status === 'draft' && (
+                            <DropdownMenuItem onClick={() => handleSendInvoice(invoice)}>
+                              <Send className="h-4 w-4 mr-2" />
+                              Send Invoice
+                            </DropdownMenuItem>
+                          )}
+                          {(invoice.status === 'sent' || invoice.status === 'overdue' || invoice.status === 'partial') && (
+                            <>
+                              <DropdownMenuItem onClick={() => handlePayInvoice(invoice)}>
+                                <CreditCard className="h-4 w-4 mr-2" />
+                                Pay with Card
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleStatusChange(invoice.id, 'paid')}>
+                                <Check className="h-4 w-4 mr-2" />
+                                Mark as Paid
+                              </DropdownMenuItem>
+                            </>
+                          )}
                           <DropdownMenuItem onClick={() => handleViewPDF(invoice.id)}>
                             <Eye className="h-4 w-4 mr-2" />
                             View PDF
@@ -362,15 +437,17 @@ export default function InvoicesPage() {
                             <Download className="h-4 w-4 mr-2" />
                             Download PDF
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setEditingInvoiceId(invoice.id);
-                              setShowInvoiceModal(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            Edit Invoice
-                          </DropdownMenuItem>
+                          {invoice.status === 'draft' && (
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditingInvoiceId(invoice.id);
+                                setShowInvoiceModal(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Invoice
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem>
                             <Calendar className="h-4 w-4 mr-2" />
                             Change Status

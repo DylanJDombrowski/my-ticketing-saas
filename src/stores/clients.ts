@@ -16,7 +16,10 @@ interface ClientsState {
     id: string,
     clientData: Partial<CreateClientForm>
   ) => Promise<{ error?: string }>;
-  deleteClient: (id: string) => Promise<{ error?: string }>;
+  deleteClient: (
+    id: string,
+    force?: boolean
+  ) => Promise<{ error?: string; ticketCount?: number }>;
   setSelectedClient: (client: Client | null) => void;
 }
 
@@ -122,20 +125,47 @@ export const useClientsStore = create<ClientsState>((set) => ({
     }
   },
 
-  deleteClient: async (id: string) => {
+  deleteClient: async (id: string, force?: boolean) => {
     try {
-      // Check if client has tickets
+      // Check if client has associated records
       const { data: tickets } = await supabase
         .from("tickets")
         .select<Pick<Ticket, "id">>("id")
-        .eq("client_id", id)
-        .limit(1);
+        .eq("client_id", id);
 
-      if (tickets && tickets.length > 0) {
-        notify.error("Cannot delete client with existing tickets");
-        return { error: "Cannot delete client with existing tickets" };
+      if (tickets && tickets.length > 0 && !force) {
+        return {
+          error: "HAS_TICKETS",
+          ticketCount: tickets.length
+        };
       }
 
+      // If force delete, cascade delete all associated records
+      if (force && tickets && tickets.length > 0) {
+        // Delete time entries for all tickets
+        const { error: timeEntriesError } = await supabase
+          .from("time_entries")
+          .delete()
+          .in("ticket_id", tickets.map(t => t.id));
+
+        if (timeEntriesError) {
+          notify.error("Failed to delete associated time entries");
+          return { error: timeEntriesError.message };
+        }
+
+        // Delete all tickets
+        const { error: ticketsError } = await supabase
+          .from("tickets")
+          .delete()
+          .eq("client_id", id);
+
+        if (ticketsError) {
+          notify.error("Failed to delete associated tickets");
+          return { error: ticketsError.message };
+        }
+      }
+
+      // Delete the client
       const { error } = await supabase.from("clients").delete().eq("id", id);
 
       if (error) {

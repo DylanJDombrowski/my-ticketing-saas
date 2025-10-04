@@ -47,8 +47,10 @@ export default function ClientsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showClientModal, setShowClientModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showCascadeModal, setShowCascadeModal] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
+  const [ticketCount, setTicketCount] = useState(0);
 
   const { profile } = useAuthStore();
   const { clients, loading, fetchClients, deleteClient } = useClientsStore();
@@ -79,11 +81,31 @@ export default function ClientsPage() {
   const handleConfirmDelete = async () => {
     if (!deletingClient) return;
 
-    const { error } = await deleteClient(deletingClient.id);
+    // First check if client has tickets
+    const result = await deleteClient(deletingClient.id);
 
-    if (!error) {
+    if (result.error === "HAS_TICKETS") {
+      // Close first modal and show cascade warning modal
+      const count = (result as { ticketCount?: number }).ticketCount || 0;
+      setTicketCount(count);
+      setShowConfirmModal(false);
+      setShowCascadeModal(true);
+    } else if (!result.error) {
+      // No tickets, deleted successfully
       setDeletingClient(null);
       setShowConfirmModal(false);
+    }
+    // If other error, it's already shown by the store via toast
+  };
+
+  const handleConfirmCascadeDelete = async () => {
+    if (!deletingClient) return;
+
+    // Force delete with cascade
+    const cascadeResult = await deleteClient(deletingClient.id, true);
+    if (!cascadeResult.error) {
+      setDeletingClient(null);
+      setShowCascadeModal(false);
     }
   };
 
@@ -250,6 +272,26 @@ export default function ClientsPage() {
         title="Delete Client"
         description={`Are you sure you want to delete "${deletingClient?.name}"? This action cannot be undone.`}
         confirmText="Delete"
+        confirmVariant="destructive"
+      />
+
+      <ConfirmModal
+        isOpen={showCascadeModal}
+        onClose={() => {
+          setShowCascadeModal(false);
+          setDeletingClient(null);
+        }}
+        onConfirm={handleConfirmCascadeDelete}
+        title="⚠️ WARNING: Client Has Active Tickets"
+        description={
+          `This client "${deletingClient?.name}" has ${ticketCount} active ticket${ticketCount !== 1 ? 's' : ''}!\n\n` +
+          `Deleting this client will also permanently delete:\n` +
+          `• ${ticketCount} ticket${ticketCount !== 1 ? 's' : ''}\n` +
+          `• All associated time entries\n` +
+          `• All related data\n\n` +
+          `This action CANNOT be undone.`
+        }
+        confirmText="Delete Everything"
         confirmVariant="destructive"
       />
     </div>

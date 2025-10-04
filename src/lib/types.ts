@@ -16,8 +16,15 @@ export interface Profile {
   email: string;
   first_name?: string;
   last_name?: string;
+  default_hourly_rate?: number | null;
   created_at: string;
   updated_at: string;
+  // Stripe Connect
+  stripe_account_id?: string;
+  stripe_account_status?: string;
+  stripe_onboarding_completed?: boolean;
+  default_payment_instructions?: string;
+  // Relations
   tenant?: Tenant;
 }
 
@@ -28,6 +35,7 @@ export interface Client {
   email: string;
   phone?: string;
   company?: string;
+  hourly_rate?: number | null;
   is_active: boolean;
   created_by?: string;
   created_at: string;
@@ -54,6 +62,7 @@ export interface Ticket {
     name: string;
     email: string;
     company?: string;
+    hourly_rate?: number | null;
   };
   assigned_user?: Profile;
   created_user?: Profile;
@@ -74,7 +83,7 @@ export interface TimeEntry {
   id: string;
   tenant_id: string;
   ticket_id: string;
-  user_id: string;
+  profile_id: string;
   description?: string;
   hours: number;
   is_billable: boolean;
@@ -91,6 +100,7 @@ export interface CreateClientForm {
   email: string;
   phone?: string;
   company?: string;
+  hourly_rate?: number;
 }
 
 export interface CreateTicketForm {
@@ -110,7 +120,8 @@ export interface CreateTimeEntryForm {
   entry_date: string;
 }
 
-export type InvoiceStatus = "draft" | "sent" | "paid" | "overdue";
+export type InvoiceStatus = "draft" | "sent" | "paid" | "partial" | "overdue" | "cancelled";
+export type PaymentMethodType = "stripe" | "manual" | "wire" | "check" | "crypto" | "other";
 
 export interface Invoice {
   id: string;
@@ -128,6 +139,15 @@ export interface Invoice {
   created_by?: string;
   created_at: string;
   updated_at: string;
+  // Payment tracking
+  payment_method?: PaymentMethodType;
+  stripe_payment_intent_id?: string;
+  stripe_checkout_session_id?: string;
+  sent_at?: string;
+  sent_to_email?: string;
+  paid_at?: string;
+  amount_paid?: number;
+  // Relations
   client?: Client;
   line_items?: InvoiceLineItem[];
 }
@@ -144,6 +164,47 @@ export interface InvoiceLineItem {
   time_entry?: TimeEntry;
 }
 
+// Manual payment methods (bank, venmo, etc.)
+export interface UserPaymentMethod {
+  id: string;
+  profile_id: string;
+  tenant_id: string;
+  method_type: PaymentMethodType;
+  method_name?: string;
+  instructions: string;
+  is_default: boolean;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreatePaymentMethodForm {
+  method_type: PaymentMethodType;
+  method_name?: string;
+  instructions: string;
+  is_default?: boolean;
+}
+
+// Stripe Connect account
+export interface StripeConnectAccount {
+  id: string;
+  profile_id: string;
+  tenant_id: string;
+  stripe_account_id: string;
+  account_status: string;
+  details_submitted: boolean;
+  charges_enabled: boolean;
+  payouts_enabled: boolean;
+  country?: string;
+  currency?: string;
+  business_type?: string;
+  email?: string;
+  created_at: string;
+  updated_at: string;
+  last_synced_at?: string;
+}
+
+// Legacy payment method type (keeping for backwards compatibility)
 export interface PaymentMethod {
   id: string;
   tenant_id: string;

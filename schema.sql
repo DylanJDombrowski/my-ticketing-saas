@@ -134,25 +134,22 @@ ALTER FUNCTION "public"."generate_client_portal_token"() OWNER TO "postgres";
 
 CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 DECLARE
-  tenant_id UUID;
+  new_tenant_id UUID;
 BEGIN
-  -- Create a new tenant for the user if they don't have one
-  IF NEW.raw_user_meta_data->>'tenant_id' IS NULL THEN
-    INSERT INTO tenants (name, created_at, updated_at)
-    VALUES (
-      COALESCE(NEW.raw_user_meta_data->>'company_name', 'My Company'),
-      NOW(),
-      NOW()
-    )
-    RETURNING id INTO tenant_id;
-  ELSE
-    tenant_id := (NEW.raw_user_meta_data->>'tenant_id')::UUID;
-  END IF;
+  -- Create tenant (SECURITY DEFINER bypasses RLS)
+  INSERT INTO public.tenants (name, created_at, updated_at)
+  VALUES (
+    COALESCE(NEW.raw_user_meta_data->>'company_name', 'My Company'),
+    NOW(),
+    NOW()
+  )
+  RETURNING id INTO new_tenant_id;
 
-  -- Create the user profile
-  INSERT INTO profiles (
+  -- Create profile (SECURITY DEFINER bypasses RLS)
+  INSERT INTO public.profiles (
     id,
     tenant_id,
     email,
@@ -163,7 +160,7 @@ BEGIN
   )
   VALUES (
     NEW.id,
-    tenant_id,
+    new_tenant_id,
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
     COALESCE(NEW.raw_user_meta_data->>'last_name', ''),
@@ -177,6 +174,68 @@ $$;
 
 
 ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."mark_overdue_invoices"() RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+BEGIN
+UPDATE invoices
+SET status = 'overdue',
+updated_at = now()
+WHERE status = 'sent'
+AND due_date IS NOT NULL
+AND due_date < CURRENT_DATE
+AND COALESCE(amount_paid, 0) < total_amount;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."mark_overdue_invoices"() OWNER TO "postgres";
+
+
+COMMENT ON FUNCTION "public"."mark_overdue_invoices"() IS 'Automatically marks invoices as overdue if past due date';
+
+
+
+CREATE OR REPLACE FUNCTION "public"."update_invoice_payment"("p_invoice_id" "uuid", "p_amount_paid" numeric, "p_payment_method" character varying DEFAULT 'stripe'::character varying, "p_stripe_payment_intent_id" character varying DEFAULT NULL::character varying) RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+DECLARE
+v_total_amount NUMERIC(10,2);
+v_current_paid NUMERIC(10,2);
+v_new_total_paid NUMERIC(10,2);
+v_new_status VARCHAR(20);
+BEGIN
+SELECT total_amount, COALESCE(amount_paid, 0)
+INTO v_total_amount, v_current_paid
+FROM invoices
+WHERE id = p_invoice_id;
+
+v_new_total_paid := v_current_paid + p_amount_paid;
+
+IF v_new_total_paid >= v_total_amount THEN
+v_new_status := 'paid';
+ELSIF v_new_total_paid > 0 THEN
+v_new_status := 'partial';
+ELSE
+v_new_status := 'sent';
+END IF;
+
+UPDATE invoices
+SET
+amount_paid = v_new_total_paid,
+status = v_new_status,
+payment_method = COALESCE(p_payment_method, payment_method),
+stripe_payment_intent_id = COALESCE(p_stripe_payment_intent_id, stripe_payment_intent_id),
+paid_at = CASE WHEN v_new_status = 'paid' THEN now() ELSE paid_at END,
+updated_at = now()
+WHERE id = p_invoice_id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."update_invoice_payment"("p_invoice_id" "uuid", "p_amount_paid" numeric, "p_payment_method" character varying, "p_stripe_payment_intent_id" character varying) OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."update_ticket_actual_hours"() RETURNS "trigger"
@@ -203,8 +262,8 @@ CREATE OR REPLACE FUNCTION "public"."update_updated_at_column"() RETURNS "trigge
     LANGUAGE "plpgsql"
     AS $$
 BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
+NEW.updated_at = now();
+RETURN NEW;
 END;
 $$;
 
@@ -283,11 +342,50 @@ CREATE TABLE IF NOT EXISTS "public"."invoices" (
     "next_run_at" timestamp with time zone,
     "approval_status" "text" DEFAULT 'draft'::"text",
     "approved_by" "uuid",
-    "approved_at" timestamp with time zone
+    "approved_at" timestamp with time zone,
+    "payment_method" character varying(50) DEFAULT 'manual'::character varying,
+    "stripe_payment_intent_id" character varying(255),
+    "stripe_checkout_session_id" character varying(255),
+    "sent_at" timestamp without time zone,
+    "sent_to_email" character varying(255),
+    "paid_at" timestamp without time zone,
+    "amount_paid" numeric(10,2) DEFAULT 0
 );
 
 
 ALTER TABLE "public"."invoices" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."invoices"."payment_instructions" IS 'Manual payment instructions specific to this invoice';
+
+
+
+COMMENT ON COLUMN "public"."invoices"."payment_method" IS 'Payment method: stripe, manual, wire, check, crypto, other';
+
+
+
+COMMENT ON COLUMN "public"."invoices"."stripe_payment_intent_id" IS 'Stripe Payment Intent ID';
+
+
+
+COMMENT ON COLUMN "public"."invoices"."stripe_checkout_session_id" IS 'Stripe Checkout Session ID';
+
+
+
+COMMENT ON COLUMN "public"."invoices"."sent_at" IS 'When invoice was sent to client';
+
+
+
+COMMENT ON COLUMN "public"."invoices"."sent_to_email" IS 'Email address invoice was sent to';
+
+
+
+COMMENT ON COLUMN "public"."invoices"."paid_at" IS 'When invoice was fully paid';
+
+
+
+COMMENT ON COLUMN "public"."invoices"."amount_paid" IS 'Amount paid so far (for partial payments)';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."notification_log" (
@@ -361,11 +459,31 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "last_name" character varying(50),
     "created_at" timestamp with time zone DEFAULT "now"(),
     "updated_at" timestamp with time zone DEFAULT "now"(),
-    "default_hourly_rate" numeric(10,2) DEFAULT 75.00
+    "default_hourly_rate" numeric(10,2) DEFAULT 75.00,
+    "stripe_account_id" character varying(255),
+    "stripe_account_status" character varying(50) DEFAULT 'none'::character varying,
+    "stripe_onboarding_completed" boolean DEFAULT false,
+    "default_payment_instructions" "text"
 );
 
 
 ALTER TABLE "public"."profiles" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."profiles"."stripe_account_id" IS 'Stripe Connect account ID for receiving payments';
+
+
+
+COMMENT ON COLUMN "public"."profiles"."stripe_account_status" IS 'Status: none, pending, active, restricted';
+
+
+
+COMMENT ON COLUMN "public"."profiles"."stripe_onboarding_completed" IS 'Whether user completed Stripe onboarding';
+
+
+
+COMMENT ON COLUMN "public"."profiles"."default_payment_instructions" IS 'Default manual payment instructions (bank, Venmo, etc.)';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."sla_rules" (
@@ -382,6 +500,48 @@ CREATE TABLE IF NOT EXISTS "public"."sla_rules" (
 
 
 ALTER TABLE "public"."sla_rules" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."stripe_connect_accounts" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "user_id" "uuid" NOT NULL,
+    "tenant_id" "uuid" NOT NULL,
+    "stripe_account_id" character varying(255) NOT NULL,
+    "account_status" character varying(50) DEFAULT 'pending'::character varying,
+    "details_submitted" boolean DEFAULT false,
+    "charges_enabled" boolean DEFAULT false,
+    "payouts_enabled" boolean DEFAULT false,
+    "country" character varying(2),
+    "currency" character varying(3),
+    "business_type" character varying(50),
+    "email" character varying(255),
+    "created_at" timestamp without time zone DEFAULT "now"(),
+    "updated_at" timestamp without time zone DEFAULT "now"(),
+    "last_synced_at" timestamp without time zone
+);
+
+
+ALTER TABLE "public"."stripe_connect_accounts" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."stripe_connect_accounts" IS 'Tracks Stripe Connect account setup and status';
+
+
+
+COMMENT ON COLUMN "public"."stripe_connect_accounts"."account_status" IS 'Stripe account status from API';
+
+
+
+COMMENT ON COLUMN "public"."stripe_connect_accounts"."details_submitted" IS 'Whether user completed Stripe onboarding';
+
+
+
+COMMENT ON COLUMN "public"."stripe_connect_accounts"."charges_enabled" IS 'Can accept payments';
+
+
+
+COMMENT ON COLUMN "public"."stripe_connect_accounts"."payouts_enabled" IS 'Can receive payouts';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."tenants" (
@@ -506,6 +666,16 @@ ALTER TABLE ONLY "public"."sla_rules"
 
 
 
+ALTER TABLE ONLY "public"."stripe_connect_accounts"
+    ADD CONSTRAINT "stripe_connect_accounts_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."stripe_connect_accounts"
+    ADD CONSTRAINT "stripe_connect_accounts_stripe_account_id_key" UNIQUE ("stripe_account_id");
+
+
+
 ALTER TABLE ONLY "public"."tenants"
     ADD CONSTRAINT "tenants_pkey" PRIMARY KEY ("id");
 
@@ -554,7 +724,23 @@ CREATE INDEX "idx_invoices_created_at" ON "public"."invoices" USING "btree" ("cr
 
 
 
+CREATE INDEX "idx_invoices_due_date" ON "public"."invoices" USING "btree" ("due_date");
+
+
+
+CREATE INDEX "idx_invoices_payment_method" ON "public"."invoices" USING "btree" ("payment_method");
+
+
+
+CREATE INDEX "idx_invoices_sent_at" ON "public"."invoices" USING "btree" ("sent_at");
+
+
+
 CREATE INDEX "idx_invoices_status" ON "public"."invoices" USING "btree" ("status");
+
+
+
+CREATE INDEX "idx_invoices_stripe_payment_intent" ON "public"."invoices" USING "btree" ("stripe_payment_intent_id");
 
 
 
@@ -590,11 +776,27 @@ CREATE INDEX "idx_payments_tenant_id" ON "public"."payments" USING "btree" ("ten
 
 
 
+CREATE INDEX "idx_profiles_stripe_account" ON "public"."profiles" USING "btree" ("stripe_account_id");
+
+
+
 CREATE INDEX "idx_profiles_tenant_id" ON "public"."profiles" USING "btree" ("tenant_id");
 
 
 
 CREATE INDEX "idx_sla_rules_tenant_id" ON "public"."sla_rules" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_stripe_accounts_stripe_id" ON "public"."stripe_connect_accounts" USING "btree" ("stripe_account_id");
+
+
+
+CREATE INDEX "idx_stripe_accounts_tenant" ON "public"."stripe_connect_accounts" USING "btree" ("tenant_id");
+
+
+
+CREATE INDEX "idx_stripe_accounts_user" ON "public"."stripe_connect_accounts" USING "btree" ("user_id");
 
 
 
@@ -662,11 +864,19 @@ CREATE OR REPLACE TRIGGER "update_invoices_updated_at" BEFORE UPDATE ON "public"
 
 
 
+CREATE OR REPLACE TRIGGER "update_payment_methods_updated_at" BEFORE UPDATE ON "public"."payment_methods" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
 CREATE OR REPLACE TRIGGER "update_payments_updated_at" BEFORE UPDATE ON "public"."payments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
 CREATE OR REPLACE TRIGGER "update_profiles_updated_at" BEFORE UPDATE ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_stripe_accounts_updated_at" BEFORE UPDATE ON "public"."stripe_connect_accounts" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
@@ -778,6 +988,16 @@ ALTER TABLE ONLY "public"."sla_rules"
 
 
 
+ALTER TABLE ONLY "public"."stripe_connect_accounts"
+    ADD CONSTRAINT "stripe_connect_accounts_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."stripe_connect_accounts"
+    ADD CONSTRAINT "stripe_connect_accounts_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."ticket_comments"
     ADD CONSTRAINT "ticket_comments_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."profiles"("id");
 
@@ -833,6 +1053,10 @@ ALTER TABLE ONLY "public"."time_entries"
 
 
 
+CREATE POLICY "Users can insert own Stripe account" ON "public"."stripe_connect_accounts" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
 CREATE POLICY "Users can manage invoice line items" ON "public"."invoice_line_items" USING (("invoice_id" IN ( SELECT "invoices"."id"
    FROM "public"."invoices"
   WHERE ("invoices"."tenant_id" = ( SELECT "profiles"."tenant_id"
@@ -879,13 +1103,11 @@ CREATE POLICY "Users can manage ticket comments" ON "public"."ticket_comments" U
 
 
 
-CREATE POLICY "Users can view their own profile" ON "public"."profiles" USING (("id" = "auth"."uid"()));
+CREATE POLICY "Users can update own Stripe account" ON "public"."stripe_connect_accounts" FOR UPDATE TO "authenticated" USING (("user_id" = "auth"."uid"())) WITH CHECK (("user_id" = "auth"."uid"()));
 
 
 
-CREATE POLICY "Users can view their own tenant" ON "public"."tenants" FOR SELECT USING (("id" = ( SELECT "profiles"."tenant_id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"()))));
+CREATE POLICY "Users can view own Stripe account" ON "public"."stripe_connect_accounts" FOR SELECT TO "authenticated" USING (("user_id" = "auth"."uid"()));
 
 
 
@@ -997,15 +1219,15 @@ CREATE POLICY "payments_tenant_policy" ON "public"."payments" TO "authenticated"
 ALTER TABLE "public"."profiles" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "profiles_own_record" ON "public"."profiles" TO "authenticated" USING (("id" = "auth"."uid"())) WITH CHECK (("id" = "auth"."uid"()));
+CREATE POLICY "profiles_insert_own" ON "public"."profiles" FOR INSERT TO "authenticated" WITH CHECK (("id" = "auth"."uid"()));
 
 
 
-CREATE POLICY "profiles_own_tenant" ON "public"."profiles" TO "authenticated" USING (("tenant_id" = ( SELECT "profiles_1"."tenant_id"
-   FROM "public"."profiles" "profiles_1"
-  WHERE ("profiles_1"."id" = "auth"."uid"())))) WITH CHECK (("tenant_id" = ( SELECT "profiles_1"."tenant_id"
-   FROM "public"."profiles" "profiles_1"
-  WHERE ("profiles_1"."id" = "auth"."uid"()))));
+CREATE POLICY "profiles_select_own" ON "public"."profiles" FOR SELECT TO "authenticated" USING (("id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "profiles_update_own" ON "public"."profiles" FOR UPDATE TO "authenticated" USING (("id" = "auth"."uid"())) WITH CHECK (("id" = "auth"."uid"()));
 
 
 
@@ -1018,14 +1240,16 @@ CREATE POLICY "sla_rules_tenant_policy" ON "public"."sla_rules" TO "authenticate
 
 
 
+ALTER TABLE "public"."stripe_connect_accounts" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."tenants" ENABLE ROW LEVEL SECURITY;
 
 
-CREATE POLICY "tenants_own_tenant" ON "public"."tenants" TO "authenticated" USING (("id" = ( SELECT "profiles"."tenant_id"
+CREATE POLICY "tenants_select_own" ON "public"."tenants" FOR SELECT TO "authenticated" USING (("id" IN ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"())))) WITH CHECK (("id" = ( SELECT "profiles"."tenant_id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"()))));
+  WHERE ("profiles"."id" = "auth"."uid"())
+ LIMIT 1)));
 
 
 
@@ -1260,6 +1484,18 @@ GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."mark_overdue_invoices"() TO "anon";
+GRANT ALL ON FUNCTION "public"."mark_overdue_invoices"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."mark_overdue_invoices"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."update_invoice_payment"("p_invoice_id" "uuid", "p_amount_paid" numeric, "p_payment_method" character varying, "p_stripe_payment_intent_id" character varying) TO "anon";
+GRANT ALL ON FUNCTION "public"."update_invoice_payment"("p_invoice_id" "uuid", "p_amount_paid" numeric, "p_payment_method" character varying, "p_stripe_payment_intent_id" character varying) TO "authenticated";
+GRANT ALL ON FUNCTION "public"."update_invoice_payment"("p_invoice_id" "uuid", "p_amount_paid" numeric, "p_payment_method" character varying, "p_stripe_payment_intent_id" character varying) TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."update_ticket_actual_hours"() TO "anon";
 GRANT ALL ON FUNCTION "public"."update_ticket_actual_hours"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."update_ticket_actual_hours"() TO "service_role";
@@ -1338,6 +1574,12 @@ GRANT ALL ON TABLE "public"."profiles" TO "service_role";
 GRANT ALL ON TABLE "public"."sla_rules" TO "anon";
 GRANT ALL ON TABLE "public"."sla_rules" TO "authenticated";
 GRANT ALL ON TABLE "public"."sla_rules" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."stripe_connect_accounts" TO "anon";
+GRANT ALL ON TABLE "public"."stripe_connect_accounts" TO "authenticated";
+GRANT ALL ON TABLE "public"."stripe_connect_accounts" TO "service_role";
 
 
 

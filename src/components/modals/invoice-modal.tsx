@@ -102,9 +102,16 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
     if (!profile?.tenant_id) return;
 
     try {
-      await fetchUnbilledTimeEntries(profile.tenant_id);
-      // Note: The time entries store would need to be updated to support client filtering
-      // For now, we'll fetch all unbilled entries and filter on the frontend
+      await fetchUnbilledTimeEntries(profile.tenant_id, clientId);
+      // Get the time entries from the store after fetching
+      const { timeEntries } = useTimeEntriesStore.getState();
+
+      // Filter by client if specified
+      const filtered = clientId
+        ? timeEntries.filter(entry => entry.ticket?.client?.id === clientId)
+        : timeEntries;
+
+      setAvailableTimeEntries(filtered);
     } catch (error) {
       console.error("Error loading unbilled time entries:", error);
     }
@@ -130,8 +137,8 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
   const calculateInvoiceTotal = () => {
     const selectedEntries = getSelectedTimeEntriesData();
     const subtotal = selectedEntries.reduce((sum, entry) => {
-      // Use client's hourly rate or default to $75/hour
-      const rate = 75; // TODO: Get actual rate from client or profile
+      // Use client's hourly rate, or user's default rate, or fallback to 0
+      const rate = entry.ticket?.client?.hourly_rate ?? entry.user?.default_hourly_rate ?? 0;
       return sum + (entry.hours * rate);
     }, 0);
 
@@ -278,7 +285,7 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
                     </TableHeader>
                     <TableBody>
                       {availableTimeEntries.map((entry) => {
-                        const rate = 75; // TODO: Get actual rate
+                        const rate = entry.ticket?.client?.hourly_rate ?? entry.user?.default_hourly_rate ?? 0;
                         const amount = entry.hours * rate;
 
                         return (
