@@ -159,13 +159,13 @@ export default function PaymentsSettingsPage() {
           {!stripeStatus.connected ? (
             <>
               <p className="text-sm text-muted-foreground">
-                Connect your Stripe account to accept credit card payments for your
-                invoices. Stripe handles all payment processing securely.
+                Connect your Stripe account to accept credit card payments for
+                your invoices. Stripe handles all payment processing securely.
               </p>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h4 className="font-semibold text-blue-900 mb-2">
-                  What you'll need:
+                  What you&apos;ll need:
                 </h4>
                 <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
                   <li>Business information (name, address, tax ID)</li>
@@ -249,18 +249,14 @@ export default function PaymentsSettingsPage() {
               {stripeStatus.status === "active" && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <p className="text-sm text-green-800">
-                    ✓ Your Stripe account is fully configured and ready to accept
-                    payments!
+                    ✓ Your Stripe account is fully configured and ready to
+                    accept payments!
                   </p>
                 </div>
               )}
 
               <div className="pt-4">
-                <Button
-                  onClick={fetchStatus}
-                  variant="outline"
-                  size="sm"
-                >
+                <Button onClick={fetchStatus} variant="outline" size="sm">
                   Refresh Status
                 </Button>
               </div>
@@ -294,7 +290,7 @@ export default function PaymentsSettingsPage() {
               <div>
                 <h4 className="font-semibold">Create & Send Invoices</h4>
                 <p className="text-sm text-muted-foreground">
-                  Your invoices will include a "Pay Now" button
+                  Your invoices will include a &quot;Pay Now&quot; button
                 </p>
               </div>
             </div>
