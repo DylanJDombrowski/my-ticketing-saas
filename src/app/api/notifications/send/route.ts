@@ -1,4 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
+export const dynamic = 'force-dynamic';
 import { createServerClient } from "@/lib/supabase-server";
 
 export interface NotificationRequest {

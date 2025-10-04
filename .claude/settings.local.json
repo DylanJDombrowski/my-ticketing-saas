@@ -19,7 +19,8 @@
       "Bash(npm:*)",
       "Bash(test:*)",
       "Bash(sed:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

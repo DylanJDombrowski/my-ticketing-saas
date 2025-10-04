@@ -1,8 +1,7 @@
 import Mustache from "mustache";
+export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
-
-type RouteContext = { params: { id: string } };
 
 type InvoiceLineItemRecord = {
   id: string;
@@ -20,9 +19,9 @@ type InvoiceLineItemRecord = {
 
 export async function GET(
   _req: Request,
-  context: RouteContext
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = context.params;
+  const { id } = await params;
   const supabase = await createServerClient();
 
   // SECURITY: Get current user and verify authentication

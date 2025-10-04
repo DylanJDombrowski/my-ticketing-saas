@@ -116,9 +116,7 @@ export default function TimeEntriesPage() {
       user_name: (entry.user as any)?.email || "Unknown User",
     }));
 
-    exportTimeEntries(exportData, {
-      filename: `time-entries-${dateFilter}-to-${endDateFilter}`,
-    });
+    exportTimeEntries(exportData, `time-entries-${dateFilter}-to-${endDateFilter}`);
   };
 
   // Set up keyboard shortcuts for this page

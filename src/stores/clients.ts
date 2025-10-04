@@ -37,7 +37,7 @@ export const useClientsStore = create<ClientsState>((set) => ({
     try {
       const { data, error } = await supabase
         .from("clients")
-        .select<Client>("*")
+        .select("*")
         .eq("tenant_id", tenantId)
         .order("name", { ascending: true });
 
@@ -59,7 +59,7 @@ export const useClientsStore = create<ClientsState>((set) => ({
           tenant_id: tenantId,
           ...clientData,
         })
-        .select<Client>()
+        .select()
         .single();
 
       if (error) {
@@ -94,7 +94,7 @@ export const useClientsStore = create<ClientsState>((set) => ({
         .from("clients")
         .update(clientData)
         .eq("id", id)
-        .select<Client>()
+        .select()
         .single();
 
       if (error) {
@@ -130,7 +130,7 @@ export const useClientsStore = create<ClientsState>((set) => ({
       // Check if client has associated records
       const { data: tickets } = await supabase
         .from("tickets")
-        .select<Pick<Ticket, "id">>("id")
+        .select("id")
         .eq("client_id", id);
 
       if (tickets && tickets.length > 0 && !force) {

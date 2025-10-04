@@ -1,8 +1,16 @@
 import { NextResponse, NextRequest } from "next/server";
+export const dynamic = 'force-dynamic';
 import { createServerClient } from "@/lib/supabase-server";
-import type { TimeEntry, AutoInvoiceGenerationForm, InvoiceLineItem } from "@/lib/types";
+import type { AutoInvoiceGenerationForm, InvoiceLineItem } from "@/lib/types";
 
-interface TimeEntryWithRates extends TimeEntry {
+interface TimeEntryWithRates {
+  id: string;
+  description: string | null;
+  hours: number;
+  is_billable: boolean;
+  entry_date: string;
+  ticket_id: string;
+  user_id: string;
   ticket?: {
     client?: {
       id: string;

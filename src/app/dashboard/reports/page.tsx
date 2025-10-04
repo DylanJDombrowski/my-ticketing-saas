@@ -290,8 +290,9 @@ export default function ReportsPage() {
       const userTimeMap = new Map<string, TimeTrackingReport>();
       (timeTrackingResponse.data || []).forEach(entry => {
         const userId = entry.user_id;
-        const userName = entry.profiles
-          ? `${entry.profiles.first_name || ''} ${entry.profiles.last_name || ''}`.trim()
+        const profiles = Array.isArray(entry.profiles) ? entry.profiles[0] : entry.profiles;
+        const userName = profiles
+          ? `${profiles.first_name || ''} ${profiles.last_name || ''}`.trim()
           : 'Unknown User';
 
         if (!userTimeMap.has(userId)) {
@@ -318,14 +319,15 @@ export default function ReportsPage() {
       // Process client reports
       const clientMap = new Map<string, ClientReport>();
       (clientRevenueResponse.data || []).forEach(entry => {
-        const client = entry.tickets?.clients;
-        if (!client) return;
+        const tickets = Array.isArray(entry.tickets) ? entry.tickets[0] : entry.tickets;
+        const clients = Array.isArray(tickets?.clients) ? tickets.clients[0] : tickets?.clients;
+        if (!clients) return;
 
-        const clientId = client.id;
+        const clientId = clients.id;
         if (!clientMap.has(clientId)) {
           clientMap.set(clientId, {
             clientId,
-            clientName: client.name,
+            clientName: clients.name,
             totalHours: 0,
             totalRevenue: 0,
             ticketCount: 0,

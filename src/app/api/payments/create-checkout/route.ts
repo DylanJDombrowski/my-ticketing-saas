@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe, formatAmountForStripe, STRIPE_CONFIG } from '@/lib/stripe';
 import { createServerClient } from '@/lib/supabase-server';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req: NextRequest) {
   try {
     const { invoice_id } = await req.json();

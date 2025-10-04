@@ -53,7 +53,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
     try {
       let query = supabase
         .from("time_entries")
-        .select<TimeEntry>(
+        .select(
           `
           *,
           ticket:tickets(id, title, client:clients(id, name)),
@@ -100,7 +100,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
     try {
       let query = supabase
         .from("time_entries")
-        .select<TimeEntry>(
+        .select(
           `
           *,
           ticket:tickets(id, title, client:clients(id, name, hourly_rate)),
@@ -145,7 +145,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
           user_id: userId,
           ...timeEntryData,
         })
-        .select<TimeEntry>(
+        .select(
           `
           *,
           ticket:tickets(id, title, client:clients(id, name)),
@@ -185,7 +185,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
         .from("time_entries")
         .update(timeEntryData)
         .eq("id", id)
-        .select<TimeEntry>(
+        .select(
           `
           *,
           ticket:tickets(id, title, client:clients(id, name)),

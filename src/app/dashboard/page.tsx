@@ -92,7 +92,10 @@ export default function DashboardPage() {
       const ticketStats = tickets.reduce(
         (acc, ticket) => {
           // Count by status
-          acc[ticket.status]++;
+          const status = ticket.status as keyof typeof acc;
+          if (status in acc) {
+            acc[status]++;
+          }
 
           // Check if overdue
           if (

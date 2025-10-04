@@ -3,6 +3,8 @@ import { stripe } from '@/lib/stripe';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 
+export const dynamic = 'force-dynamic';
+
 // Create admin Supabase client for webhook (bypasses RLS)
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -144,15 +146,18 @@ async function handlePaymentSucceeded(paymentIntent: Stripe.PaymentIntent) {
     .single();
 
   // Create notification log
-  if (invoice?.client?.email) {
-    await supabaseAdmin.from('notification_log').insert({
-      tenant_id: payment.tenant_id,
-      recipient_email: invoice.client.email,
-      notification_type: 'payment_received',
-      subject: `Payment Received - Invoice ${invoice.invoice_number}`,
-      message_body: `Payment of $${invoice.total_amount} has been received for invoice ${invoice.invoice_number}. Thank you!`,
-      status: 'pending',
-    });
+  if (invoice) {
+    const client = Array.isArray(invoice.client) ? invoice.client[0] : invoice.client;
+    if (client?.email) {
+      await supabaseAdmin.from('notification_log').insert({
+        tenant_id: payment.tenant_id,
+        recipient_email: client.email,
+        notification_type: 'payment_received',
+        subject: `Payment Received - Invoice ${invoice.invoice_number}`,
+        message_body: `Payment of $${invoice.total_amount} has been received for invoice ${invoice.invoice_number}. Thank you!`,
+        status: 'pending',
+      });
+    }
   }
 
   console.log(`Payment succeeded for invoice ${payment.invoice_id}`);

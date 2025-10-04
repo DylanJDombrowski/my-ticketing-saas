@@ -52,7 +52,7 @@ export const useTicketsStore = create<TicketsState>((set) => ({
     try {
       let query = supabase
         .from("tickets")
-        .select<Ticket>(
+        .select(
           `
           *,
           client:clients(id, name, email, company),
@@ -100,7 +100,7 @@ export const useTicketsStore = create<TicketsState>((set) => ({
     try {
       const { data, error } = await supabase
         .from("tickets")
-        .select<Ticket>(
+        .select(
           `
           *,
           client:clients(id, name, email, company),
@@ -133,7 +133,7 @@ export const useTicketsStore = create<TicketsState>((set) => ({
           tenant_id: tenantId,
           ...ticketData,
         })
-        .select<Ticket>(
+        .select(
           `
           *,
           client:clients(id, name, email, company),
@@ -169,7 +169,7 @@ export const useTicketsStore = create<TicketsState>((set) => ({
         .from("tickets")
         .update(ticketData)
         .eq("id", id)
-        .select<Ticket>(
+        .select(
           `
           *,
           client:clients(id, name, email, company),
@@ -209,7 +209,7 @@ export const useTicketsStore = create<TicketsState>((set) => ({
         .from("tickets")
         .update({ status })
         .eq("id", id)
-        .select<Ticket>(
+        .select(
           `
           *,
           client:clients(id, name, email, company),

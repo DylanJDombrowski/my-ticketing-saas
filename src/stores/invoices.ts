@@ -6,11 +6,17 @@ import type {
   CreateInvoiceForm,
   InvoiceStatus,
   InvoiceLineItem,
-  TimeEntry,
 } from "@/lib/types";
 import { useTimeEntriesStore } from "./time-entries";
 
-interface TimeEntryWithRates extends TimeEntry {
+interface TimeEntryWithRates {
+  id: string;
+  description: string | null;
+  hours: number;
+  is_billable: boolean;
+  entry_date: string;
+  ticket_id: string;
+  user_id: string;
   ticket?: { client?: { id: string; hourly_rate: number | null } };
   user?: { id: string; default_hourly_rate: number | null };
 }
@@ -68,7 +74,7 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
     try {
       let query = supabase
         .from("invoices")
-        .select<Invoice>(
+        .select(
           `*, client:clients(*), line_items:invoice_line_items(*, time_entry:time_entries(*))`
         )
         .eq("tenant_id", tenantId);
@@ -104,7 +110,7 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from("invoices")
-        .select<Invoice>(
+        .select(
           `*, client:clients(*), line_items:invoice_line_items(*, time_entry:time_entries(*))`
         )
         .eq("tenant_id", tenantId)
@@ -124,7 +130,7 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
     try {
       const { data: entries, error: entriesError } = await supabase
         .from("time_entries")
-        .select<TimeEntryWithRates>(
+        .select(
           `id, description, hours, ticket:tickets(client:clients(id, hourly_rate)), user:profiles!time_entries_user_id_fkey(id, default_hourly_rate)`
         )
         .in("id", invoiceData.time_entry_ids);
@@ -132,8 +138,11 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
       if (entriesError) throw entriesError;
 
       const lineItems: InvoiceLineItem[] = (entries || []).map((entry) => {
+        const ticket = Array.isArray(entry.ticket) ? entry.ticket[0] : entry.ticket;
+        const client = Array.isArray(ticket?.client) ? ticket.client[0] : ticket?.client;
+        const user = Array.isArray(entry.user) ? entry.user[0] : entry.user;
         const rate =
-          entry.ticket?.client?.hourly_rate ?? entry.user?.default_hourly_rate ?? 0;
+          client?.hourly_rate ?? user?.default_hourly_rate ?? 0;
         const amount = rate * entry.hours;
         return {
           id: "", // placeholder, Supabase will generate
@@ -168,7 +177,7 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
           payment_instructions: invoiceData.payment_instructions,
           notes: invoiceData.notes,
         })
-        .select<Invoice>()
+        .select()
         .single();
 
       if (invoiceError) throw invoiceError;
@@ -328,7 +337,7 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
     const prefix = `INV-${year}-`;
     const { data, error } = await supabase
       .from("invoices")
-      .select<Pick<Invoice, "invoice_number">>("invoice_number")
+      .select("invoice_number")
       .eq("tenant_id", tenantId)
       .like("invoice_number", `${prefix}%`)
       .order("invoice_number", { ascending: false })

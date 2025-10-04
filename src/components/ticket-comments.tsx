@@ -104,7 +104,13 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
 
       if (error) throw error;
 
-      setComments(data || []);
+      // Transform data to handle created_user being an array
+      const transformedComments = (data || []).map(comment => ({
+        ...comment,
+        created_user: Array.isArray(comment.created_user) ? comment.created_user[0] : comment.created_user
+      }));
+
+      setComments(transformedComments);
     } catch (error) {
       handleError("Failed to fetch comments", {
         operation: "fetchComments",
@@ -148,7 +154,13 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
 
       if (error) throw error;
 
-      setComments(prev => [...prev, newComment]);
+      // Transform newComment to handle created_user being an array
+      const transformedNewComment = {
+        ...newComment,
+        created_user: Array.isArray(newComment.created_user) ? newComment.created_user[0] : newComment.created_user
+      };
+
+      setComments(prev => [...prev, transformedNewComment]);
       reset();
       notify.success("Comment added successfully");
     } catch (error) {

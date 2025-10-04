@@ -175,7 +175,7 @@ export function TimeTracker() {
 
   const createNewSession = (ticketId: string) => {
     if (session && session.elapsedTime > 0) {
-      notify.warning("Please save or discard the current session before starting a new one");
+      notify.error("Please save or discard the current session before starting a new one");
       return;
     }
 

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+export const dynamic = 'force-dynamic';
 import { createServerClient } from "@/lib/supabase-server";
 
-export async function GET(request: Request, { params }: any) {
-  const { token } = params;
+export async function GET(request: Request, { params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
 
   try {
     const supabase = await createServerClient();
