@@ -1,15 +1,15 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { token: string } }
+  request: Request,
+  context: { params: { token: string } }
 ) {
+  const { token } = context.params;
+
   try {
     const supabase = await createServerClient();
-    const { token } = params;
 
-    // Validate token and get client info
     const { data: portalAccess, error: accessError } = await supabase
       .from("client_portal_access")
       .select(`
@@ -38,28 +38,19 @@ export async function GET(
       .single();
 
     if (accessError || !portalAccess) {
-      return NextResponse.json(
-        { error: "Invalid or expired access token" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Invalid or expired access token" }, { status: 401 });
     }
 
-    // Check if token is expired
     if (portalAccess.expires_at && new Date(portalAccess.expires_at) < new Date()) {
-      return NextResponse.json(
-        { error: "Access token has expired" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Access token has expired" }, { status: 401 });
     }
 
-    // Update last accessed timestamp
     await supabase
       .from("client_portal_access")
       .update({ last_accessed: new Date().toISOString() })
       .eq("id", portalAccess.id);
 
-    // Get client's invoices
-    const { data: invoices, error: invoicesError } = await supabase
+    const { data: invoices } = await supabase
       .from("invoices")
       .select(`
         id,
@@ -74,16 +65,7 @@ export async function GET(
       .eq("client_id", portalAccess.client_id)
       .order("created_at", { ascending: false });
 
-    if (invoicesError) {
-      console.error("Error fetching invoices:", invoicesError);
-      return NextResponse.json(
-        { error: "Failed to fetch invoices" },
-        { status: 500 }
-      );
-    }
-
-    // Get client's tickets
-    const { data: tickets, error: ticketsError } = await supabase
+    const { data: tickets } = await supabase
       .from("tickets")
       .select(`
         id,
@@ -98,14 +80,6 @@ export async function GET(
       .order("created_at", { ascending: false })
       .limit(10);
 
-    if (ticketsError) {
-      console.error("Error fetching tickets:", ticketsError);
-      return NextResponse.json(
-        { error: "Failed to fetch tickets" },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json({
       client: portalAccess.client,
       invoices: invoices || [],
@@ -116,30 +90,22 @@ export async function GET(
         last_accessed: new Date().toISOString()
       }
     });
-
   } catch (error) {
     console.error("Client portal access error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 export async function POST(
-  req: NextRequest,
-  { params }: { params: { token: string } }
+  request: Request,
+  context: { params: { token: string } }
 ) {
   try {
     const supabase = await createServerClient();
-    const body = await req.json();
-    const { client_id, expires_in_days = 30 } = body;
+    const { client_id, expires_in_days = 30 } = await request.json();
 
-    // Validate admin access
     const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (userError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -147,11 +113,8 @@ export async function POST(
       .eq("id", user.id)
       .single();
 
-    if (!profile) {
-      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-    }
+    if (!profile) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
 
-    // Validate client belongs to user's tenant
     const { data: client } = await supabase
       .from("clients")
       .select("id")
@@ -160,25 +123,17 @@ export async function POST(
       .single();
 
     if (!client) {
-      return NextResponse.json(
-        { error: "Client not found or access denied" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Client not found or access denied" }, { status: 404 });
     }
 
-    // Call the database function to create portal access
-    const { data: tokenResult, error: tokenError } = await supabase
-      .rpc("create_client_portal_access", {
-        p_client_id: client_id,
-        p_expires_in_days: expires_in_days
-      });
+    const { data: tokenResult, error: tokenError } = await supabase.rpc(
+      "create_client_portal_access",
+      { p_client_id: client_id, p_expires_in_days: expires_in_days }
+    );
 
     if (tokenError) {
       console.error("Error creating portal access:", tokenError);
-      return NextResponse.json(
-        { error: "Failed to create portal access" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to create portal access" }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -187,12 +142,8 @@ export async function POST(
       portal_url: `/client-portal/${tokenResult}`,
       expires_in_days
     });
-
   } catch (error) {
     console.error("Client portal creation error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
