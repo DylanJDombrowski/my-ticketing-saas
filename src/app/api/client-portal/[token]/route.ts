@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { token: string } }
 ) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { token } = params;
 
     // Validate token and get client info
@@ -132,7 +132,7 @@ export async function POST(
   { params }: { params: { token: string } }
 ) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const body = await request.json();
     const { client_id, expires_in_days = 30 } = body;
 
