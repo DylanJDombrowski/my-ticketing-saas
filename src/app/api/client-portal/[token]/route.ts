@@ -93,10 +93,9 @@ export async function GET(request: Request, { params }: any) {
   }
 }
 
-export async function POST(
-  request: Request,
-  context: { params: { token: string } }
-) {
+export async function POST(request: Request, { params }: any) {
+  const { token } = params;
+
   try {
     const supabase = await createServerClient();
     const { client_id, expires_in_days = 30 } = await request.json();
