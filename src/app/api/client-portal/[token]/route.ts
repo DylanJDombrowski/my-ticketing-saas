@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 
 export async function GET(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: { token: string } }
 ) {
   try {
@@ -96,7 +96,7 @@ export async function GET(
       `)
       .eq("client_id", portalAccess.client_id)
       .order("created_at", { ascending: false })
-      .limit(10); // Limit to recent tickets
+      .limit(10);
 
     if (ticketsError) {
       console.error("Error fetching tickets:", ticketsError);
@@ -126,17 +126,15 @@ export async function GET(
   }
 }
 
-// POST endpoint to create new client portal access
 export async function POST(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: { token: string } }
 ) {
   try {
     const supabase = await createServerClient();
-    const body = await request.json();
+    const body = await req.json();
     const { client_id, expires_in_days = 30 } = body;
 
-    // This endpoint should be called from authenticated admin routes
     // Validate admin access
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
