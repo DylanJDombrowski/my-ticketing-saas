@@ -22,7 +22,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Trash2, Edit } from "lucide-react";
 import { useAuthStore } from "@/stores/auth";
-import { supabase } from "@/lib/supabase";
+import { createBrowserClient } from "@/lib/supabase";
 import { toast } from "sonner";
 
 interface SLARule {
@@ -48,6 +48,8 @@ interface SLARulesModalProps {
   onClose: () => void;
   onSuccess: () => void;
 }
+
+const supabase = createBrowserClient();
 
 export function SLARulesModal({
   open,
