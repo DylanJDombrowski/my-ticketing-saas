@@ -17,7 +17,9 @@
       "Bash(supabase status:*)",
       "Bash(node:*)",
       "Bash(npm:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)"
     ],
     "deny": [],
     "ask": []

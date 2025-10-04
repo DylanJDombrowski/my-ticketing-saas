@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get authenticated user
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
@@ -64,6 +64,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Handle client being returned as array
+    const client = Array.isArray(invoice.client) ? invoice.client[0] : invoice.client;
+
     // Don't allow payment for already paid invoices
     if (invoice.status === 'paid') {
       return NextResponse.json(
@@ -89,7 +92,7 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
-      customer_email: invoice.client?.email,
+      customer_email: client?.email,
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/client-portal/payment-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/client-portal/payment-cancel?invoice_id=${invoice_id}`,
       metadata: {

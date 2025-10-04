@@ -4,7 +4,7 @@ import { createServerClient } from "@/lib/supabase-server";
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { invoiceId } = await request.json();
 
     if (!invoiceId) {
@@ -40,10 +40,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Handle created_by_user being returned as array
+    const createdByUser = Array.isArray(invoice.created_by_user) ? invoice.created_by_user[0] : invoice.created_by_user;
+
     // Check if user has connected Stripe account
     if (
-      !invoice.created_by_user?.stripe_account_id ||
-      !invoice.created_by_user?.stripe_onboarding_completed
+      !createdByUser?.stripe_account_id ||
+      !createdByUser?.stripe_onboarding_completed
     ) {
       return NextResponse.json(
         { error: "Stripe account not connected. Please complete onboarding first." },
@@ -88,7 +91,7 @@ export async function POST(request: NextRequest) {
         },
       },
       {
-        stripeAccount: invoice.created_by_user.stripe_account_id,
+        stripeAccount: createdByUser.stripe_account_id,
       }
     );
 

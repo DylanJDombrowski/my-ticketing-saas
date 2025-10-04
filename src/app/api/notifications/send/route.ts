@@ -12,7 +12,7 @@ export interface NotificationRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const body = await request.json() as NotificationRequest;
 
     const {
@@ -189,7 +189,7 @@ async function sendEmail({ to, subject, body, notification_id }: {
 // GET endpoint to retrieve notification logs
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const type = searchParams.get('type');

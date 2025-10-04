@@ -9,17 +9,37 @@ interface TimeEntryWithRates extends TimeEntry {
       name: string;
       email: string;
       hourly_rate: number | null;
-    }
-  };
+    } | Array<{
+      id: string;
+      name: string;
+      email: string;
+      hourly_rate: number | null;
+    }>;
+  } | Array<{
+    client?: {
+      id: string;
+      name: string;
+      email: string;
+      hourly_rate: number | null;
+    } | Array<{
+      id: string;
+      name: string;
+      email: string;
+      hourly_rate: number | null;
+    }>;
+  }>;
   user?: {
     id: string;
     default_hourly_rate: number | null;
-  };
+  } | Array<{
+    id: string;
+    default_hourly_rate: number | null;
+  }>;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const body = await request.json() as AutoInvoiceGenerationForm;
 
     const {
@@ -99,12 +119,15 @@ export async function POST(request: NextRequest) {
 
     // Group time entries by client
     const entriesByClient = timeEntries.reduce((acc, entry: TimeEntryWithRates) => {
-      const clientId = entry.ticket?.client?.id;
+      // Handle nested arrays from Supabase
+      const ticket = Array.isArray(entry.ticket) ? entry.ticket[0] : entry.ticket;
+      const client = ticket?.client ? (Array.isArray(ticket.client) ? ticket.client[0] : ticket.client) : null;
+      const clientId = client?.id;
       if (!clientId) return acc;
 
       if (!acc[clientId]) {
         acc[clientId] = {
-          client: entry.ticket.client,
+          client: client,
           entries: []
         };
       }
@@ -119,7 +142,12 @@ export async function POST(request: NextRequest) {
       try {
         // Calculate line items
         const lineItems: Omit<InvoiceLineItem, 'id' | 'invoice_id' | 'created_at'>[] = entries.map((entry) => {
-          const rate = entry.ticket?.client?.hourly_rate ?? entry.user?.default_hourly_rate ?? 75;
+          // Handle nested arrays from Supabase
+          const ticket = Array.isArray(entry.ticket) ? entry.ticket[0] : entry.ticket;
+          const ticketClient = ticket?.client ? (Array.isArray(ticket.client) ? ticket.client[0] : ticket.client) : null;
+          const user = Array.isArray(entry.user) ? entry.user[0] : entry.user;
+
+          const rate = ticketClient?.hourly_rate ?? user?.default_hourly_rate ?? 75;
           const amount = rate * entry.hours;
           return {
             time_entry_id: entry.id,

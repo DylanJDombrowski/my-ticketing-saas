@@ -9,7 +9,7 @@ interface BulkApprovalRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const body = await request.json() as BulkApprovalRequest;
 
     const {

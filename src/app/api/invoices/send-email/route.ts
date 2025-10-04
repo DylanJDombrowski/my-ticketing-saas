@@ -6,7 +6,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { invoiceId } = await request.json();
 
     // Authenticate user
@@ -54,7 +54,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!invoice.client?.email) {
+    // Handle client being returned as array
+    const client = Array.isArray(invoice.client) ? invoice.client[0] : invoice.client;
+
+    if (!client?.email) {
       return NextResponse.json(
         { error: "Client email not found" },
         { status: 400 }
@@ -72,11 +75,14 @@ export async function POST(request: NextRequest) {
         currency: "USD",
       }).format(amount);
 
+    // Handle tenant being returned as array
+    const tenant = Array.isArray(profile.tenant) ? profile.tenant[0] : profile.tenant;
+
     // Send email via Resend
     const { data, error: emailError } = await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL || "invoices@yourdomain.com",
-      to: [invoice.client.email],
-      subject: `Invoice ${invoice.invoice_number} from ${profile.tenant?.name || "Your Company"}`,
+      to: [client.email],
+      subject: `Invoice ${invoice.invoice_number} from ${tenant?.name || "Your Company"}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -167,7 +173,7 @@ export async function POST(request: NextRequest) {
             </div>
 
             <div class="content">
-              <p>Hi ${invoice.client.name},</p>
+              <p>Hi ${client.name},</p>
 
               <p>Thank you for your business! Please find your invoice details below.</p>
 
@@ -193,7 +199,7 @@ export async function POST(request: NextRequest) {
                   }
                   <tr>
                     <td>From:</td>
-                    <td>${profile.tenant?.name || "Your Company"}</td>
+                    <td>${tenant?.name || "Your Company"}</td>
                   </tr>
                 </table>
               </div>
@@ -212,7 +218,7 @@ export async function POST(request: NextRequest) {
             </div>
 
             <div class="footer">
-              <p>This is an automated email from ${profile.tenant?.name || "Your Company"}.</p>
+              <p>This is an automated email from ${tenant?.name || "Your Company"}.</p>
             </div>
           </body>
         </html>
@@ -234,7 +240,7 @@ export async function POST(request: NextRequest) {
       .update({
         status: "sent",
         sent_at: now,
-        sent_to_email: invoice.client.email,
+        sent_to_email: client.email,
       })
       .eq("id", invoiceId)
       .eq("tenant_id", profile.tenant_id);
@@ -250,7 +256,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       emailId: data?.id,
-      message: `Invoice sent to ${invoice.client.email}`,
+      message: `Invoice sent to ${client.email}`,
     });
   } catch (error) {
     console.error("Send invoice email error:", error);

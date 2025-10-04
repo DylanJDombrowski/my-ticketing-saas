@@ -2,11 +2,27 @@ import Mustache from "mustache";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase-server";
 
+type RouteContext = { params: { id: string } };
+
+type InvoiceLineItemRecord = {
+  id: string;
+  description: string | null;
+  hours: number | string | null;
+  rate: number | string | null;
+  amount: number | string | null;
+  time_entry: {
+    id: string;
+    description: string | null;
+    entry_date: string | null;
+    ticket: { id: string; title: string | null } | null;
+  } | null;
+};
+
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ id: string }> }
+  context: RouteContext
 ) {
-  const { id } = await params;
+  const { id } = context.params;
   const supabase = await createServerClient();
 
   // SECURITY: Get current user and verify authentication
@@ -336,8 +352,8 @@ export async function GET(
               </td>
               <td class="text-center">{{entry_date}}</td>
               <td class="text-center">{{hours}}</td>
-              <td class="text-right">${{rate}}</td>
-              <td class="text-right amount">${{amount}}</td>
+              <td class="text-right">\${{rate}}</td>
+              <td class="text-right amount">\${{amount}}</td>
             </tr>
             {{/line_items}}
             {{^line_items}}
@@ -354,17 +370,17 @@ export async function GET(
         <div class="totals-section">
           <div class="total-row">
             <span>Subtotal:</span>
-            <span class="amount">${{subtotal}}</span>
+            <span class="amount">\${{subtotal}}</span>
           </div>
           {{#tax_rate}}
           <div class="total-row">
             <span>Tax ({{tax_rate}}%):</span>
-            <span class="amount">${{tax_amount}}</span>
+            <span class="amount">\${{tax_amount}}</span>
           </div>
           {{/tax_rate}}
           <div class="total-row final">
             <span>Total:</span>
-            <span>${{total_amount}}</span>
+            <span>\${{total_amount}}</span>
           </div>
         </div>
 
@@ -403,20 +419,51 @@ export async function GET(
     });
   };
 
-  const formatCurrency = (amount: number) => {
-    return amount.toFixed(2);
+  const toNumber = (value: number | string | null | undefined) => {
+    if (typeof value === "number") {
+      return Number.isFinite(value) ? value : 0;
+    }
+
+    if (typeof value === "string" && value.trim() !== "") {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    return 0;
+  };
+
+  const formatCurrency = (amount: number | string | null | undefined) => {
+    return toNumber(amount).toFixed(2);
+  };
+
+  const formatTaxRate = (rate: number | string | null | undefined) => {
+    if (rate === null || rate === undefined) return null;
+
+    const numericRate = typeof rate === "number" ? rate : Number(rate);
+    if (!Number.isFinite(numericRate) || numericRate === 0) {
+      return null;
+    }
+
+    if (Number.isInteger(numericRate)) {
+      return numericRate.toString();
+    }
+
+    return numericRate.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
   };
 
   // Calculate total hours
-  const totalHours = (invoice.line_items || []).reduce((sum: number, item: any) => sum + (item.hours || 0), 0);
+  const lineItems: InvoiceLineItemRecord[] = Array.isArray(invoice.line_items)
+    ? invoice.line_items
+    : [];
+
+  const totalHours = lineItems.reduce((sum, item) => sum + toNumber(item.hours), 0);
 
   // Determine billing period
-  const lineItems = invoice.line_items || [];
   let billingPeriod = "N/A";
   if (lineItems.length > 0) {
     const dates = lineItems
-      .map((item: any) => item.time_entry?.entry_date)
-      .filter(Boolean)
+      .map((item: InvoiceLineItemRecord) => item.time_entry?.entry_date)
+      .filter((dateString): dateString is string => Boolean(dateString))
       .sort();
 
     if (dates.length > 0) {
@@ -427,20 +474,28 @@ export async function GET(
   }
 
   // Format line items for template
-  const formattedLineItems = lineItems.map((item: any) => ({
+  const formattedLineItems = lineItems.map((item: InvoiceLineItemRecord) => ({
     description: item.description || item.time_entry?.description || "Time entry",
     entry_date: item.time_entry?.entry_date ? formatDate(item.time_entry.entry_date) : "",
-    hours: item.hours?.toFixed(1) || "0.0",
-    rate: formatCurrency(item.rate || 0),
-    amount: formatCurrency(item.amount || 0),
+    hours: toNumber(item.hours).toFixed(1),
+    rate: formatCurrency(item.rate),
+    amount: formatCurrency(item.amount),
     ticket_title: item.time_entry?.ticket?.title || null
   }));
+
+  const tenantName = (() => {
+    if (!profile.tenant) return null;
+    if (Array.isArray(profile.tenant)) {
+      return profile.tenant[0]?.name ?? null;
+    }
+    return (profile.tenant as { name: string }).name;
+  })();
 
   // Mustache escapes HTML entities by default, which helps prevent XSS when
   // rendering user-provided content into the template.
   const html = Mustache.render(template, {
     // Company info (can be made configurable later)
-    company_name: profile.tenant?.name || "Your Company",
+    company_name: tenantName || "Your Company",
     company_email: "",
     company_phone: "",
 
@@ -465,7 +520,7 @@ export async function GET(
 
     // Financial totals
     subtotal: formatCurrency(invoice.subtotal || 0),
-    tax_rate: invoice.tax_rate > 0 ? invoice.tax_rate.toFixed(1) : null,
+    tax_rate: formatTaxRate(invoice.tax_rate),
     tax_amount: formatCurrency(invoice.tax_amount || 0),
     total_amount: formatCurrency(invoice.total_amount || 0),
 

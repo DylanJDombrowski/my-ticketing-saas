@@ -4,7 +4,7 @@ import { createServerClient } from "@/lib/supabase-server";
 // GET endpoint to fetch time entries for approval
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerClient();
+    const supabase = await createServerClient();
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const limit = parseInt(searchParams.get('limit') || '50');
