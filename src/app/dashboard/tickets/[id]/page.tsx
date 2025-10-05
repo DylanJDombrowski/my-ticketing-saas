@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -32,7 +31,7 @@ import {
   BarChart3,
   MessageSquare,
 } from "lucide-react";
-import type { Ticket, TicketStatus, TicketPriority } from "@/lib/types";
+import type { TicketStatus } from "@/lib/types";
 
 const statusColors = {
   open: "bg-blue-100 text-blue-800",

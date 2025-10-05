@@ -40,7 +40,7 @@ import { useTicketsStore } from "@/stores/tickets";
 import { TimeEntryModal } from "@/components/modals/time-entry-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { TimeTracker } from "@/components/time-tracker";
-import { useKeyboardShortcuts, pageShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
   Plus,
   MoreHorizontal,
