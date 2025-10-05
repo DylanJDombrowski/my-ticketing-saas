@@ -11,13 +11,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Download, Home } from "lucide-react";
+import { CheckCircle, Home } from "lucide-react";
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
   const [loading, setLoading] = useState(true);
-  const [paymentDetails, setPaymentDetails] = useState<any>(null);
 
   useEffect(() => {
     if (sessionId) {
