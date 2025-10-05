@@ -58,7 +58,8 @@ export default function ClientsPage() {
     if (profile?.tenant_id) {
       fetchClients(profile.tenant_id);
     }
-  }, [profile?.tenant_id, fetchClients]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.tenant_id]);
 
   const filteredClients = clients.filter(
     (client) =>

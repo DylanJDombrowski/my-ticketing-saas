@@ -85,7 +85,8 @@ export default function InvoicesPage() {
       fetchInvoices(profile.tenant_id);
       fetchClients(profile.tenant_id);
     }
-  }, [profile?.tenant_id, fetchInvoices, fetchClients]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.tenant_id]);
 
   const filteredInvoices = invoices.filter(invoice =>
     statusFilter === "all" || invoice.status === statusFilter
@@ -117,7 +118,7 @@ export default function InvoicesPage() {
 
     if (confirmed) {
       try {
-        await sendInvoice(profile.tenant_id, invoice.id, clientEmail);
+        await sendInvoice(invoice.id, clientEmail);
         notify.success(`Invoice sent to ${clientEmail}`);
         await fetchInvoices(profile.tenant_id);
       } catch (error) {

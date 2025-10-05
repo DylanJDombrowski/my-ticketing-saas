@@ -73,7 +73,8 @@ export default function TicketsPage() {
       fetchTickets(profile.tenant_id);
       fetchClients(profile.tenant_id);
     }
-  }, [profile?.tenant_id, fetchTickets, fetchClients]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.tenant_id]);
 
   const filteredTickets = tickets.filter((ticket) => {
     const matchesSearch =

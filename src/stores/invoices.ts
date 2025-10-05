@@ -20,7 +20,6 @@ interface InvoicesState {
     invoiceData: CreateInvoiceForm
   ) => Promise<{ error?: string; invoice?: Invoice }>;
   sendInvoice: (
-    tenantId: string,
     id: string,
     clientEmail: string
   ) => Promise<{ error?: string }>;

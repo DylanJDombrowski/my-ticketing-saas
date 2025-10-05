@@ -61,7 +61,8 @@ export default function TicketDetailPage() {
     if (profile?.tenant_id && ticketId) {
       fetchTicket(ticketId);
     }
-  }, [profile?.tenant_id, ticketId, fetchTicket]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.tenant_id, ticketId]);
 
   const handleStatusChange = async (newStatus: TicketStatus) => {
     if (!selectedTicket) return;
