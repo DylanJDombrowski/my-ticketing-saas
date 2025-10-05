@@ -1,15 +1,21 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { CheckCircle, Download, Home } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, Download, Home } from "lucide-react";
 
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get('session_id');
+  const sessionId = searchParams.get("session_id");
   const [loading, setLoading] = useState(true);
   const [paymentDetails, setPaymentDetails] = useState<any>(null);
 
@@ -44,7 +50,8 @@ export default function PaymentSuccessPage() {
         <CardContent className="space-y-4">
           <div className="rounded-lg bg-gray-50 p-4">
             <p className="text-sm text-gray-600 mb-2">
-              Thank you for your payment. Your invoice has been marked as paid and you should receive a confirmation email shortly.
+              Thank you for your payment. Your invoice has been marked as paid
+              and you should receive a confirmation email shortly.
             </p>
             {sessionId && (
               <p className="text-xs text-gray-500 font-mono">
@@ -54,10 +61,12 @@ export default function PaymentSuccessPage() {
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-700">What's next?</p>
+            <p className="text-sm font-medium text-gray-700">
+              What&apos;s next?
+            </p>
             <ul className="text-sm text-gray-600 space-y-1 list-disc list-inside">
-              <li>You'll receive a payment confirmation email</li>
-              <li>Your invoice status has been updated to "Paid"</li>
+              <li>You&apos;ll receive a payment confirmation email</li>
+              <li>Your invoice status has been updated to &quot;Paid&quot;</li>
               <li>A receipt will be sent to your email address</li>
             </ul>
           </div>

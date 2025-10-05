@@ -1,14 +1,20 @@
-'use client';
+"use client";
 
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { XCircle, ArrowLeft, CreditCard } from 'lucide-react';
+import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { XCircle, ArrowLeft, CreditCard } from "lucide-react";
 
 export default function PaymentCancelPage() {
   const searchParams = useSearchParams();
-  const invoiceId = searchParams.get('invoice_id');
+  const invoiceId = searchParams.get("invoice_id");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -18,14 +24,13 @@ export default function PaymentCancelPage() {
             <XCircle className="h-10 w-10 text-yellow-600" />
           </div>
           <CardTitle className="text-2xl">Payment Cancelled</CardTitle>
-          <CardDescription>
-            Your payment was not completed
-          </CardDescription>
+          <CardDescription>Your payment was not completed</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="rounded-lg bg-gray-50 p-4">
             <p className="text-sm text-gray-600">
-              No charges were made to your card. You can try again when you're ready.
+              No charges were made to your card. You can try again when
+              you&apos;re ready.
             </p>
           </div>
 
