@@ -70,8 +70,11 @@ export async function POST(req: NextRequest) {
       }
 
       case 'account.application.deauthorized': {
-        const account = event.data.object as Stripe.Account;
-        await handleAccountDeauthorized(account);
+        // Extract account ID from the event - it's in the account field, not data.object
+        const accountId = event.account as string;
+        if (accountId) {
+          await handleAccountDeauthorized(accountId);
+        }
         break;
       }
 
@@ -132,7 +135,7 @@ async function handleCapabilityUpdated(capability: Stripe.Capability) {
   }
 }
 
-async function handleAccountDeauthorized(account: Stripe.Account) {
+async function handleAccountDeauthorized(accountId: string) {
   // User disconnected their Stripe account
   const { error } = await supabaseAdmin
     .from('profiles')
@@ -141,11 +144,11 @@ async function handleAccountDeauthorized(account: Stripe.Account) {
       stripe_onboarding_completed: false,
       stripe_account_status: null,
     })
-    .eq('stripe_account_id', account.id);
+    .eq('stripe_account_id', accountId);
 
   if (error) {
-    console.error(`Error deauthorizing account ${account.id}:`, error);
+    console.error(`Error deauthorizing account ${accountId}:`, error);
   } else {
-    console.log(`Account ${account.id} deauthorized and disconnected`);
+    console.log(`Account ${accountId} deauthorized and disconnected`);
   }
 }
