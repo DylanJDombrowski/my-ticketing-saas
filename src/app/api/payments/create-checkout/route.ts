@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
               name: `Invoice ${invoice.invoice_number}`,
               description: `Payment for invoice ${invoice.invoice_number}`,
             },
-            unit_amount: formatAmountForStripe(invoice.total_amount, STRIPE_CONFIG.currency),
+            unit_amount: formatAmountForStripe(invoice.total_amount),
           },
           quantity: 1,
         },
