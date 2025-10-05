@@ -9,18 +9,6 @@ import type {
 } from "@/lib/types";
 import { useTimeEntriesStore } from "./time-entries";
 
-interface TimeEntryWithRates {
-  id: string;
-  description: string | null;
-  hours: number;
-  is_billable: boolean;
-  entry_date: string;
-  ticket_id: string;
-  user_id: string;
-  ticket?: { client?: { id: string; hourly_rate: number | null } };
-  user?: { id: string; default_hourly_rate: number | null };
-}
-
 interface InvoicesState {
   invoices: Invoice[];
   selectedInvoice: Invoice | null;
@@ -54,15 +42,6 @@ interface InvoiceFilters {
 }
 
 const supabase = createBrowserClient();
-
-async function queueInvoiceReminder(
-  invoiceId: string,
-  dueDate?: string | null
-) {
-  return supabase.functions.invoke("queue-invoice-reminder", {
-    body: { invoiceId, dueDate },
-  });
-}
 
 export const useInvoicesStore = create<InvoicesState>((set, get) => ({
   invoices: [],

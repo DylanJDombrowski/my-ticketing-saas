@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createBrowserClient } from "@/lib/supabase";
 import { notify } from "@/lib/notifications";
-import type { Client, CreateClientForm, Ticket } from "@/lib/types";
+import type { Client, CreateClientForm } from "@/lib/types";
 
 interface ClientsState {
   clients: Client[];

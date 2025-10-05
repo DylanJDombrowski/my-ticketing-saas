@@ -39,7 +39,6 @@ import {
   Mail,
   Phone,
   Users,
-  Shield,
 } from "lucide-react";
 import type { Client } from "@/lib/types";
 

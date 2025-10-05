@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
         portal_url: `${process.env.NEXT_PUBLIC_APP_URL || ''}/client-portal/${tokenResult}`,
         expires_in_days
       });
-    } catch (rpcError) {
+    } catch {
       // RPC function doesn't exist, create manually
       const accessToken = generateSecureToken();
       const expiresAt = new Date();

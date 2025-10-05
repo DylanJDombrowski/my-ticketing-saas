@@ -8,7 +8,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Clock, Play, Pause, Square } from "lucide-react";
+import { Clock } from "lucide-react";
 
 interface TimerData {
   isRunning: boolean;

@@ -20,12 +20,12 @@ export const STRIPE_CONFIG = {
 };
 
 // Helper: Format amount for Stripe (cents)
-export function formatAmountForStripe(amount: number, currency: string): number {
+export function formatAmountForStripe(amount: number): number {
   // Stripe expects amounts in smallest currency unit (cents for USD)
   return Math.round(amount * 100);
 }
 
 // Helper: Format amount from Stripe (dollars)
-export function formatAmountFromStripe(amount: number, currency: string): number {
+export function formatAmountFromStripe(amount: number): number {
   return amount / 100;
 }

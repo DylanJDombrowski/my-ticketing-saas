@@ -78,7 +78,7 @@ export default function InvoicesPage() {
     updateInvoiceStatus,
     deleteInvoice
   } = useInvoicesStore();
-  const { clients, fetchClients } = useClientsStore();
+  const { fetchClients } = useClientsStore();
 
   useEffect(() => {
     if (profile?.tenant_id) {

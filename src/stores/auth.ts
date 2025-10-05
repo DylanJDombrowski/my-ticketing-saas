@@ -3,7 +3,7 @@ import { createBrowserClient } from "@/lib/supabase";
 import type { User } from "@supabase/supabase-js";
 import type { Profile } from "@/lib/types";
 import { notify } from "@/lib/notifications";
-import { handleError, getErrorMessage } from "@/lib/error-handling";
+import { handleError } from "@/lib/error-handling";
 
 interface AuthState {
   user: User | null;
