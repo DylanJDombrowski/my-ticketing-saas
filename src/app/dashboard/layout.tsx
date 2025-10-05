@@ -28,6 +28,8 @@ import {
   Bell,
   CheckCircle,
   Timer,
+  Settings,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AuthGuard } from "@/components/auth-guard";
@@ -80,6 +82,11 @@ const navigation = [
     name: "Notifications",
     href: "/dashboard/notifications",
     icon: Bell,
+  },
+  {
+    name: "Settings",
+    href: "/dashboard/settings/payments",
+    icon: Settings,
   },
 ];
 
@@ -266,6 +273,12 @@ export default function DashboardLayout({
                   <DropdownMenuItem>
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard/settings/payments">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      <span>Payment Settings</span>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut}>

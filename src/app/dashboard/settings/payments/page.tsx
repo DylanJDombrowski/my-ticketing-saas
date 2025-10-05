@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,7 +23,7 @@ interface StripeStatus {
   detailsSubmitted?: boolean;
 }
 
-export default function PaymentsSettingsPage() {
+function PaymentsSettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -310,5 +310,20 @@ export default function PaymentsSettingsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function PaymentsSettingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold">Payment Settings</h1>
+        <div className="animate-pulse">
+          <div className="h-64 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    }>
+      <PaymentsSettingsContent />
+    </Suspense>
   );
 }
