@@ -1,18 +1,22 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Keyboard, Navigation, Settings, Zap } from 'lucide-react';
-import { useGlobalKeyboardShortcuts, pageShortcuts, formatShortcut } from '@/hooks/use-keyboard-shortcuts';
-import { usePathname } from 'next/navigation';
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Keyboard, Navigation, Settings, Zap } from "lucide-react";
+import {
+  useGlobalKeyboardShortcuts,
+  pageShortcuts,
+  formatShortcut,
+} from "@/hooks/use-keyboard-shortcuts";
+import { usePathname } from "next/navigation";
 
 export function KeyboardShortcutsModal() {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,11 +25,11 @@ export function KeyboardShortcutsModal() {
 
   // Determine current page shortcuts
   const getCurrentPageShortcuts = () => {
-    if (pathname.includes('/tickets')) return pageShortcuts.tickets;
-    if (pathname.includes('/time-entries')) return pageShortcuts.timeEntries;
-    if (pathname.includes('/clients')) return pageShortcuts.clients;
-    if (pathname.includes('/invoices')) return pageShortcuts.invoices;
-    if (pathname.includes('/reports')) return pageShortcuts.reports;
+    if (pathname.includes("/tickets")) return pageShortcuts.tickets;
+    if (pathname.includes("/time-entries")) return pageShortcuts.timeEntries;
+    if (pathname.includes("/clients")) return pageShortcuts.clients;
+    if (pathname.includes("/invoices")) return pageShortcuts.invoices;
+    if (pathname.includes("/reports")) return pageShortcuts.reports;
     return [];
   };
 
@@ -35,23 +39,29 @@ export function KeyboardShortcutsModal() {
   useEffect(() => {
     const handleShowModal = () => setIsOpen(true);
 
-    window.addEventListener('show-shortcuts-modal', handleShowModal);
+    window.addEventListener("show-shortcuts-modal", handleShowModal);
 
     return () => {
-      window.removeEventListener('show-shortcuts-modal', handleShowModal);
+      window.removeEventListener("show-shortcuts-modal", handleShowModal);
     };
   }, []);
 
   const getPageName = () => {
-    if (pathname.includes('/tickets')) return 'Tickets';
-    if (pathname.includes('/time-entries')) return 'Time Entries';
-    if (pathname.includes('/clients')) return 'Clients';
-    if (pathname.includes('/invoices')) return 'Invoices';
-    if (pathname.includes('/reports')) return 'Reports';
-    return 'Dashboard';
+    if (pathname.includes("/tickets")) return "Tickets";
+    if (pathname.includes("/time-entries")) return "Time Entries";
+    if (pathname.includes("/clients")) return "Clients";
+    if (pathname.includes("/invoices")) return "Invoices";
+    if (pathname.includes("/reports")) return "Reports";
+    return "Dashboard";
   };
 
-  const ShortcutRow = ({ shortcut, description }: { shortcut: string; description: string }) => (
+  const ShortcutRow = ({
+    shortcut,
+    description,
+  }: {
+    shortcut: string;
+    description: string;
+  }) => (
     <div className="flex items-center justify-between py-2">
       <span className="text-sm text-muted-foreground">{description}</span>
       <Badge variant="outline" className="font-mono text-xs">
@@ -69,9 +79,11 @@ export function KeyboardShortcutsModal() {
             Keyboard Shortcuts
           </DialogTitle>
           <DialogDescription>
-            Boost your productivity with these keyboard shortcuts. Press{' '}
-            <Badge variant="outline" className="font-mono text-xs mx-1">Shift + ?</Badge>
-            {' '}to view this help.
+            Boost your productivity with these keyboard shortcuts. Press{" "}
+            <Badge variant="outline" className="font-mono text-xs mx-1">
+              Shift + ?
+            </Badge>{" "}
+            to view this help.
           </DialogDescription>
         </DialogHeader>
 
@@ -84,7 +96,7 @@ export function KeyboardShortcutsModal() {
             </div>
             <div className="space-y-1">
               {globalShortcuts
-                .filter(s => s.description.startsWith('Go to'))
+                .filter((s) => s.description.startsWith("Go to"))
                 .map((shortcut, index) => (
                   <ShortcutRow
                     key={index}
@@ -105,7 +117,7 @@ export function KeyboardShortcutsModal() {
             </div>
             <div className="space-y-1">
               {globalShortcuts
-                .filter(s => !s.description.startsWith('Go to'))
+                .filter((s) => !s.description.startsWith("Go to"))
                 .map((shortcut, index) => (
                   <ShortcutRow
                     key={index}
@@ -142,10 +154,30 @@ export function KeyboardShortcutsModal() {
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-medium text-blue-900 mb-2">💡 Tips</h4>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Shortcuts work globally except when typing in input fields</li>
-              <li>• Use <Badge variant="outline" className="font-mono text-xs mx-1">Alt</Badge> + letter for navigation</li>
-              <li>• Use <Badge variant="outline" className="font-mono text-xs mx-1">Ctrl</Badge> + letter for actions</li>
-              <li>• Press <Badge variant="outline" className="font-mono text-xs mx-1">F</Badge> to focus search fields</li>
+              <li>
+                • Shortcuts work globally except when typing in input fields
+              </li>
+              <li>
+                • Use{" "}
+                <Badge variant="outline" className="font-mono text-xs mx-1">
+                  Alt
+                </Badge>{" "}
+                + letter for navigation
+              </li>
+              <li>
+                • Use{" "}
+                <Badge variant="outline" className="font-mono text-xs mx-1">
+                  Ctrl
+                </Badge>{" "}
+                + letter for actions
+              </li>
+              <li>
+                • Press{" "}
+                <Badge variant="outline" className="font-mono text-xs mx-1">
+                  F
+                </Badge>{" "}
+                to focus search fields
+              </li>
             </ul>
           </div>
         </div>

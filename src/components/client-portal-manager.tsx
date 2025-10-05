@@ -5,9 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { notify } from "@/lib/notifications";
 import {
   Shield,
@@ -17,7 +22,7 @@ import {
   Copy,
   ExternalLink,
   Mail,
-  Settings
+  Settings,
 } from "lucide-react";
 
 interface Client {
@@ -53,7 +58,7 @@ export function ClientPortalManager({ client }: ClientPortalManagerProps) {
         },
         body: JSON.stringify({
           client_id: client.id,
-          expires_in_days: expiresInDays
+          expires_in_days: expiresInDays,
         }),
       });
 
@@ -67,7 +72,11 @@ export function ClientPortalManager({ client }: ClientPortalManagerProps) {
       notify.success("Client portal access generated successfully");
     } catch (error) {
       console.error("Error generating portal access:", error);
-      notify.error(error instanceof Error ? error.message : "Failed to generate portal access");
+      notify.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to generate portal access"
+      );
     } finally {
       setLoading(false);
     }
@@ -109,7 +118,7 @@ If you have any questions, please don't hesitate to contact us.
 Best regards,
 Your Support Team
           `.trim(),
-          send_immediately: true
+          send_immediately: true,
         }),
       });
 
@@ -122,7 +131,9 @@ Your Support Team
       notify.success("Portal access email sent to client");
     } catch (error) {
       console.error("Error sending email:", error);
-      notify.error(error instanceof Error ? error.message : "Failed to send email");
+      notify.error(
+        error instanceof Error ? error.message : "Failed to send email"
+      );
     }
   };
 
@@ -159,7 +170,9 @@ Your Support Team
               </div>
               {client.company && (
                 <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Company:</span>
+                  <span className="text-sm text-muted-foreground">
+                    Company:
+                  </span>
                   <span className="text-sm font-medium">{client.company}</span>
                 </div>
               )}
@@ -175,12 +188,16 @@ Your Support Team
                   Generate Portal Access
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Create a secure access token for the client to view their invoices and tickets.
+                  Create a secure access token for the client to view their
+                  invoices and tickets.
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="expires-in-days" className="flex items-center gap-1">
+                  <Label
+                    htmlFor="expires-in-days"
+                    className="flex items-center gap-1"
+                  >
                     <Calendar className="h-4 w-4" />
                     Access Duration (Days)
                   </Label>
@@ -190,11 +207,14 @@ Your Support Team
                     min="1"
                     max="365"
                     value={expiresInDays}
-                    onChange={(e) => setExpiresInDays(parseInt(e.target.value) || 30)}
+                    onChange={(e) =>
+                      setExpiresInDays(parseInt(e.target.value) || 30)
+                    }
                     placeholder="30"
                   />
                   <p className="text-xs text-muted-foreground">
-                    The portal access will expire after this many days. Recommended: 30 days.
+                    The portal access will expire after this many days.
+                    Recommended: 30 days.
                   </p>
                 </div>
 
@@ -217,7 +237,8 @@ Your Support Team
                   Portal Access Generated
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Share this access link with your client. Keep it secure as anyone with this link can access the client portal.
+                  Share this access link with your client. Keep it secure as
+                  anyone with this link can access the client portal.
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -236,14 +257,23 @@ Your Support Team
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => copyToClipboard(`${window.location.origin}${portalAccess.portal_url}`)}
+                      onClick={() =>
+                        copyToClipboard(
+                          `${window.location.origin}${portalAccess.portal_url}`
+                        )
+                      }
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => window.open(`${window.location.origin}${portalAccess.portal_url}`, '_blank')}
+                      onClick={() =>
+                        window.open(
+                          `${window.location.origin}${portalAccess.portal_url}`,
+                          "_blank"
+                        )
+                      }
                     >
                       <ExternalLink className="h-4 w-4" />
                     </Button>
@@ -273,9 +303,15 @@ Your Support Team
                 <div className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg">
                   <Calendar className="h-5 w-5 text-blue-500" />
                   <div>
-                    <p className="text-sm font-medium">Expires in {portalAccess.expires_in_days} days</p>
+                    <p className="text-sm font-medium">
+                      Expires in {portalAccess.expires_in_days} days
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      Access will expire on {new Date(Date.now() + portalAccess.expires_in_days * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                      Access will expire on{" "}
+                      {new Date(
+                        Date.now() +
+                          portalAccess.expires_in_days * 24 * 60 * 60 * 1000
+                      ).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
@@ -284,10 +320,7 @@ Your Support Team
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2">
-                  <Button
-                    onClick={sendPortalEmail}
-                    className="flex-1"
-                  >
+                  <Button onClick={sendPortalEmail} className="flex-1">
                     <Mail className="h-4 w-4 mr-2" />
                     Email Portal Link to Client
                   </Button>
@@ -311,8 +344,9 @@ Your Support Team
             <div className="text-sm">
               <p className="font-medium text-yellow-800">Security Notice</p>
               <p className="text-yellow-700 mt-1">
-                This portal link provides access to sensitive client information including invoices and tickets.
-                Only share this link directly with the authorized client through secure channels.
+                This portal link provides access to sensitive client information
+                including invoices and tickets. Only share this link directly
+                with the authorized client through secure channels.
               </p>
             </div>
           </div>

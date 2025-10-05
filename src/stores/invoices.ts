@@ -207,7 +207,6 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
   },
 
   sendInvoice: async (
-    tenantId: string,
     id: string,
     clientEmail: string
   ) => {

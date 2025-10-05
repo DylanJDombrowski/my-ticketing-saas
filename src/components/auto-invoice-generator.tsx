@@ -112,7 +112,12 @@ export function AutoInvoiceGenerator() {
                 <Label htmlFor="client">Client (Optional)</Label>
                 <Select
                   value={form.watch("client_id") || "ALL_CLIENTS"}
-                  onValueChange={(value) => form.setValue("client_id", value === "ALL_CLIENTS" ? "" : value)}
+                  onValueChange={(value) =>
+                    form.setValue(
+                      "client_id",
+                      value === "ALL_CLIENTS" ? "" : value
+                    )
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All clients" />

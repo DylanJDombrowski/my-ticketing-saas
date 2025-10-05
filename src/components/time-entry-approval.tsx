@@ -1,13 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuthStore } from "@/stores/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -30,13 +27,12 @@ import {
   Clock,
   CheckCircle,
   XCircle,
-  Calendar,
   User,
   FileText,
   Filter,
   RefreshCw,
   AlertTriangle,
-  DollarSign
+  DollarSign,
 } from "lucide-react";
 
 interface TimeEntry {
@@ -68,7 +64,7 @@ interface TimeEntry {
 
 interface BulkApprovalRequest {
   time_entry_ids: string[];
-  approval_status: 'approved' | 'rejected';
+  approval_status: "approved" | "rejected";
   rejection_reason?: string;
 }
 
@@ -76,18 +72,17 @@ const statusColors = {
   submitted: "bg-yellow-100 text-yellow-800",
   approved: "bg-green-100 text-green-800",
   rejected: "bg-red-100 text-red-800",
-  draft: "bg-gray-100 text-gray-800"
+  draft: "bg-gray-100 text-gray-800",
 };
 
 const statusIcons = {
   submitted: Clock,
   approved: CheckCircle,
   rejected: XCircle,
-  draft: FileText
+  draft: FileText,
 };
 
 export function TimeEntryApproval() {
-  const { profile } = useAuthStore();
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedEntries, setSelectedEntries] = useState<string[]>([]);
@@ -123,13 +118,13 @@ export function TimeEntryApproval() {
     }
   };
 
-  const handleBulkApproval = async (action: 'approved' | 'rejected') => {
+  const handleBulkApproval = async (action: "approved" | "rejected") => {
     if (selectedEntries.length === 0) {
       notify.error("Please select time entries to approve/reject");
       return;
     }
 
-    if (action === 'rejected' && !rejectionReason.trim()) {
+    if (action === "rejected" && !rejectionReason.trim()) {
       setShowRejectionReason(true);
       notify.error("Please provide a reason for rejection");
       return;
@@ -145,7 +140,7 @@ export function TimeEntryApproval() {
         body: JSON.stringify({
           time_entry_ids: selectedEntries,
           approval_status: action,
-          rejection_reason: action === 'rejected' ? rejectionReason : undefined
+          rejection_reason: action === "rejected" ? rejectionReason : undefined,
         } as BulkApprovalRequest),
       });
 
@@ -162,7 +157,9 @@ export function TimeEntryApproval() {
       fetchTimeEntries();
     } catch (error) {
       console.error("Error processing approvals:", error);
-      notify.error(error instanceof Error ? error.message : "Failed to process approvals");
+      notify.error(
+        error instanceof Error ? error.message : "Failed to process approvals"
+      );
     } finally {
       setBulkApproving(false);
     }
@@ -177,9 +174,9 @@ export function TimeEntryApproval() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
@@ -194,9 +191,9 @@ export function TimeEntryApproval() {
   };
 
   const toggleEntrySelection = (entryId: string) => {
-    setSelectedEntries(prev =>
+    setSelectedEntries((prev) =>
       prev.includes(entryId)
-        ? prev.filter(id => id !== entryId)
+        ? prev.filter((id) => id !== entryId)
         : [...prev, entryId]
     );
   };
@@ -205,17 +202,26 @@ export function TimeEntryApproval() {
     if (selectedEntries.length === timeEntries.length) {
       setSelectedEntries([]);
     } else {
-      setSelectedEntries(timeEntries.map(entry => entry.id));
+      setSelectedEntries(timeEntries.map((entry) => entry.id));
     }
   };
 
   // Calculate statistics
-  const pendingEntries = timeEntries.filter(e => e.approval_status === 'submitted');
-  const approvedEntries = timeEntries.filter(e => e.approval_status === 'approved');
-  const rejectedEntries = timeEntries.filter(e => e.approval_status === 'rejected');
+  const pendingEntries = timeEntries.filter(
+    (e) => e.approval_status === "submitted"
+  );
+  const approvedEntries = timeEntries.filter(
+    (e) => e.approval_status === "approved"
+  );
+  const rejectedEntries = timeEntries.filter(
+    (e) => e.approval_status === "rejected"
+  );
 
   const pendingHours = pendingEntries.reduce((sum, e) => sum + e.hours, 0);
-  const pendingAmount = pendingEntries.reduce((sum, e) => sum + calculateAmount(e), 0);
+  const pendingAmount = pendingEntries.reduce(
+    (sum, e) => sum + calculateAmount(e),
+    0
+  );
 
   return (
     <div className="space-y-6">
@@ -230,7 +236,9 @@ export function TimeEntryApproval() {
           </p>
         </div>
         <Button onClick={fetchTimeEntries} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+          />
           Refresh
         </Button>
       </div>
@@ -242,9 +250,13 @@ export function TimeEntryApproval() {
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-yellow-500" />
               <div>
-                <p className="text-sm text-muted-foreground">Pending Approval</p>
+                <p className="text-sm text-muted-foreground">
+                  Pending Approval
+                </p>
                 <p className="text-2xl font-bold">{pendingEntries.length}</p>
-                <p className="text-xs text-muted-foreground">{pendingHours.toFixed(1)} hours</p>
+                <p className="text-xs text-muted-foreground">
+                  {pendingHours.toFixed(1)} hours
+                </p>
               </div>
             </div>
           </CardContent>
@@ -256,7 +268,9 @@ export function TimeEntryApproval() {
               <DollarSign className="h-5 w-5 text-green-500" />
               <div>
                 <p className="text-sm text-muted-foreground">Pending Value</p>
-                <p className="text-2xl font-bold">{formatCurrency(pendingAmount)}</p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(pendingAmount)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -317,7 +331,7 @@ export function TimeEntryApproval() {
                 <Button
                   variant="default"
                   size="sm"
-                  onClick={() => handleBulkApproval('approved')}
+                  onClick={() => handleBulkApproval("approved")}
                   disabled={bulkApproving}
                 >
                   <CheckCircle className="h-4 w-4 mr-1" />
@@ -330,7 +344,7 @@ export function TimeEntryApproval() {
                     if (!rejectionReason.trim()) {
                       setShowRejectionReason(true);
                     } else {
-                      handleBulkApproval('rejected');
+                      handleBulkApproval("rejected");
                     }
                   }}
                   disabled={bulkApproving}
@@ -345,7 +359,10 @@ export function TimeEntryApproval() {
           {/* Rejection Reason Input */}
           {showRejectionReason && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <Label htmlFor="rejection-reason" className="flex items-center gap-1">
+              <Label
+                htmlFor="rejection-reason"
+                className="flex items-center gap-1"
+              >
                 <AlertTriangle className="h-4 w-4 text-red-500" />
                 Reason for Rejection *
               </Label>
@@ -361,7 +378,7 @@ export function TimeEntryApproval() {
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => handleBulkApproval('rejected')}
+                  onClick={() => handleBulkApproval("rejected")}
                   disabled={!rejectionReason.trim() || bulkApproving}
                 >
                   Confirm Rejection
@@ -431,7 +448,9 @@ export function TimeEntryApproval() {
                           <p className="font-medium">
                             {entry.user.first_name} {entry.user.last_name}
                           </p>
-                          <p className="text-xs text-muted-foreground">{entry.user.email}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {entry.user.email}
+                          </p>
                         </div>
                       </div>
                     </TableCell>
@@ -439,27 +458,46 @@ export function TimeEntryApproval() {
                       <div className="max-w-xs">
                         <p className="text-sm">{entry.description}</p>
                         <div className="flex items-center gap-1 mt-1">
-                          <Badge variant={entry.is_billable ? "default" : "secondary"} className="text-xs">
+                          <Badge
+                            variant={
+                              entry.is_billable ? "default" : "secondary"
+                            }
+                            className="text-xs"
+                          >
                             {entry.is_billable ? "Billable" : "Non-billable"}
                           </Badge>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>{formatDate(entry.entry_date)}</TableCell>
-                    <TableCell className="font-medium">{entry.hours}h</TableCell>
+                    <TableCell className="font-medium">
+                      {entry.hours}h
+                    </TableCell>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{entry.ticket.client.name}</p>
-                        <p className="text-xs text-muted-foreground">{entry.ticket.title}</p>
+                        <p className="font-medium">
+                          {entry.ticket.client.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {entry.ticket.title}
+                        </p>
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {entry.is_billable ? formatCurrency(calculateAmount(entry)) : "-"}
+                      {entry.is_billable
+                        ? formatCurrency(calculateAmount(entry))
+                        : "-"}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {getStatusIcon(entry.approval_status)}
-                        <Badge className={statusColors[entry.approval_status as keyof typeof statusColors]}>
+                        <Badge
+                          className={
+                            statusColors[
+                              entry.approval_status as keyof typeof statusColors
+                            ]
+                          }
+                        >
                           {entry.approval_status}
                         </Badge>
                       </div>

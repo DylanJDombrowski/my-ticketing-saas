@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { CreditCard, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { CreditCard, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface StripePaymentButtonProps {
   invoiceId: string;
@@ -15,7 +15,6 @@ interface StripePaymentButtonProps {
 export function StripePaymentButton({
   invoiceId,
   amount,
-  invoiceNumber,
   disabled = false,
 }: StripePaymentButtonProps) {
   const [loading, setLoading] = useState(false);
@@ -25,10 +24,10 @@ export function StripePaymentButton({
       setLoading(true);
 
       // Create Stripe Checkout Session
-      const response = await fetch('/api/payments/create-checkout', {
-        method: 'POST',
+      const response = await fetch("/api/payments/create-checkout", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           invoice_id: invoiceId,
@@ -37,7 +36,7 @@ export function StripePaymentButton({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to create checkout session');
+        throw new Error(error.error || "Failed to create checkout session");
       }
 
       const { url } = await response.json();
@@ -46,11 +45,11 @@ export function StripePaymentButton({
       if (url) {
         window.location.href = url;
       } else {
-        throw new Error('No checkout URL received');
+        throw new Error("No checkout URL received");
       }
     } catch (error: any) {
-      console.error('Payment error:', error);
-      toast.error(error.message || 'Failed to process payment');
+      console.error("Payment error:", error);
+      toast.error(error.message || "Failed to process payment");
       setLoading(false);
     }
   };

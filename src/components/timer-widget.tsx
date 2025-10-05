@@ -23,7 +23,7 @@ export function TimerWidget() {
   // Listen for timer updates from localStorage or global state
   useEffect(() => {
     const checkTimer = () => {
-      const stored = localStorage.getItem('activeTimer');
+      const stored = localStorage.getItem("activeTimer");
       if (stored) {
         try {
           const timer = JSON.parse(stored);
@@ -37,7 +37,7 @@ export function TimerWidget() {
             setDisplayTime(timer.elapsedTime);
           }
         } catch (error) {
-          console.error('Failed to parse timer data:', error);
+          console.error("Failed to parse timer data:", error);
         }
       } else {
         setTimerData(null);
@@ -53,16 +53,16 @@ export function TimerWidget() {
 
     // Listen for storage changes from other tabs
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'activeTimer') {
+      if (e.key === "activeTimer") {
         checkTimer();
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener("storage", handleStorageChange);
 
     return () => {
       clearInterval(interval);
-      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener("storage", handleStorageChange);
     };
   }, []);
 
@@ -73,13 +73,17 @@ export function TimerWidget() {
     const seconds = totalSeconds % 60;
 
     if (hours > 0) {
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      return `${hours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
     }
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const navigateToTimeEntries = () => {
-    window.location.href = '/dashboard/time-entries';
+    window.location.href = "/dashboard/time-entries";
   };
 
   if (!timerData) {
@@ -96,7 +100,9 @@ export function TimerWidget() {
         >
           <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
           <span className="hidden xs:inline">{formatTime(displayTime)}</span>
-          <span className="xs:hidden">{formatTime(displayTime).replace(/^0:/, '')}</span>
+          <span className="xs:hidden">
+            {formatTime(displayTime).replace(/^0:/, "")}
+          </span>
           {timerData.isRunning && (
             <div className="ml-1 sm:ml-2 h-2 w-2 bg-red-500 rounded-full animate-pulse flex-shrink-0" />
           )}
@@ -106,7 +112,10 @@ export function TimerWidget() {
         <div className="space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="font-medium text-sm sm:text-base">Active Timer</h4>
-            <Badge variant={timerData.isRunning ? "default" : "secondary"} className="text-xs">
+            <Badge
+              variant={timerData.isRunning ? "default" : "secondary"}
+              className="text-xs"
+            >
               {timerData.isRunning ? "Running" : "Paused"}
             </Badge>
           </div>

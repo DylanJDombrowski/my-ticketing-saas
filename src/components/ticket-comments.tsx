@@ -70,7 +70,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
     reset,
     setValue,
     watch,
-    formState: { errors }
+    formState: { errors },
   } = useForm<CommentForm>();
 
   const commentContent = watch("content");
@@ -85,7 +85,8 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
 
       const { data, error } = await supabase
         .from("ticket_comments")
-        .select(`
+        .select(
+          `
           id,
           content,
           created_at,
@@ -97,7 +98,8 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
             last_name,
             email
           )
-        `)
+        `
+        )
         .eq("ticket_id", ticketId)
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: true });
@@ -105,9 +107,11 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
       if (error) throw error;
 
       // Transform data to handle created_user being an array
-      const transformedComments = (data || []).map(comment => ({
+      const transformedComments = (data || []).map((comment) => ({
         ...comment,
-        created_user: Array.isArray(comment.created_user) ? comment.created_user[0] : comment.created_user
+        created_user: Array.isArray(comment.created_user)
+          ? comment.created_user[0]
+          : comment.created_user,
       }));
 
       setComments(transformedComments);
@@ -137,7 +141,8 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
           content: data.content.trim(),
           created_by: profile.id,
         })
-        .select(`
+        .select(
+          `
           id,
           content,
           created_at,
@@ -149,7 +154,8 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
             last_name,
             email
           )
-        `)
+        `
+        )
         .single();
 
       if (error) throw error;
@@ -157,10 +163,12 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
       // Transform newComment to handle created_user being an array
       const transformedNewComment = {
         ...newComment,
-        created_user: Array.isArray(newComment.created_user) ? newComment.created_user[0] : newComment.created_user
+        created_user: Array.isArray(newComment.created_user)
+          ? newComment.created_user[0]
+          : newComment.created_user,
       };
 
-      setComments(prev => [...prev, transformedNewComment]);
+      setComments((prev) => [...prev, transformedNewComment]);
       reset();
       notify.success("Comment added successfully");
     } catch (error) {
@@ -188,10 +196,14 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
 
       if (error) throw error;
 
-      setComments(prev =>
-        prev.map(comment =>
+      setComments((prev) =>
+        prev.map((comment) =>
           comment.id === commentId
-            ? { ...comment, content: newContent.trim(), updated_at: new Date().toISOString() }
+            ? {
+                ...comment,
+                content: newContent.trim(),
+                updated_at: new Date().toISOString(),
+              }
             : comment
         )
       );
@@ -222,7 +234,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
 
       if (error) throw error;
 
-      setComments(prev => prev.filter(comment => comment.id !== commentId));
+      setComments((prev) => prev.filter((comment) => comment.id !== commentId));
       notify.success("Comment deleted successfully");
     } catch (error) {
       handleError("Failed to delete comment", {
@@ -241,10 +253,10 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
 
     if (diffInHours < 1) {
       const diffInMinutes = Math.floor(diffInHours * 60);
-      return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+      return `${diffInMinutes} minute${diffInMinutes !== 1 ? "s" : ""} ago`;
     } else if (diffInHours < 24) {
       const hours = Math.floor(diffInHours);
-      return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+      return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
     } else {
       return date.toLocaleDateString();
     }
@@ -254,22 +266,22 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
     if (comment.created_user) {
       const { first_name, last_name, email } = comment.created_user;
       if (first_name || last_name) {
-        return `${first_name || ''} ${last_name || ''}`.trim();
+        return `${first_name || ""} ${last_name || ""}`.trim();
       }
       return email;
     }
-    return 'Unknown User';
+    return "Unknown User";
   };
 
   const getUserInitials = (comment: TicketComment) => {
     if (comment.created_user) {
       const { first_name, last_name, email } = comment.created_user;
       if (first_name || last_name) {
-        return `${first_name?.[0] || ''}${last_name?.[0] || ''}`.toUpperCase();
+        return `${first_name?.[0] || ""}${last_name?.[0] || ""}`.toUpperCase();
       }
-      return email[0]?.toUpperCase() || 'U';
+      return email[0]?.toUpperCase() || "U";
     }
-    return 'U';
+    return "U";
   };
 
   const canModifyComment = (comment: TicketComment) => {
@@ -323,7 +335,8 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
           <div className="flex space-x-3">
             <Avatar className="w-8 h-8">
               <AvatarFallback>
-                {profile?.first_name?.[0]}{profile?.last_name?.[0]}
+                {profile?.first_name?.[0]}
+                {profile?.last_name?.[0]}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
@@ -332,15 +345,17 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
                   required: "Comment content is required",
                   minLength: {
                     value: 1,
-                    message: "Comment must not be empty"
-                  }
+                    message: "Comment must not be empty",
+                  },
                 })}
                 placeholder="Add a comment..."
                 rows={3}
                 className="resize-none"
               />
               {errors.content && (
-                <p className="text-sm text-red-600 mt-1">{errors.content.message}</p>
+                <p className="text-sm text-red-600 mt-1">
+                  {errors.content.message}
+                </p>
               )}
             </div>
           </div>
@@ -369,9 +384,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
             comments.map((comment) => (
               <div key={comment.id} className="flex space-x-3 group">
                 <Avatar className="w-8 h-8">
-                  <AvatarFallback>
-                    {getUserInitials(comment)}
-                  </AvatarFallback>
+                  <AvatarFallback>{getUserInitials(comment)}</AvatarFallback>
                 </Avatar>
 
                 <div className="flex-1 min-w-0">
@@ -424,7 +437,9 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
 
                   {editingCommentId === comment.id ? (
                     <form
-                      onSubmit={handleSubmit((data) => updateComment(comment.id, data.content))}
+                      onSubmit={handleSubmit((data) =>
+                        updateComment(comment.id, data.content)
+                      )}
                       className="mt-2 space-y-2"
                     >
                       <Textarea

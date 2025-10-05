@@ -25,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
@@ -35,8 +34,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2, Clock } from "lucide-react";
-import type { CreateInvoiceForm, TimeEntry, Client } from "@/lib/types";
+import { Clock } from "lucide-react";
+import type { CreateInvoiceForm, TimeEntry } from "@/lib/types";
 
 interface InvoiceModalProps {
   isOpen: boolean;
@@ -53,9 +52,15 @@ interface InvoiceFormData {
   notes: string;
 }
 
-export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) {
+export function InvoiceModal({
+  isOpen,
+  onClose,
+  invoiceId,
+}: InvoiceModalProps) {
   const [selectedTimeEntries, setSelectedTimeEntries] = useState<string[]>([]);
-  const [availableTimeEntries, setAvailableTimeEntries] = useState<TimeEntry[]>([]);
+  const [availableTimeEntries, setAvailableTimeEntries] = useState<TimeEntry[]>(
+    []
+  );
   const [loading, setLoading] = useState(false);
 
   const { profile } = useAuthStore();
@@ -69,7 +74,7 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
     watch,
     setValue,
     reset,
-    formState: { errors }
+    formState: { errors },
   } = useForm<InvoiceFormData>({
     defaultValues: {
       client_id: "",
@@ -78,7 +83,7 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
       tax_rate: 0,
       payment_instructions: "",
       notes: "",
-    }
+    },
   });
 
   const watchedClientId = watch("client_id");
@@ -108,7 +113,7 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
 
       // Filter by client if specified
       const filtered = clientId
-        ? timeEntries.filter(entry => entry.ticket?.client?.id === clientId)
+        ? timeEntries.filter((entry) => entry.ticket?.client?.id === clientId)
         : timeEntries;
 
       setAvailableTimeEntries(filtered);
@@ -118,9 +123,9 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
   };
 
   const handleTimeEntryToggle = (timeEntryId: string) => {
-    setSelectedTimeEntries(prev => {
+    setSelectedTimeEntries((prev) => {
       const newSelection = prev.includes(timeEntryId)
-        ? prev.filter(id => id !== timeEntryId)
+        ? prev.filter((id) => id !== timeEntryId)
         : [...prev, timeEntryId];
 
       setValue("selectedTimeEntries", newSelection);
@@ -129,7 +134,7 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
   };
 
   const getSelectedTimeEntriesData = (): TimeEntry[] => {
-    return availableTimeEntries.filter(entry =>
+    return availableTimeEntries.filter((entry) =>
       selectedTimeEntries.includes(entry.id)
     );
   };
@@ -138,8 +143,11 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
     const selectedEntries = getSelectedTimeEntriesData();
     const subtotal = selectedEntries.reduce((sum, entry) => {
       // Use client's hourly rate, or user's default rate, or fallback to 0
-      const rate = entry.ticket?.client?.hourly_rate ?? entry.user?.default_hourly_rate ?? 0;
-      return sum + (entry.hours * rate);
+      const rate =
+        entry.ticket?.client?.hourly_rate ??
+        entry.user?.default_hourly_rate ??
+        0;
+      return sum + entry.hours * rate;
     }, 0);
 
     const taxAmount = subtotal * (watchedTaxRate / 100);
@@ -149,7 +157,7 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
       subtotal,
       taxAmount,
       total,
-      totalHours: selectedEntries.reduce((sum, entry) => sum + entry.hours, 0)
+      totalHours: selectedEntries.reduce((sum, entry) => sum + entry.hours, 0),
     };
   };
 
@@ -187,9 +195,9 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
@@ -226,7 +234,7 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
                 <SelectContent>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
-                      {client.name} ({client.company || 'No company'})
+                      {client.name} ({client.company || "No company"})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -238,11 +246,7 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
 
             <div className="space-y-2">
               <Label htmlFor="due_date">Due Date</Label>
-              <Input
-                type="date"
-                {...register("due_date")}
-                className="w-full"
-              />
+              <Input type="date" {...register("due_date")} className="w-full" />
             </div>
           </div>
 
@@ -265,10 +269,15 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
                       <TableRow>
                         <TableHead className="w-12">
                           <Checkbox
-                            checked={selectedTimeEntries.length === availableTimeEntries.length}
+                            checked={
+                              selectedTimeEntries.length ===
+                              availableTimeEntries.length
+                            }
                             onCheckedChange={(checked) => {
                               if (checked) {
-                                setSelectedTimeEntries(availableTimeEntries.map(e => e.id));
+                                setSelectedTimeEntries(
+                                  availableTimeEntries.map((e) => e.id)
+                                );
                               } else {
                                 setSelectedTimeEntries([]);
                               }
@@ -285,7 +294,10 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
                     </TableHeader>
                     <TableBody>
                       {availableTimeEntries.map((entry) => {
-                        const rate = entry.ticket?.client?.hourly_rate ?? entry.user?.default_hourly_rate ?? 0;
+                        const rate =
+                          entry.ticket?.client?.hourly_rate ??
+                          entry.user?.default_hourly_rate ??
+                          0;
                         const amount = entry.hours * rate;
 
                         return (
@@ -293,15 +305,19 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
                             <TableCell>
                               <Checkbox
                                 checked={selectedTimeEntries.includes(entry.id)}
-                                onCheckedChange={() => handleTimeEntryToggle(entry.id)}
+                                onCheckedChange={() =>
+                                  handleTimeEntryToggle(entry.id)
+                                }
                               />
                             </TableCell>
-                            <TableCell>{formatDate(entry.entry_date)}</TableCell>
                             <TableCell>
-                              {entry.description || 'No description'}
+                              {formatDate(entry.entry_date)}
                             </TableCell>
                             <TableCell>
-                              {entry.ticket?.title || 'Unknown ticket'}
+                              {entry.description || "No description"}
+                            </TableCell>
+                            <TableCell>
+                              {entry.ticket?.title || "Unknown ticket"}
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center">
@@ -320,12 +336,13 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
               ) : (
                 <div className="text-center py-8 border rounded-lg bg-muted/50">
                   <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No unbilled time entries</h3>
+                  <h3 className="text-lg font-medium mb-2">
+                    No unbilled time entries
+                  </h3>
                   <p className="text-muted-foreground">
                     {watchedClientId
                       ? "This client has no unbilled time entries available."
-                      : "Select a client to see available time entries."
-                    }
+                      : "Select a client to see available time entries."}
                   </p>
                 </div>
               )}
@@ -397,7 +414,9 @@ export function InvoiceModal({ isOpen, onClose, invoiceId }: InvoiceModalProps) 
             </Button>
             <Button
               type="submit"
-              disabled={loading || selectedTimeEntries.length === 0 || !watchedClientId}
+              disabled={
+                loading || selectedTimeEntries.length === 0 || !watchedClientId
+              }
             >
               {loading ? "Creating..." : "Create Invoice"}
             </Button>

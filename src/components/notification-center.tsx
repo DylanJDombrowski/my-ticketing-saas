@@ -1,12 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuthStore } from "@/stores/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,7 +26,7 @@ import {
   Clock,
   Send,
   RefreshCw,
-  Filter
+  Filter,
 } from "lucide-react";
 
 interface NotificationLog {
@@ -40,14 +45,14 @@ const statusColors = {
   pending: "bg-yellow-100 text-yellow-800",
   processing: "bg-blue-100 text-blue-800",
   sent: "bg-green-100 text-green-800",
-  failed: "bg-red-100 text-red-800"
+  failed: "bg-red-100 text-red-800",
 };
 
 const statusIcons = {
   pending: Clock,
   processing: RefreshCw,
   sent: CheckCircle,
-  failed: XCircle
+  failed: XCircle,
 };
 
 const typeColors = {
@@ -55,11 +60,10 @@ const typeColors = {
   invoice_overdue: "bg-red-100 text-red-800",
   ticket_comment: "bg-green-100 text-green-800",
   ticket_status_change: "bg-purple-100 text-purple-800",
-  sla_alert: "bg-orange-100 text-orange-800"
+  sla_alert: "bg-orange-100 text-orange-800",
 };
 
 export function NotificationCenter() {
-  const { profile } = useAuthStore();
   const [notifications, setNotifications] = useState<NotificationLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -68,7 +72,8 @@ export function NotificationCenter() {
 
   // Send notification form state
   const [recipient, setRecipient] = useState("");
-  const [notificationType, setNotificationType] = useState<string>("invoice_sent");
+  const [notificationType, setNotificationType] =
+    useState<string>("invoice_sent");
   const [subject, setSubject] = useState("");
   const [messageBody, setMessageBody] = useState("");
 
@@ -118,7 +123,7 @@ export function NotificationCenter() {
           notification_type: notificationType,
           subject,
           message_body: messageBody,
-          send_immediately: true
+          send_immediately: true,
         }),
       });
 
@@ -139,7 +144,9 @@ export function NotificationCenter() {
       fetchNotifications();
     } catch (error) {
       console.error("Error sending notification:", error);
-      notify.error(error instanceof Error ? error.message : "Failed to send notification");
+      notify.error(
+        error instanceof Error ? error.message : "Failed to send notification"
+      );
     } finally {
       setSending(false);
     }
@@ -154,9 +161,11 @@ export function NotificationCenter() {
     return <Icon className="h-4 w-4" />;
   };
 
-  const filteredNotifications = notifications.filter(notification => {
-    const statusMatch = statusFilter === "all" || notification.status === statusFilter;
-    const typeMatch = typeFilter === "all" || notification.notification_type === typeFilter;
+  const filteredNotifications = notifications.filter((notification) => {
+    const statusMatch =
+      statusFilter === "all" || notification.status === statusFilter;
+    const typeMatch =
+      typeFilter === "all" || notification.notification_type === typeFilter;
     return statusMatch && typeMatch;
   });
 
@@ -173,7 +182,9 @@ export function NotificationCenter() {
           </p>
         </div>
         <Button onClick={fetchNotifications} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+          />
           Refresh
         </Button>
       </div>
@@ -219,9 +230,15 @@ export function NotificationCenter() {
                     <SelectContent>
                       <SelectItem value="all">All Types</SelectItem>
                       <SelectItem value="invoice_sent">Invoice Sent</SelectItem>
-                      <SelectItem value="invoice_overdue">Invoice Overdue</SelectItem>
-                      <SelectItem value="ticket_comment">Ticket Comment</SelectItem>
-                      <SelectItem value="ticket_status_change">Ticket Status Change</SelectItem>
+                      <SelectItem value="invoice_overdue">
+                        Invoice Overdue
+                      </SelectItem>
+                      <SelectItem value="ticket_comment">
+                        Ticket Comment
+                      </SelectItem>
+                      <SelectItem value="ticket_status_change">
+                        Ticket Status Change
+                      </SelectItem>
                       <SelectItem value="sla_alert">SLA Alert</SelectItem>
                     </SelectContent>
                   </Select>
@@ -239,7 +256,10 @@ export function NotificationCenter() {
                   <div>
                     <p className="text-sm text-muted-foreground">Pending</p>
                     <p className="text-2xl font-bold">
-                      {notifications.filter(n => n.status === 'pending').length}
+                      {
+                        notifications.filter((n) => n.status === "pending")
+                          .length
+                      }
                     </p>
                   </div>
                 </div>
@@ -252,7 +272,7 @@ export function NotificationCenter() {
                   <div>
                     <p className="text-sm text-muted-foreground">Sent</p>
                     <p className="text-2xl font-bold">
-                      {notifications.filter(n => n.status === 'sent').length}
+                      {notifications.filter((n) => n.status === "sent").length}
                     </p>
                   </div>
                 </div>
@@ -265,7 +285,10 @@ export function NotificationCenter() {
                   <div>
                     <p className="text-sm text-muted-foreground">Failed</p>
                     <p className="text-2xl font-bold">
-                      {notifications.filter(n => n.status === 'failed').length}
+                      {
+                        notifications.filter((n) => n.status === "failed")
+                          .length
+                      }
                     </p>
                   </div>
                 </div>
@@ -300,12 +323,23 @@ export function NotificationCenter() {
               ) : filteredNotifications.length > 0 ? (
                 <div className="space-y-4">
                   {filteredNotifications.map((notification) => (
-                    <div key={notification.id} className="border rounded-lg p-4 space-y-3">
+                    <div
+                      key={notification.id}
+                      className="border rounded-lg p-4 space-y-3"
+                    >
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-medium">{notification.subject}</h4>
-                            <Badge className={typeColors[notification.notification_type as keyof typeof typeColors]}>
+                            <h4 className="font-medium">
+                              {notification.subject}
+                            </h4>
+                            <Badge
+                              className={
+                                typeColors[
+                                  notification.notification_type as keyof typeof typeColors
+                                ]
+                              }
+                            >
                               {notification.notification_type}
                             </Badge>
                           </div>
@@ -315,7 +349,13 @@ export function NotificationCenter() {
                         </div>
                         <div className="flex items-center gap-2">
                           {getStatusIcon(notification.status)}
-                          <Badge className={statusColors[notification.status as keyof typeof statusColors]}>
+                          <Badge
+                            className={
+                              statusColors[
+                                notification.status as keyof typeof statusColors
+                              ]
+                            }
+                          >
                             {notification.status}
                           </Badge>
                         </div>
@@ -324,7 +364,9 @@ export function NotificationCenter() {
                       <p className="text-sm">{notification.message_body}</p>
 
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>Created: {formatDate(notification.created_at)}</span>
+                        <span>
+                          Created: {formatDate(notification.created_at)}
+                        </span>
                         {notification.sent_at && (
                           <span>Sent: {formatDate(notification.sent_at)}</span>
                         )}
@@ -379,15 +421,24 @@ export function NotificationCenter() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="type">Notification Type</Label>
-                  <Select value={notificationType} onValueChange={setNotificationType}>
+                  <Select
+                    value={notificationType}
+                    onValueChange={setNotificationType}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="invoice_sent">Invoice Sent</SelectItem>
-                      <SelectItem value="invoice_overdue">Invoice Overdue</SelectItem>
-                      <SelectItem value="ticket_comment">Ticket Comment</SelectItem>
-                      <SelectItem value="ticket_status_change">Ticket Status Change</SelectItem>
+                      <SelectItem value="invoice_overdue">
+                        Invoice Overdue
+                      </SelectItem>
+                      <SelectItem value="ticket_comment">
+                        Ticket Comment
+                      </SelectItem>
+                      <SelectItem value="ticket_status_change">
+                        Ticket Status Change
+                      </SelectItem>
                       <SelectItem value="sla_alert">SLA Alert</SelectItem>
                     </SelectContent>
                   </Select>

@@ -32,13 +32,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useTimeEntriesStore } from "@/stores/time-entries";
 import { useTicketsStore } from "@/stores/tickets";
 import { notify } from "@/lib/notifications";
-import {
-  Play,
-  Pause,
-  Square,
-  Clock,
-  RotateCcw,
-} from "lucide-react";
+import { Play, Pause, Square, Clock, RotateCcw } from "lucide-react";
 
 interface TimerSession {
   ticketId: string;
@@ -65,31 +59,33 @@ export function TimeTracker() {
     }
 
     // Load any existing timer from localStorage
-    const savedTimer = localStorage.getItem('activeTimer');
+    const savedTimer = localStorage.getItem("activeTimer");
     if (savedTimer) {
       try {
         const timer = JSON.parse(savedTimer);
         setSession(timer);
         setDisplayTime(timer.elapsedTime);
       } catch (error) {
-        console.error('Failed to load saved timer:', error);
+        console.error("Failed to load saved timer:", error);
       }
     }
   }, [profile?.tenant_id, fetchTickets]);
 
   // Find current ticket
-  const currentTicket = session ? tickets.find(t => t.id === session.ticketId) : null;
+  const currentTicket = session
+    ? tickets.find((t) => t.id === session.ticketId)
+    : null;
 
   // Save timer state to localStorage whenever session changes
   useEffect(() => {
     if (session) {
       const timerData = {
         ...session,
-        ticketTitle: currentTicket?.title
+        ticketTitle: currentTicket?.title,
       };
-      localStorage.setItem('activeTimer', JSON.stringify(timerData));
+      localStorage.setItem("activeTimer", JSON.stringify(timerData));
     } else {
-      localStorage.removeItem('activeTimer');
+      localStorage.removeItem("activeTimer");
     }
   }, [session, currentTicket]);
 
@@ -122,9 +118,13 @@ export function TimeTracker() {
     const seconds = totalSeconds % 60;
 
     if (hours > 0) {
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      return `${hours.toString().padStart(2, "0")}:${minutes
+        .toString()
+        .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
     }
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const getHoursFromMilliseconds = (milliseconds: number) => {
@@ -135,11 +135,15 @@ export function TimeTracker() {
     if (!session) return;
 
     const now = Date.now();
-    setSession(prev => prev ? {
-      ...prev,
-      isRunning: true,
-      startTime: now
-    } : null);
+    setSession((prev) =>
+      prev
+        ? {
+            ...prev,
+            isRunning: true,
+            startTime: now,
+          }
+        : null
+    );
   };
 
   const pauseTimer = () => {
@@ -148,11 +152,15 @@ export function TimeTracker() {
     const now = Date.now();
     const elapsed = session.elapsedTime + (now - session.startTime);
 
-    setSession(prev => prev ? {
-      ...prev,
-      isRunning: false,
-      elapsedTime: elapsed
-    } : null);
+    setSession((prev) =>
+      prev
+        ? {
+            ...prev,
+            isRunning: false,
+            elapsedTime: elapsed,
+          }
+        : null
+    );
 
     setDisplayTime(elapsed);
   };
@@ -175,11 +183,13 @@ export function TimeTracker() {
 
   const createNewSession = (ticketId: string) => {
     if (session && session.elapsedTime > 0) {
-      notify.error("Please save or discard the current session before starting a new one");
+      notify.error(
+        "Please save or discard the current session before starting a new one"
+      );
       return;
     }
 
-    const selectedTicket = tickets.find(t => t.id === ticketId);
+    const selectedTicket = tickets.find((t) => t.id === ticketId);
     if (!selectedTicket) return;
 
     setSession({
@@ -208,7 +218,7 @@ export function TimeTracker() {
         description: session.description,
         hours: totalHours,
         is_billable: session.isBillable,
-        entry_date: new Date().toISOString().split('T')[0],
+        entry_date: new Date().toISOString().split("T")[0],
       });
 
       if (error) {
@@ -280,9 +290,7 @@ export function TimeTracker() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Ticket:</span>
-                  <Badge variant="outline">
-                    {currentTicket?.title}
-                  </Badge>
+                  <Badge variant="outline">{currentTicket?.title}</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Client:</span>
@@ -346,7 +354,8 @@ export function TimeTracker() {
                 <div className="flex justify-between items-center">
                   <span className="font-medium">Total Time:</span>
                   <span className="text-lg font-mono">
-                    {formatTime(displayTime)} ({getHoursFromMilliseconds(displayTime).toFixed(2)}h)
+                    {formatTime(displayTime)} (
+                    {getHoursFromMilliseconds(displayTime).toFixed(2)}h)
                   </span>
                 </div>
 
@@ -360,9 +369,11 @@ export function TimeTracker() {
                   <Textarea
                     id="description"
                     value={session.description}
-                    onChange={(e) => setSession(prev =>
-                      prev ? { ...prev, description: e.target.value } : null
-                    )}
+                    onChange={(e) =>
+                      setSession((prev) =>
+                        prev ? { ...prev, description: e.target.value } : null
+                      )
+                    }
                     rows={3}
                   />
                 </div>
@@ -371,9 +382,11 @@ export function TimeTracker() {
                   <Checkbox
                     id="is_billable"
                     checked={session.isBillable}
-                    onCheckedChange={(checked) => setSession(prev =>
-                      prev ? { ...prev, isBillable: checked === true } : null
-                    )}
+                    onCheckedChange={(checked) =>
+                      setSession((prev) =>
+                        prev ? { ...prev, isBillable: checked === true } : null
+                      )
+                    }
                   />
                   <Label htmlFor="is_billable">This time is billable</Label>
                 </div>
@@ -385,9 +398,7 @@ export function TimeTracker() {
             <Button variant="outline" onClick={discardSession}>
               Discard
             </Button>
-            <Button onClick={saveTimeEntry}>
-              Save Time Entry
-            </Button>
+            <Button onClick={saveTimeEntry}>Save Time Entry</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
