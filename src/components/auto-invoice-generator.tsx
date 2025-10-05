@@ -111,14 +111,14 @@ export function AutoInvoiceGenerator() {
               <div className="space-y-2">
                 <Label htmlFor="client">Client (Optional)</Label>
                 <Select
-                  value={form.watch("client_id")}
-                  onValueChange={(value) => form.setValue("client_id", value)}
+                  value={form.watch("client_id") || "ALL_CLIENTS"}
+                  onValueChange={(value) => form.setValue("client_id", value === "ALL_CLIENTS" ? "" : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All clients" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All clients</SelectItem>
+                    <SelectItem value="ALL_CLIENTS">All clients</SelectItem>
                     {clients.map((client) => (
                       <SelectItem key={client.id} value={client.id}>
                         {client.name} ({client.email})

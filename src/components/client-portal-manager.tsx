@@ -46,7 +46,7 @@ export function ClientPortalManager({ client }: ClientPortalManagerProps) {
   const generatePortalAccess = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/client-portal/${client.id}`, {
+      const response = await fetch(`/api/client-portal/generate`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

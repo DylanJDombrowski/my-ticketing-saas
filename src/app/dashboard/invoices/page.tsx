@@ -107,7 +107,7 @@ export default function InvoicesPage() {
 
     const clientEmail = invoice.client?.email;
     if (!clientEmail) {
-      alert("Client email not found. Please update the client's email address.");
+      notify.error("Client email not found. Please update the client's email address.");
       return;
     }
 
@@ -116,9 +116,13 @@ export default function InvoicesPage() {
     );
 
     if (confirmed) {
-      await sendInvoice(profile.tenant_id, invoice.id, clientEmail);
-      // Optionally refresh invoices
-      await fetchInvoices(profile.tenant_id);
+      try {
+        await sendInvoice(profile.tenant_id, invoice.id, clientEmail);
+        notify.success(`Invoice sent to ${clientEmail}`);
+        await fetchInvoices(profile.tenant_id);
+      } catch (error) {
+        notify.error(error instanceof Error ? error.message : "Failed to send invoice");
+      }
     }
   };
 
@@ -448,7 +452,20 @@ export default function InvoicesPage() {
                               Edit Invoice
                             </DropdownMenuItem>
                           )}
-                          <DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.preventDefault();
+                              // Create a submenu for status changes
+                              const newStatus = prompt(
+                                'Enter new status (draft, sent, paid, partial, overdue, cancelled):'
+                              );
+                              if (newStatus && ['draft', 'sent', 'paid', 'partial', 'overdue', 'cancelled'].includes(newStatus)) {
+                                handleStatusChange(invoice.id, newStatus as InvoiceStatus);
+                              } else if (newStatus) {
+                                notify.error('Invalid status. Choose: draft, sent, paid, partial, overdue, or cancelled');
+                              }
+                            }}
+                          >
                             <Calendar className="h-4 w-4 mr-2" />
                             Change Status
                           </DropdownMenuItem>
