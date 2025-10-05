@@ -22,7 +22,8 @@ import {
   Ticket,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  Download,
 } from "lucide-react";
 
 interface Invoice {
@@ -77,21 +78,21 @@ const statusColors = {
   sent: "bg-blue-100 text-blue-800",
   paid: "bg-green-100 text-green-800",
   overdue: "bg-red-100 text-red-800",
-  cancelled: "bg-gray-100 text-gray-800"
+  cancelled: "bg-gray-100 text-gray-800",
 };
 
 const ticketStatusColors = {
   open: "bg-blue-100 text-blue-800",
   in_progress: "bg-yellow-100 text-yellow-800",
   resolved: "bg-green-100 text-green-800",
-  closed: "bg-gray-100 text-gray-800"
+  closed: "bg-gray-100 text-gray-800",
 };
 
 const priorityColors = {
   low: "bg-green-100 text-green-800",
   medium: "bg-yellow-100 text-yellow-800",
   high: "bg-orange-100 text-orange-800",
-  urgent: "bg-red-100 text-red-800"
+  urgent: "bg-red-100 text-red-800",
 };
 
 export default function ClientPortalPage() {
@@ -125,9 +126,9 @@ export default function ClientPortalPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
@@ -136,14 +137,14 @@ export default function ClientPortalPage() {
   };
 
   const handleViewPDF = (invoiceId: string) => {
-    window.open(`/api/invoices/${invoiceId}/pdf`, '_blank');
+    window.open(`/api/invoices/${invoiceId}/pdf`, "_blank");
   };
 
   const handleDownloadPDF = (invoiceId: string, invoiceNumber: string) => {
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = `/api/invoices/${invoiceId}/pdf`;
     link.download = `invoice-${invoiceNumber}.pdf`;
-    link.target = '_blank';
+    link.target = "_blank";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -166,9 +167,12 @@ export default function ClientPortalPage() {
         <Card className="w-full max-w-md">
           <CardContent className="p-6 text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Access Denied
+            </h2>
             <p className="text-gray-600 mb-4">
-              {error || "Invalid or expired access token. Please contact support for a new access link."}
+              {error ||
+                "Invalid or expired access token. Please contact support for a new access link."}
             </p>
             <Button variant="outline" onClick={() => window.location.reload()}>
               Try Again
@@ -184,13 +188,13 @@ export default function ClientPortalPage() {
   // Calculate invoice statistics
   const totalAmount = invoices.reduce((sum, inv) => sum + inv.total_amount, 0);
   const paidAmount = invoices
-    .filter(inv => inv.status === 'paid')
+    .filter((inv) => inv.status === "paid")
     .reduce((sum, inv) => sum + inv.total_amount, 0);
   const pendingAmount = invoices
-    .filter(inv => ['draft', 'sent'].includes(inv.status))
+    .filter((inv) => ["draft", "sent"].includes(inv.status))
     .reduce((sum, inv) => sum + inv.total_amount, 0);
   const overdueAmount = invoices
-    .filter(inv => inv.status === 'overdue')
+    .filter((inv) => inv.status === "overdue")
     .reduce((sum, inv) => sum + inv.total_amount, 0);
 
   return (
@@ -205,7 +209,8 @@ export default function ClientPortalPage() {
                   Welcome, {client.name}!
                 </h2>
                 <p className="text-gray-600">
-                  Access your invoices, view tickets, and manage your account information.
+                  Access your invoices, view tickets, and manage your account
+                  information.
                 </p>
               </div>
               <div className="text-right">
@@ -225,8 +230,12 @@ export default function ClientPortalPage() {
               <div className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-blue-500" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Invoiced</p>
-                  <p className="text-2xl font-bold">{formatCurrency(totalAmount)}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Total Invoiced
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {formatCurrency(totalAmount)}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -293,7 +302,8 @@ export default function ClientPortalPage() {
               <CardHeader>
                 <CardTitle>Your Invoices</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  View and download your invoices. Click on an invoice to see details.
+                  View and download your invoices. Click on an invoice to see
+                  details.
                 </p>
               </CardHeader>
               <CardContent>
@@ -315,16 +325,28 @@ export default function ClientPortalPage() {
                           <TableCell className="font-medium">
                             {invoice.invoice_number}
                           </TableCell>
-                          <TableCell>{formatCurrency(invoice.total_amount)}</TableCell>
                           <TableCell>
-                            <Badge className={statusColors[invoice.status as keyof typeof statusColors]}>
+                            {formatCurrency(invoice.total_amount)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              className={
+                                statusColors[
+                                  invoice.status as keyof typeof statusColors
+                                ]
+                              }
+                            >
                               {invoice.status}
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            {invoice.due_date ? formatDate(invoice.due_date) : 'No due date'}
+                            {invoice.due_date
+                              ? formatDate(invoice.due_date)
+                              : "No due date"}
                           </TableCell>
-                          <TableCell>{formatDate(invoice.created_at)}</TableCell>
+                          <TableCell>
+                            {formatDate(invoice.created_at)}
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
                               <Button
@@ -338,7 +360,12 @@ export default function ClientPortalPage() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleDownloadPDF(invoice.id, invoice.invoice_number)}
+                                onClick={() =>
+                                  handleDownloadPDF(
+                                    invoice.id,
+                                    invoice.invoice_number
+                                  )
+                                }
                               >
                                 <Download className="h-4 w-4 mr-1" />
                                 Download
@@ -379,14 +406,30 @@ export default function ClientPortalPage() {
                       <div key={ticket.id} className="border rounded-lg p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div>
-                            <h4 className="font-medium text-gray-900">{ticket.title}</h4>
-                            <p className="text-sm text-gray-600 mt-1">{ticket.description}</p>
+                            <h4 className="font-medium text-gray-900">
+                              {ticket.title}
+                            </h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              {ticket.description}
+                            </p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge className={priorityColors[ticket.priority as keyof typeof priorityColors]}>
+                            <Badge
+                              className={
+                                priorityColors[
+                                  ticket.priority as keyof typeof priorityColors
+                                ]
+                              }
+                            >
                               {ticket.priority}
                             </Badge>
-                            <Badge className={ticketStatusColors[ticket.status as keyof typeof ticketStatusColors]}>
+                            <Badge
+                              className={
+                                ticketStatusColors[
+                                  ticket.status as keyof typeof ticketStatusColors
+                                ]
+                              }
+                            >
                               {ticket.status}
                             </Badge>
                           </div>
@@ -405,7 +448,8 @@ export default function ClientPortalPage() {
                       No support tickets
                     </h3>
                     <p className="text-gray-500">
-                      Your support tickets will appear here when they are created.
+                      Your support tickets will appear here when they are
+                      created.
                     </p>
                   </div>
                 )}
