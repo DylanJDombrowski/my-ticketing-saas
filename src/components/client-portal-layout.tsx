@@ -1,20 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  FileText,
-  Ticket,
   Building2,
   Mail,
   Phone,
   MapPin,
   Calendar,
   User,
-  Shield
+  Shield,
 } from "lucide-react";
 
 interface ClientInfo {
@@ -44,9 +40,11 @@ interface ClientPortalLayoutProps {
   children: React.ReactNode;
 }
 
-export function ClientPortalLayout({ client, portal_info, children }: ClientPortalLayoutProps) {
-  const pathname = usePathname();
-
+export function ClientPortalLayout({
+  client,
+  portal_info,
+  children,
+}: ClientPortalLayoutProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString();
   };
@@ -59,7 +57,9 @@ export function ClientPortalLayout({ client, portal_info, children }: ClientPort
     if (!portal_info.expires_at) return false;
     const expiryDate = new Date(portal_info.expires_at);
     const now = new Date();
-    const daysUntilExpiry = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const daysUntilExpiry = Math.ceil(
+      (expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
     return daysUntilExpiry <= 7;
   };
 
@@ -83,7 +83,9 @@ export function ClientPortalLayout({ client, portal_info, children }: ClientPort
 
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{client.name}</p>
+                <p className="text-sm font-medium text-gray-900">
+                  {client.name}
+                </p>
                 <p className="text-xs text-gray-500">{client.email}</p>
               </div>
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -151,7 +153,9 @@ export function ClientPortalLayout({ client, portal_info, children }: ClientPort
                     <Calendar className="h-4 w-4 text-gray-500" />
                     <div>
                       <p className="text-xs text-gray-500">Last accessed</p>
-                      <p className="text-sm">{formatDateTime(portal_info.last_accessed)}</p>
+                      <p className="text-sm">
+                        {formatDateTime(portal_info.last_accessed)}
+                      </p>
                     </div>
                   </div>
 
@@ -161,7 +165,9 @@ export function ClientPortalLayout({ client, portal_info, children }: ClientPort
                       <div>
                         <p className="text-xs text-gray-500">Access expires</p>
                         <div className="flex items-center gap-2">
-                          <p className="text-sm">{formatDate(portal_info.expires_at)}</p>
+                          <p className="text-sm">
+                            {formatDate(portal_info.expires_at)}
+                          </p>
                           {isExpiringSoon() && (
                             <Badge variant="destructive" className="text-xs">
                               Expires Soon
@@ -200,9 +206,7 @@ export function ClientPortalLayout({ client, portal_info, children }: ClientPort
           </div>
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
-            {children}
-          </div>
+          <div className="lg:col-span-3">{children}</div>
         </div>
       </div>
 
@@ -211,10 +215,12 @@ export function ClientPortalLayout({ client, portal_info, children }: ClientPort
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="text-center text-sm text-gray-500">
             <p>
-              © 2025 {client.tenant.company_name || client.tenant.name}. All rights reserved.
+              © 2025 {client.tenant.company_name || client.tenant.name}. All
+              rights reserved.
             </p>
             <p className="mt-1">
-              Powered by {client.tenant.company_name || client.tenant.name} Client Portal
+              Powered by {client.tenant.company_name || client.tenant.name}{" "}
+              Client Portal
             </p>
           </div>
         </div>
