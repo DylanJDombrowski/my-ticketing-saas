@@ -10,16 +10,15 @@ export function Hero() {
       <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-            Streamline Your
+            Track Time.
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
               {" "}
-              Client Support
+              Get Paid.
             </span>
           </h1>
           <p className="mt-6 text-lg leading-8 text-gray-600">
-            The modern ticketing platform that helps teams track issues, manage
-            clients, and bill time efficiently. Everything you need to deliver
-            exceptional customer service.
+            Professional time tracking and invoicing for freelancers and agencies.
+            Manage clients, track billable hours, and get paid faster with Billable.
           </p>
 
           <div className="mt-10 flex items-center justify-center gap-x-6">
@@ -48,7 +47,7 @@ export function Hero() {
                 Lightning Fast
               </h3>
               <p className="mt-2 text-sm text-gray-600 text-center">
-                Set up in minutes, not hours. Start managing tickets
+                Set up in minutes, not hours. Start tracking time and billing clients
                 immediately.
               </p>
             </div>

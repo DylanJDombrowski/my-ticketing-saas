@@ -19,10 +19,10 @@ import {
 
 const features = [
   {
-    icon: Ticket,
-    title: "Smart Ticket Management",
+    icon: Clock,
+    title: "Smart Time Tracking",
     description:
-      "Create, assign, and track support tickets with priority levels, due dates, and status updates.",
+      "Track billable hours with a built-in timer, detailed descriptions, and automatic project integration.",
   },
   {
     icon: Users,
@@ -31,46 +31,46 @@ const features = [
       "Organize client information, track communication history, and manage multiple accounts seamlessly.",
   },
   {
-    icon: Clock,
-    title: "Time Tracking",
+    icon: Ticket,
+    title: "Project & Ticket Tracking",
     description:
-      "Log billable and non-billable hours with detailed descriptions and automatic ticket integration.",
+      "Create and track work items with priority levels, due dates, and status updates for complete visibility.",
   },
   {
     icon: BarChart3,
-    title: "Analytics & Reports",
+    title: "Professional Invoicing",
     description:
-      "Get insights into team performance, client activity, and time allocation with detailed reporting.",
+      "Generate beautiful PDF invoices from tracked time, accept online payments, and get paid faster.",
   },
   {
     icon: Shield,
-    title: "Multi-Tenant Security",
+    title: "Secure & Private",
     description:
-      "Enterprise-grade security with isolated tenant data and role-based access controls.",
+      "Enterprise-grade security with isolated data and role-based access controls for your team.",
   },
   {
     icon: Zap,
-    title: "Real-Time Updates",
+    title: "Accept Payments",
     description:
-      "Stay synchronized with live updates, notifications, and collaborative features.",
+      "Connect your Stripe account and let clients pay invoices instantly with credit cards.",
   },
   {
     icon: Calendar,
-    title: "Due Date Management",
+    title: "Reports & Analytics",
     description:
-      "Never miss deadlines with automatic reminders and overdue ticket tracking.",
+      "Get insights into billable hours, revenue trends, and client profitability with detailed reporting.",
   },
   {
     icon: MessageSquare,
-    title: "Team Collaboration",
+    title: "Client Portal",
     description:
-      "Comment on tickets, mention team members, and keep everyone in the loop.",
+      "Give clients secure access to view their invoices, tickets, and payment history.",
   },
   {
     icon: Target,
-    title: "Priority Management",
+    title: "SLA Monitoring",
     description:
-      "Organize work by priority levels and ensure critical issues get immediate attention.",
+      "Set service level agreements and get automatic alerts when response times are at risk.",
   },
 ];
 
@@ -80,11 +80,10 @@ export function Features() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Everything you need to deliver great support
+            Everything you need to run your business
           </h2>
           <p className="mt-4 text-lg text-gray-600">
-            Powerful features designed to streamline your workflow and improve
-            customer satisfaction.
+            Powerful features designed to help you track time, manage clients, and get paid faster.
           </p>
         </div>
 

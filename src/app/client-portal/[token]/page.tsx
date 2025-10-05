@@ -17,15 +17,12 @@ import {
 import { ClientPortalLayout } from "@/components/client-portal-layout";
 import {
   FileText,
-  Download,
   Eye,
   DollarSign,
-  Calendar,
   Ticket,
   AlertCircle,
   CheckCircle,
-  Clock,
-  ArrowRight
+  Clock
 } from "lucide-react";
 
 interface Invoice {

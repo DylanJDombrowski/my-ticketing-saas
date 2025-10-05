@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ticketing SaaS",
-  description: "Modern client ticketing and time tracking platform",
+  title: "Billable - Time Tracking & Invoicing",
+  description: "Professional time tracking, invoicing, and client management platform for freelancers and agencies",
 };
 
 export default function RootLayout({

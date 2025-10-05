@@ -12,51 +12,54 @@ import { Check } from "lucide-react";
 const plans = [
   {
     name: "Starter",
-    price: "Free",
-    description: "Perfect for small teams getting started",
+    price: "$29",
+    period: "/month",
+    description: "Perfect for freelancers",
     features: [
-      "Up to 3 users",
-      "50 tickets per month",
-      "Basic time tracking",
+      "1 user",
+      "5 clients",
+      "50 projects per month",
+      "Time tracking & invoicing",
+      "Accept card payments",
       "Email support",
-      "Standard reports",
     ],
-    cta: "Get Started",
+    cta: "Start Free Trial",
     popular: false,
   },
   {
     name: "Professional",
-    price: "$29",
+    price: "$79",
     period: "/month",
-    description: "Best for growing businesses",
+    description: "Best for small agencies",
     features: [
-      "Up to 15 users",
-      "Unlimited tickets",
+      "Up to 3 users",
+      "25 clients",
+      "Unlimited projects",
       "Advanced time tracking",
+      "Client portal access",
       "Priority support",
-      "Advanced analytics",
-      "Custom fields",
-      "API access",
+      "SLA monitoring",
+      "Advanced reports",
     ],
     cta: "Start Free Trial",
     popular: true,
   },
   {
-    name: "Enterprise",
-    price: "$99",
+    name: "Business",
+    price: "$149",
     period: "/month",
-    description: "For large organizations",
+    description: "For growing teams",
     features: [
-      "Unlimited users",
-      "Unlimited tickets",
-      "Advanced integrations",
+      "Up to 10 users",
+      "Unlimited clients",
+      "Unlimited projects",
+      "White-label invoices",
       "Dedicated support",
-      "Custom reporting",
-      "SSO & SAML",
-      "SLA management",
-      "White labeling",
+      "Custom integrations",
+      "API access",
+      "Usage analytics",
     ],
-    cta: "Contact Sales",
+    cta: "Start Free Trial",
     popular: false,
   },
 ];
@@ -70,8 +73,8 @@ export function Pricing() {
             Simple, transparent pricing
           </h2>
           <p className="mt-4 text-lg text-gray-600">
-            Choose the plan that fits your team size and needs. Start free,
-            upgrade anytime.
+            All plans include a 14-day free trial. No credit card required.
+            Cancel anytime.
           </p>
         </div>
 
