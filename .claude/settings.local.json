@@ -25,7 +25,8 @@
       "Bash(xargs:*)",
       "Bash(npx eslint:*)",
       "Bash(python3:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(psql:*)"
     ],
     "deny": [],
     "ask": []

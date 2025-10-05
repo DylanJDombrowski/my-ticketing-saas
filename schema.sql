@@ -407,18 +407,35 @@ ALTER TABLE "public"."notification_log" OWNER TO "postgres";
 
 CREATE TABLE IF NOT EXISTS "public"."payment_methods" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "profile_id" "uuid" NOT NULL,
     "tenant_id" "uuid" NOT NULL,
-    "method_type" character varying(20) NOT NULL,
-    "display_name" character varying(100) NOT NULL,
-    "instructions" "text",
-    "payment_link_template" "text",
+    "method_type" character varying(50) NOT NULL,
+    "method_name" character varying(100),
+    "instructions" "text" NOT NULL,
+    "is_default" boolean DEFAULT false,
     "is_active" boolean DEFAULT true,
-    "sort_order" integer DEFAULT 0,
-    "created_at" timestamp with time zone DEFAULT "now"()
+    "created_at" timestamp without time zone DEFAULT "now"(),
+    "updated_at" timestamp without time zone DEFAULT "now"()
 );
 
 
 ALTER TABLE "public"."payment_methods" OWNER TO "postgres";
+
+
+COMMENT ON TABLE "public"."payment_methods" IS 'Manual payment methods configured by users';
+
+
+
+COMMENT ON COLUMN "public"."payment_methods"."profile_id" IS 'References profiles.id (the user)';
+
+
+
+COMMENT ON COLUMN "public"."payment_methods"."method_type" IS 'Type: bank, venmo, paypal, zelle, crypto, check, wire, other';
+
+
+
+COMMENT ON COLUMN "public"."payment_methods"."instructions" IS 'Instructions for client to pay using this method';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."payments" (
@@ -756,7 +773,15 @@ CREATE INDEX "idx_notification_log_tenant_id" ON "public"."notification_log" USI
 
 
 
-CREATE INDEX "idx_payment_methods_tenant_id" ON "public"."payment_methods" USING "btree" ("tenant_id");
+CREATE INDEX "idx_payment_methods_default" ON "public"."payment_methods" USING "btree" ("profile_id", "is_default") WHERE ("is_default" = true);
+
+
+
+CREATE INDEX "idx_payment_methods_profile" ON "public"."payment_methods" USING "btree" ("profile_id");
+
+
+
+CREATE INDEX "idx_payment_methods_tenant" ON "public"."payment_methods" USING "btree" ("tenant_id");
 
 
 
@@ -959,6 +984,11 @@ ALTER TABLE ONLY "public"."notification_log"
 
 
 ALTER TABLE ONLY "public"."payment_methods"
+    ADD CONSTRAINT "payment_methods_profile_id_fkey" FOREIGN KEY ("profile_id") REFERENCES "public"."profiles"("id") ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."payment_methods"
     ADD CONSTRAINT "payment_methods_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
 
 
@@ -1053,7 +1083,15 @@ ALTER TABLE ONLY "public"."time_entries"
 
 
 
+CREATE POLICY "Users can delete own payment methods" ON "public"."payment_methods" FOR DELETE TO "authenticated" USING (("profile_id" = "auth"."uid"()));
+
+
+
 CREATE POLICY "Users can insert own Stripe account" ON "public"."stripe_connect_accounts" FOR INSERT TO "authenticated" WITH CHECK (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "Users can insert own payment methods" ON "public"."payment_methods" FOR INSERT TO "authenticated" WITH CHECK (("profile_id" = "auth"."uid"()));
 
 
 
@@ -1072,12 +1110,6 @@ CREATE POLICY "Users can manage their tenant's clients" ON "public"."clients" US
 
 
 CREATE POLICY "Users can manage their tenant's invoices" ON "public"."invoices" USING (("tenant_id" = ( SELECT "profiles"."tenant_id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"()))));
-
-
-
-CREATE POLICY "Users can manage their tenant's payment methods" ON "public"."payment_methods" USING (("tenant_id" = ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
   WHERE ("profiles"."id" = "auth"."uid"()))));
 
@@ -1107,7 +1139,15 @@ CREATE POLICY "Users can update own Stripe account" ON "public"."stripe_connect_
 
 
 
+CREATE POLICY "Users can update own payment methods" ON "public"."payment_methods" FOR UPDATE TO "authenticated" USING (("profile_id" = "auth"."uid"())) WITH CHECK (("profile_id" = "auth"."uid"()));
+
+
+
 CREATE POLICY "Users can view own Stripe account" ON "public"."stripe_connect_accounts" FOR SELECT TO "authenticated" USING (("user_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "Users can view own payment methods" ON "public"."payment_methods" FOR SELECT TO "authenticated" USING (("profile_id" = "auth"."uid"()));
 
 
 
@@ -1195,14 +1235,6 @@ CREATE POLICY "notification_log_tenant_policy" ON "public"."notification_log" TO
 
 
 ALTER TABLE "public"."payment_methods" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "payment_methods_tenant_policy" ON "public"."payment_methods" TO "authenticated" USING (("tenant_id" = ( SELECT "profiles"."tenant_id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"())))) WITH CHECK (("tenant_id" = ( SELECT "profiles"."tenant_id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"()))));
-
 
 
 ALTER TABLE "public"."payments" ENABLE ROW LEVEL SECURITY;

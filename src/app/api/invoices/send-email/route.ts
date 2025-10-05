@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
         invoice_number,
         total_amount,
         due_date,
-        issue_date,
+        created_at,
         status,
         client:clients(id, name, email)
       `
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
                   </tr>
                   <tr>
                     <td>Issue Date:</td>
-                    <td>${new Date(invoice.issue_date).toLocaleDateString()}</td>
+                    <td>${new Date(invoice.created_at).toLocaleDateString()}</td>
                   </tr>
                   ${
                     invoice.due_date
