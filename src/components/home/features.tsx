@@ -76,31 +76,36 @@ const features = [
 
 export function Features() {
   return (
-    <div className="py-24 bg-white">
+    <div className="py-24 bg-gradient-to-b from-white to-gray-50">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="inline-flex items-center rounded-full bg-purple-50 px-4 py-1.5 text-sm font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10 mb-4">
+            <Target className="mr-1.5 h-3.5 w-3.5" />
+            Powerful Features
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
             Everything you need to run your business
           </h2>
-          <p className="mt-4 text-lg text-gray-600">
-            Powerful features designed to help you track time, manage clients, and get paid faster.
+          <p className="mt-6 text-lg text-gray-600 leading-relaxed">
+            From time tracking to invoicing, Billable has all the tools you need to manage
+            clients, track billable hours, and get paid faster—all in one streamlined platform.
           </p>
         </div>
 
-        <div className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 lg:max-w-none lg:grid-cols-3">
+        <div className="mx-auto mt-20 grid max-w-2xl grid-cols-1 gap-6 lg:max-w-none lg:grid-cols-3">
           {features.map((feature) => (
             <Card
               key={feature.title}
-              className="border-0 shadow-lg hover:shadow-xl transition-shadow duration-300"
+              className="border border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white"
             >
               <CardHeader>
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-                  <feature.icon className="h-6 w-6 text-white" />
+                <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
+                  <feature.icon className="h-7 w-7 text-white" />
                 </div>
-                <CardTitle className="mt-4 text-xl">{feature.title}</CardTitle>
+                <CardTitle className="mt-6 text-xl font-bold">{feature.title}</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription className="text-base leading-relaxed">
+                <CardDescription className="text-base leading-relaxed text-gray-600">
                   {feature.description}
                 </CardDescription>
               </CardContent>

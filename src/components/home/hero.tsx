@@ -9,71 +9,81 @@ export function Hero() {
     <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-            Track Time.
+          <div className="mb-4">
+            <span className="inline-flex items-center rounded-full bg-blue-50 px-4 py-1.5 text-sm font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+              <Zap className="mr-1.5 h-3.5 w-3.5" />
+              Try free - 1 invoice/month, no credit card required
+            </span>
+          </div>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
+            Time Tracking & Invoicing{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-              {" "}
-              Get Paid.
+              Made Simple
             </span>
           </h1>
-          <p className="mt-6 text-lg leading-8 text-gray-600">
-            Professional time tracking and invoicing for freelancers and agencies.
-            Manage clients, track billable hours, and get paid faster with Billable.
+          <p className="mt-6 text-xl leading-8 text-gray-600 max-w-2xl mx-auto">
+            Stop juggling spreadsheets and chasing payments. Billable brings together
+            time tracking, client management, ticketing, and professional invoicing
+            in one beautiful platform.
           </p>
 
-          <div className="mt-10 flex items-center justify-center gap-x-6">
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/register">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-lg px-8 py-6 shadow-xl hover:shadow-2xl transition-all"
               >
-                Start Free Trial
-                <ArrowRight className="ml-2 h-4 w-4" />
+                Get Started Free
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link href="/login">
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
                 Sign In
               </Button>
             </Link>
           </div>
+          <p className="mt-6 text-sm text-gray-500">
+            No credit card required • Free forever plan available
+          </p>
 
-          <div className="mt-16 grid grid-cols-1 gap-8 sm:grid-cols-3 lg:gap-16">
-            <div className="flex flex-col items-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100">
-                <Zap className="h-6 w-6 text-blue-600" />
+          <div className="mt-20 grid grid-cols-1 gap-8 sm:grid-cols-3 lg:gap-12">
+            <div className="flex flex-col items-center p-6 rounded-xl bg-white shadow-md hover:shadow-lg transition-shadow">
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+                <Zap className="h-7 w-7 text-white" />
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-gray-900">
-                Lightning Fast
+              <h3 className="mt-5 text-lg font-bold text-gray-900">
+                Quick Setup
               </h3>
-              <p className="mt-2 text-sm text-gray-600 text-center">
-                Set up in minutes, not hours. Start tracking time and billing clients
-                immediately.
+              <p className="mt-2 text-sm text-gray-600 text-center leading-relaxed">
+                Start tracking time and creating invoices in under 5 minutes.
+                No complex onboarding required.
               </p>
             </div>
 
-            <div className="flex flex-col items-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-100">
-                <Clock className="h-6 w-6 text-purple-600" />
+            <div className="flex flex-col items-center p-6 rounded-xl bg-white shadow-md hover:shadow-lg transition-shadow">
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg">
+                <Clock className="h-7 w-7 text-white" />
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-gray-900">
-                Time Tracking
+              <h3 className="mt-5 text-lg font-bold text-gray-900">
+                Smart Time Tracking
               </h3>
-              <p className="mt-2 text-sm text-gray-600 text-center">
-                Built-in time tracking with billable hours and detailed
-                reporting.
+              <p className="mt-2 text-sm text-gray-600 text-center leading-relaxed">
+                Track billable hours effortlessly with built-in timers and
+                automatic invoice generation.
               </p>
             </div>
 
-            <div className="flex flex-col items-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-100">
-                <Users className="h-6 w-6 text-green-600" />
+            <div className="flex flex-col items-center p-6 rounded-xl bg-white shadow-md hover:shadow-lg transition-shadow">
+              <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg">
+                <Users className="h-7 w-7 text-white" />
               </div>
-              <h3 className="mt-4 text-lg font-semibold text-gray-900">
-                Team Collaboration
+              <h3 className="mt-5 text-lg font-bold text-gray-900">
+                Client Management
               </h3>
-              <p className="mt-2 text-sm text-gray-600 text-center">
-                Multi-user workspaces with role-based permissions.
+              <p className="mt-2 text-sm text-gray-600 text-center leading-relaxed">
+                Organize clients, tickets, and projects in one centralized
+                dashboard.
               </p>
             </div>
           </div>
