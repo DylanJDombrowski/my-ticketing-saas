@@ -51,11 +51,11 @@ export function TimeTracker() {
 
   const { profile } = useAuthStore();
   const { createTimeEntry } = useTimeEntriesStore();
-  const { tickets, fetchTickets } = useTasksStore();
+  const { tasks, fetchTasks } = useTasksStore();
 
   useEffect(() => {
     if (profile?.tenant_id) {
-      fetchTickets(profile.tenant_id);
+      fetchTasks(profile.tenant_id);
     }
 
     // Load any existing timer from localStorage
@@ -69,11 +69,11 @@ export function TimeTracker() {
         console.error("Failed to load saved timer:", error);
       }
     }
-  }, [profile?.tenant_id, fetchTickets]);
+  }, [profile?.tenant_id, fetchTasks]);
 
-  // Find current ticket
-  const currentTicket = session
-    ? tickets.find((t) => t.id === session.ticketId)
+  // Find current task
+  const currentTask = session
+    ? tasks.find((t) => t.id === session.ticketId)
     : null;
 
   // Save timer state to localStorage whenever session changes
@@ -81,13 +81,13 @@ export function TimeTracker() {
     if (session) {
       const timerData = {
         ...session,
-        ticketTitle: currentTicket?.title,
+        taskTitle: currentTask?.title,
       };
       localStorage.setItem("activeTimer", JSON.stringify(timerData));
     } else {
       localStorage.removeItem("activeTimer");
     }
-  }, [session, currentTicket]);
+  }, [session, currentTask]);
 
   useEffect(() => {
     if (session?.isRunning) {
@@ -189,12 +189,12 @@ export function TimeTracker() {
       return;
     }
 
-    const selectedTicket = tickets.find((t) => t.id === ticketId);
-    if (!selectedTicket) return;
+    const selectedTask = tasks.find((t) => t.id === ticketId);
+    if (!selectedTask) return;
 
     setSession({
       ticketId,
-      description: `Working on ${selectedTicket.title}`,
+      description: `Working on ${selectedTask.title}`,
       startTime: Date.now(),
       elapsedTime: 0,
       isRunning: true,
@@ -257,15 +257,15 @@ export function TimeTracker() {
             <div className="space-y-3">
               <Select onValueChange={createNewSession}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a ticket to start tracking" />
+                  <SelectValue placeholder="Select a task to start tracking" />
                 </SelectTrigger>
                 <SelectContent>
-                  {tickets.map((ticket) => (
-                    <SelectItem key={ticket.id} value={ticket.id}>
+                  {tasks.map((task) => (
+                    <SelectItem key={task.id} value={task.id}>
                       <div className="flex items-center justify-between w-full">
-                        <span>{ticket.title}</span>
+                        <span>{task.title}</span>
                         <span className="text-xs text-muted-foreground ml-2">
-                          {ticket.client?.name}
+                          {task.client?.name}
                         </span>
                       </div>
                     </SelectItem>
@@ -273,7 +273,7 @@ export function TimeTracker() {
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
-                Select a ticket to begin time tracking
+                Select a task to begin time tracking
               </p>
             </div>
           ) : (
@@ -289,13 +289,13 @@ export function TimeTracker() {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Ticket:</span>
-                  <Badge variant="outline">{currentTicket?.title}</Badge>
+                  <span className="text-sm font-medium">Task:</span>
+                  <Badge variant="outline">{currentTask?.title}</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Client:</span>
                   <span className="text-sm text-muted-foreground">
-                    {currentTicket?.client?.name}
+                    {currentTask?.client?.name}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -360,8 +360,8 @@ export function TimeTracker() {
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="font-medium">Ticket:</span>
-                  <span>{currentTicket?.title}</span>
+                  <span className="font-medium">Task:</span>
+                  <span>{currentTask?.title}</span>
                 </div>
 
                 <div className="space-y-2">

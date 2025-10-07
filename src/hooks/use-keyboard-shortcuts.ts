@@ -74,7 +74,7 @@ export function useGlobalKeyboardShortcuts() {
       key: 't',
       altKey: true,
       action: () => router.push('/dashboard/tasks'),
-      description: 'Go to Tickets',
+      description: 'Go to Tasks',
       global: true
     },
     {
@@ -117,11 +117,11 @@ export function useGlobalKeyboardShortcuts() {
 
 // Page-specific shortcuts for different sections
 export const pageShortcuts = {
-  tickets: [
+  tasks: [
     {
       key: 'n',
-      action: () => window.dispatchEvent(new CustomEvent('create-ticket')),
-      description: 'Create New Ticket'
+      action: () => window.dispatchEvent(new CustomEvent('create-task')),
+      description: 'Create New Task'
     },
     {
       key: 'f',
@@ -135,8 +135,8 @@ export const pageShortcuts = {
     },
     {
       key: 'o',
-      action: () => window.dispatchEvent(new CustomEvent('filter-open-tickets')),
-      description: 'Filter Open Tickets'
+      action: () => window.dispatchEvent(new CustomEvent('filter-open-tasks')),
+      description: 'Filter Open Tasks'
     }
   ],
 

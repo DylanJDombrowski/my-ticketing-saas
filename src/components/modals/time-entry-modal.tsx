@@ -51,15 +51,15 @@ export function TimeEntryModal({
 
   const { profile } = useAuthStore();
   const { createTimeEntry, updateTimeEntry } = useTimeEntriesStore();
-  const { tickets, fetchTickets } = useTasksStore();
+  const { tasks, fetchTasks } = useTasksStore();
 
   const isEditing = !!timeEntry;
 
   useEffect(() => {
     if (profile?.tenant_id) {
-      fetchTickets(profile.tenant_id);
+      fetchTasks(profile.tenant_id);
     }
-  }, [profile?.tenant_id, fetchTickets]);
+  }, [profile?.tenant_id, fetchTasks]);
 
   useEffect(() => {
     if (timeEntry) {
@@ -172,12 +172,12 @@ export function TimeEntryModal({
                 required
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a ticket" />
+                  <SelectValue placeholder="Select a task" />
                 </SelectTrigger>
                 <SelectContent>
-                  {tickets.map((ticket) => (
-                    <SelectItem key={ticket.id} value={ticket.id}>
-                      {ticket.title} - {ticket.client?.name}
+                  {tasks.map((task) => (
+                    <SelectItem key={task.id} value={task.id}>
+                      {task.title} - {task.client?.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

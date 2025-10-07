@@ -117,10 +117,10 @@ export default function TaskDetailPage() {
         <Card>
           <CardContent className="text-center py-12">
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Ticket not found
+              Task not found
             </h3>
             <p className="text-gray-500">
-              The ticket you&apos;re looking for doesn&apos;t exist or you
+              The task you&apos;re looking for doesn&apos;t exist or you
               don&apos;t have permission to view it.
             </p>
           </CardContent>
@@ -152,7 +152,7 @@ export default function TaskDetailPage() {
       <div className="grid gap-6 md:grid-cols-3">
         {/* Main Content */}
         <div className="md:col-span-2 space-y-6">
-          {/* Ticket Details */}
+          {/* Task Details */}
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -371,7 +371,7 @@ export default function TaskDetailPage() {
       <TaskModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
-        ticket={selectedTask}
+        task={selectedTask}
       />
     </div>
   );

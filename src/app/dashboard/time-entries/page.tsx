@@ -78,11 +78,11 @@ export default function TimeEntriesPage() {
   const { profile } = useAuthStore();
   const { timeEntries, loading, fetchTimeEntries, deleteTimeEntry } =
     useTimeEntriesStore();
-  const { tickets, fetchTickets } = useTasksStore();
+  const { tasks, fetchTasks } = useTasksStore();
 
   useEffect(() => {
     if (profile?.tenant_id) {
-      fetchTickets(profile.tenant_id);
+      fetchTasks(profile.tenant_id);
       loadTimeEntries();
     }
   }, [profile?.tenant_id]);
@@ -284,7 +284,7 @@ export default function TimeEntriesPage() {
         <CardHeader>
           <CardTitle>Time Entry Management</CardTitle>
           <CardDescription>
-            Track and manage time spent on tickets
+            Track and manage time spent on tasks
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -312,13 +312,13 @@ export default function TimeEntriesPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
               <Select value={ticketFilter} onValueChange={setTicketFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Filter by ticket" />
+                  <SelectValue placeholder="Filter by task" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Tickets</SelectItem>
-                  {tickets.map((ticket) => (
-                    <SelectItem key={ticket.id} value={ticket.id}>
-                      {ticket.title} ({ticket.client?.name})
+                  <SelectItem value="all">All Tasks</SelectItem>
+                  {tasks.map((task) => (
+                    <SelectItem key={task.id} value={task.id}>
+                      {task.title} ({task.client?.name})
                     </SelectItem>
                   ))}
                 </SelectContent>

@@ -32,7 +32,7 @@ const features = [
   },
   {
     icon: Ticket,
-    title: "Project & Ticket Tracking",
+    title: "Project & Task Tracking",
     description:
       "Create and track work items with priority levels, due dates, and status updates for complete visibility.",
   },
@@ -64,7 +64,7 @@ const features = [
     icon: MessageSquare,
     title: "Client Portal",
     description:
-      "Give clients secure access to view their invoices, tickets, and payment history.",
+      "Give clients secure access to view their invoices, tasks, and payment history.",
   },
   {
     icon: Target,

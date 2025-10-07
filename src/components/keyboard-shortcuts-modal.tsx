@@ -25,7 +25,7 @@ export function KeyboardShortcutsModal() {
 
   // Determine current page shortcuts
   const getCurrentPageShortcuts = () => {
-    if (pathname.includes("/tickets")) return pageShortcuts.tickets;
+    if (pathname.includes("/tasks")) return pageShortcuts.tasks;
     if (pathname.includes("/time-entries")) return pageShortcuts.timeEntries;
     if (pathname.includes("/clients")) return pageShortcuts.clients;
     if (pathname.includes("/invoices")) return pageShortcuts.invoices;

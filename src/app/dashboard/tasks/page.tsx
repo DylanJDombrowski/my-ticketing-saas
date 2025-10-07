@@ -60,57 +60,56 @@ export default function TicketsPage() {
   const [clientFilter, setClientFilter] = useState<string>("all");
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [editingTask, setEditingTicket] = useState<Task | null>(null);
-  const [deletingTask, setDeletingTicket] = useState<Task | null>(null);
+  const [deletingTask, setDeletingTask] = useState<Task | null>(null);
 
   const { profile } = useAuthStore();
-  const { tickets, loading, fetchTickets, deleteTask, updateTaskStatus } =
+  const { tasks, loading, fetchTasks, deleteTask, updateTaskStatus } =
     useTasksStore();
   const { clients, fetchClients } = useClientsStore();
 
   useEffect(() => {
     if (profile?.tenant_id) {
-      fetchTickets(profile.tenant_id);
+      fetchTasks(profile.tenant_id);
       fetchClients(profile.tenant_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.tenant_id]);
 
-  const filteredTickets = tickets.filter((ticket) => {
+  const filteredTasks = tasks.filter((task) => {
     const matchesSearch =
-      ticket.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (ticket.client as any)?.name
+      task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (task.client as any)?.name
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "all" || ticket.status === statusFilter;
+      statusFilter === "all" || task.status === statusFilter;
     const matchesPriority =
-      priorityFilter === "all" || ticket.priority === priorityFilter;
+      priorityFilter === "all" || task.priority === priorityFilter;
     const matchesClient =
-      clientFilter === "all" || ticket.client_id === clientFilter;
+      clientFilter === "all" || task.client_id === clientFilter;
 
     return matchesSearch && matchesStatus && matchesPriority && matchesClient;
   });
 
-  const handleEditTicket = (ticket: Ticket) => {
-    setEditingTicket(ticket);
+  const handleEditTask = () => {
+    // Editing not implemented here, opens create modal
     setShowTaskModal(true);
   };
 
-  const handleDeleteTicket = (ticket: Ticket) => {
-    setDeletingTicket(ticket);
+  const handleDeleteTask = (task: Task) => {
+    setDeletingTask(task);
     setShowConfirmModal(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!deletingTicket) return;
+    if (!deletingTask) return;
 
-    const { error } = await deleteTicket(deletingTicket.id);
+    const { error } = await deleteTask(deletingTask.id);
 
     if (!error) {
-      setDeletingTicket(null);
+      setDeletingTask(null);
       setShowConfirmModal(false);
     }
   };
@@ -128,7 +127,6 @@ export default function TicketsPage() {
 
   const handleCloseModal = () => {
     setShowTaskModal(false);
-    setEditingTicket(null);
   };
 
   const getStatusColor = (status: TaskStatus) => {
@@ -259,7 +257,7 @@ export default function TicketsPage() {
           </div>
 
           {/* Tickets Table */}
-          {filteredTickets.length > 0 ? (
+          {filteredTasks.length > 0 ? (
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
@@ -274,15 +272,15 @@ export default function TicketsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTickets.map((ticket) => (
-                    <TableRow key={ticket.id} className="cursor-pointer hover:bg-muted/50">
+                  {filteredTasks.map((task) => (
+                    <TableRow key={task.id} className="cursor-pointer hover:bg-muted/50">
                       <TableCell>
-                        <Link href={`/dashboard/tasks/${ticket.id}`} className="block">
+                        <Link href={`/dashboard/tasks/${task.id}`} className="block">
                           <div className="space-y-1">
-                            <div className="font-medium hover:text-blue-600">{ticket.title}</div>
-                          {ticket.description && (
+                            <div className="font-medium hover:text-blue-600">{task.title}</div>
+                          {task.description && (
                             <div className="text-sm text-gray-600 truncate max-w-[200px]">
-                              {ticket.description}
+                              {task.description}
                             </div>
                           )}
                           </div>
@@ -291,19 +289,19 @@ export default function TicketsPage() {
                       <TableCell>
                         <div className="flex items-center">
                           <User className="mr-2 h-3 w-3 text-gray-400" />
-                          {(ticket.client as any)?.name || "Unknown"}
+                          {(task.client as any)?.name || "Unknown"}
                         </div>
                       </TableCell>
                       <TableCell>
                         <Select
-                          value={ticket.status}
+                          value={task.status}
                           onValueChange={(value) =>
-                            handleStatusChange(ticket.id, value as TaskStatus)
+                            handleStatusChange(task.id, value as TaskStatus)
                           }
                         >
                           <SelectTrigger className="w-[130px]">
-                            <Badge className={getStatusColor(ticket.status)}>
-                              {ticket.status.replace("_", " ")}
+                            <Badge className={getStatusColor(task.status)}>
+                              {task.status.replace("_", " ")}
                             </Badge>
                           </SelectTrigger>
                           <SelectContent>
@@ -317,15 +315,15 @@ export default function TicketsPage() {
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <Badge className={getPriorityColor(ticket.priority)}>
-                          {ticket.priority}
+                        <Badge className={getPriorityColor(task.priority)}>
+                          {task.priority}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {ticket.due_date ? (
+                        {task.due_date ? (
                           <div className="flex items-center text-sm">
                             <Calendar className="mr-2 h-3 w-3 text-gray-400" />
-                            {formatDate(ticket.due_date)}
+                            {formatDate(task.due_date)}
                           </div>
                         ) : (
                           "-"
@@ -334,8 +332,8 @@ export default function TicketsPage() {
                       <TableCell>
                         <div className="flex items-center text-sm">
                           <Clock className="mr-2 h-3 w-3 text-gray-400" />
-                          {ticket.actual_hours?.toFixed(1) || "0.0"} /{" "}
-                          {ticket.estimated_hours?.toFixed(1) || "-"}
+                          {task.actual_hours?.toFixed(1) || "0.0"} /{" "}
+                          {task.estimated_hours?.toFixed(1) || "-"}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -347,13 +345,13 @@ export default function TicketsPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem
-                              onClick={() => handleEditTicket(ticket)}
+                              onClick={() => handleEditTask()}
                             >
                               <Edit className="mr-2 h-4 w-4" />
                               Edit
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                              onClick={() => handleDeleteTicket(ticket)}
+                              onClick={() => handleDeleteTask(task)}
                               className="text-red-600"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
@@ -373,15 +371,15 @@ export default function TicketsPage() {
                 <Clock className="h-12 w-12 text-gray-400" />
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No tickets found
+                No tasks found
               </h3>
               <p className="text-gray-500 mb-4">
                 {searchTerm ||
                 statusFilter !== "all" ||
                 priorityFilter !== "all" ||
                 clientFilter !== "all"
-                  ? "No tickets match your current filters."
-                  : "Get started by creating your first ticket."}
+                  ? "No tasks match your current filters."
+                  : "Get started by creating your first task."}
               </p>
               {!searchTerm &&
                 statusFilter === "all" &&
@@ -389,7 +387,7 @@ export default function TicketsPage() {
                 clientFilter === "all" && (
                   <Button onClick={() => setShowTaskModal(true)}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Create Ticket
+                    Create Task
                   </Button>
                 )}
             </div>
@@ -401,15 +399,14 @@ export default function TicketsPage() {
       <TaskModal
         isOpen={showTaskModal}
         onClose={handleCloseModal}
-        ticket={editingTicket}
       />
 
       <ConfirmModal
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
         onConfirm={handleConfirmDelete}
-        title="Delete Ticket"
-        description={`Are you sure you want to delete "${deletingTicket?.title}"? This action cannot be undone.`}
+        title="Delete Task"
+        description={`Are you sure you want to delete "${deletingTask?.title}"? This action cannot be undone.`}
         confirmText="Delete"
         confirmVariant="destructive"
       />

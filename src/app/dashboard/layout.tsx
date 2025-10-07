@@ -36,27 +36,32 @@ import { AuthGuard } from "@/components/auth-guard";
 import { TimerWidget } from "@/components/timer-widget";
 import { KeyboardShortcutsModal } from "@/components/keyboard-shortcuts-modal";
 import { useGlobalKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { KeyboardHint } from "@/components/keyboard-hint";
 
 const navigation = [
   {
     name: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+    shortcut: ["Alt", "D"],
   },
   {
     name: "Clients",
     href: "/dashboard/clients",
     icon: Users,
+    shortcut: ["Alt", "C"],
   },
   {
     name: "Tasks",
     href: "/dashboard/tasks",
     icon: Ticket,
+    shortcut: ["Alt", "T"],
   },
   {
     name: "Time Entries",
     href: "/dashboard/time-entries",
     icon: Clock,
+    shortcut: ["Alt", "E"],
   },
   {
     name: "Approvals",
@@ -67,11 +72,13 @@ const navigation = [
     name: "Invoices",
     href: "/dashboard/invoices",
     icon: FileText,
+    shortcut: ["Alt", "I"],
   },
   {
     name: "Reports",
     href: "/dashboard/reports",
     icon: BarChart3,
+    shortcut: ["Alt", "R"],
   },
   {
     name: "SLA",
@@ -165,7 +172,10 @@ export default function DashboardLayout({
                                 : "text-gray-400 group-hover:text-gray-500"
                             )}
                           />
-                          {item.name}
+                          <span className="flex-1">{item.name}</span>
+                          {item.shortcut && (
+                            <KeyboardHint keys={item.shortcut} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                          )}
                         </Link>
                       </li>
                     );
@@ -211,7 +221,10 @@ export default function DashboardLayout({
                             : "text-gray-400 group-hover:text-gray-500"
                         )}
                       />
-                      {item.name}
+                      <span className="flex-1">{item.name}</span>
+                      {item.shortcut && (
+                        <KeyboardHint keys={item.shortcut} className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                      )}
                     </Link>
                   </li>
                 );
