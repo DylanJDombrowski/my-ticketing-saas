@@ -70,9 +70,9 @@ export default function DashboardPage() {
           .eq("tenant_id", profile.tenant_id)
           .eq("is_active", true),
 
-        // All tickets for stats calculation (minimal fields)
+        // All tasks for stats calculation (minimal fields)
         supabase
-          .from("tickets")
+          .from("tasks")
           .select("id, status, due_date")
           .eq("tenant_id", profile.tenant_id),
 
@@ -84,25 +84,25 @@ export default function DashboardPage() {
           .gte("created_at", monthStart)
       ]);
 
-      const tickets = allTicketsResponse.data || [];
+      const tasks = allTicketsResponse.data || [];
       const timeEntries = timeEntriesResponse.data || [];
 
       // Optimize calculations with single pass
       const now = new Date();
-      const ticketStats = tickets.reduce(
-        (acc, ticket) => {
+      const taskStats = tasks.reduce(
+        (acc, task) => {
           // Count by status
-          const status = ticket.status as keyof typeof acc;
+          const status = task.status as keyof typeof acc;
           if (status in acc) {
             acc[status]++;
           }
 
           // Check if overdue
           if (
-            ticket.due_date &&
-            new Date(ticket.due_date) < now &&
-            ticket.status !== "resolved" &&
-            ticket.status !== "closed"
+            task.due_date &&
+            new Date(task.due_date) < now &&
+            task.status !== "resolved" &&
+            task.status !== "closed"
           ) {
             acc.overdue++;
           }
@@ -132,12 +132,12 @@ export default function DashboardPage() {
 
       const dashboardStats: DashboardStats = {
         totalClients: clientsResponse.count || 0,
-        totalTickets: tickets.length,
-        openTickets: ticketStats.open,
-        inProgressTickets: ticketStats.in_progress,
-        resolvedTickets: ticketStats.resolved,
-        closedTickets: ticketStats.closed,
-        overdueTickets: ticketStats.overdue,
+        totalTickets: tasks.length,
+        openTickets: taskStats.open,
+        inProgressTickets: taskStats.in_progress,
+        resolvedTickets: taskStats.resolved,
+        closedTickets: taskStats.closed,
+        overdueTickets: taskStats.overdue,
         monthlyHours: timeStats.total,
         billableHours: timeStats.billable,
       };
@@ -145,28 +145,28 @@ export default function DashboardPage() {
       setStats(dashboardStats);
       setLoading(false);
 
-      // Priority 2: Fetch recent tickets in background (non-blocking)
+      // Priority 2: Fetch recent tasks in background (non-blocking)
       setTicketsLoading(true);
       try {
-        const recentTicketsResponse = await supabase
-          .from("tickets")
+        const recentTasksResponse = await supabase
+          .from("tasks")
           .select("id, title, status, priority, created_at, client:clients(name)")
           .eq("tenant_id", profile.tenant_id)
           .order("created_at", { ascending: false })
           .limit(5);
 
-        const formattedTickets = (recentTicketsResponse.data || []).map((ticket) => ({
-          id: ticket.id,
-          title: ticket.title,
-          status: ticket.status,
-          priority: ticket.priority,
-          client_name: (ticket.client as any)?.name || "Unknown",
-          created_at: ticket.created_at,
+        const formattedTasks = (recentTasksResponse.data || []).map((task) => ({
+          id: task.id,
+          title: task.title,
+          status: task.status,
+          priority: task.priority,
+          client_name: (task.client as any)?.name || "Unknown",
+          created_at: task.created_at,
         }));
 
-        setRecentTickets(formattedTickets);
-      } catch (ticketsError) {
-        console.error("Error fetching recent tickets:", ticketsError);
+        setRecentTickets(formattedTasks);
+      } catch (tasksError) {
+        console.error("Error fetching recent tasks:", tasksError);
       } finally {
         setTicketsLoading(false);
       }

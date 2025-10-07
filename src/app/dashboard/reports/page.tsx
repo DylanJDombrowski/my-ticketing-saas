@@ -215,9 +215,9 @@ export default function ReportsPage() {
           .eq("tenant_id", profile!.tenant_id)
           .eq("is_active", true),
 
-        // Resolved tickets in current period
+        // Resolved tasks in current period
         supabase
-          .from("tickets")
+          .from("tasks")
           .select("id, status, created_at, client_id")
           .eq("tenant_id", profile!.tenant_id)
           .in("status", ["resolved", "closed"])

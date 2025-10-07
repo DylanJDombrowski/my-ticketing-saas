@@ -51,13 +51,13 @@ export const useTasksStore = create<TasksState>((set) => ({
 
     try {
       let query = supabase
-        .from("tickets")
+        .from("tasks")
         .select(
           `
           *,
           client:clients(id, name, email, company),
-          assigned_user:profiles!tickets_assigned_to_fkey(id, first_name, last_name, email),
-          created_user:profiles!tickets_created_by_fkey(id, first_name, last_name, email)
+          assigned_user:profiles!tasks_assigned_to_fkey(id, first_name, last_name, email),
+          created_user:profiles!tasks_created_by_fkey(id, first_name, last_name, email)
         `
         )
         .eq("tenant_id", tenantId);
@@ -99,13 +99,13 @@ export const useTasksStore = create<TasksState>((set) => ({
   fetchTask: async (id: string) => {
     try {
       const { data, error } = await supabase
-        .from("tickets")
+        .from("tasks")
         .select(
           `
           *,
           client:clients(id, name, email, company),
-          assigned_user:profiles!tickets_assigned_to_fkey(id, first_name, last_name, email),
-          created_user:profiles!tickets_created_by_fkey(id, first_name, last_name, email)
+          assigned_user:profiles!tasks_assigned_to_fkey(id, first_name, last_name, email),
+          created_user:profiles!tasks_created_by_fkey(id, first_name, last_name, email)
         `
         )
         .eq("id", id)
@@ -128,7 +128,7 @@ export const useTasksStore = create<TasksState>((set) => ({
   createTask: async (tenantId: string, taskData: CreateTaskForm) => {
     try {
       const { data, error } = await supabase
-        .from("tickets")
+        .from("tasks")
         .insert({
           tenant_id: tenantId,
           ...taskData,
@@ -137,8 +137,8 @@ export const useTasksStore = create<TasksState>((set) => ({
           `
           *,
           client:clients(id, name, email, company),
-          assigned_user:profiles!tickets_assigned_to_fkey(id, first_name, last_name, email),
-          created_user:profiles!tickets_created_by_fkey(id, first_name, last_name, email)
+          assigned_user:profiles!tasks_assigned_to_fkey(id, first_name, last_name, email),
+          created_user:profiles!tasks_created_by_fkey(id, first_name, last_name, email)
         `
         )
         .single();
@@ -166,15 +166,15 @@ export const useTasksStore = create<TasksState>((set) => ({
   updateTask: async (id: string, taskData: Partial<CreateTaskForm>) => {
     try {
       const { data, error } = await supabase
-        .from("tickets")
+        .from("tasks")
         .update(taskData)
         .eq("id", id)
         .select(
           `
           *,
           client:clients(id, name, email, company),
-          assigned_user:profiles!tickets_assigned_to_fkey(id, first_name, last_name, email),
-          created_user:profiles!tickets_created_by_fkey(id, first_name, last_name, email)
+          assigned_user:profiles!tasks_assigned_to_fkey(id, first_name, last_name, email),
+          created_user:profiles!tasks_created_by_fkey(id, first_name, last_name, email)
         `
         )
         .single();
@@ -206,15 +206,15 @@ export const useTasksStore = create<TasksState>((set) => ({
   updateTaskStatus: async (id: string, status: TaskStatus) => {
     try {
       const { data, error } = await supabase
-        .from("tickets")
+        .from("tasks")
         .update({ status })
         .eq("id", id)
         .select(
           `
           *,
           client:clients(id, name, email, company),
-          assigned_user:profiles!tickets_assigned_to_fkey(id, first_name, last_name, email),
-          created_user:profiles!tickets_created_by_fkey(id, first_name, last_name, email)
+          assigned_user:profiles!tasks_assigned_to_fkey(id, first_name, last_name, email),
+          created_user:profiles!tasks_created_by_fkey(id, first_name, last_name, email)
         `
         )
         .single();
@@ -247,7 +247,7 @@ export const useTasksStore = create<TasksState>((set) => ({
 
   deleteTask: async (id: string) => {
     try {
-      const { error } = await supabase.from("tickets").delete().eq("id", id);
+      const { error } = await supabase.from("tasks").delete().eq("id", id);
 
       if (error) {
         notify.error(error.message);

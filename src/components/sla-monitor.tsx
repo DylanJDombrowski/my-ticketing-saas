@@ -92,9 +92,9 @@ export function SLAMonitor({ onManageRules }: SLAMonitorProps) {
 
       setSlaRules(rules || []);
 
-      // Load tickets with SLA status calculation
-      const { data: tickets, error: ticketsError } = await supabase
-        .from("tickets")
+      // Load tasks with SLA status calculation
+      const { data: tasks, error: tasksError } = await supabase
+        .from("tasks")
         .select(
           `
           id,
@@ -109,10 +109,10 @@ export function SLAMonitor({ onManageRules }: SLAMonitorProps) {
         .in("status", ["open", "in_progress"])
         .order("created_at", { ascending: true });
 
-      if (ticketsError) throw ticketsError;
+      if (tasksError) throw tasksError;
 
       // Calculate SLA statuses
-      const slaStatuses = calculateSLAStatuses(tickets || [], rules || []);
+      const slaStatuses = calculateSLAStatuses(tasks || [], rules || []);
       setSlaStatuses(slaStatuses);
 
       // Calculate summary stats

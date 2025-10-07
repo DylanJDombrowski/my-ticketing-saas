@@ -94,16 +94,16 @@ export async function POST(request: NextRequest) {
       .eq("approval_status", "approved"); // Only approved entries
 
     if (client_id) {
-      // Filter by specific client through tickets
-      const { data: clientTickets } = await supabase
-        .from("tickets")
+      // Filter by specific client through tasks
+      const { data: clientTasks } = await supabase
+        .from("tasks")
         .select("id")
         .eq("client_id", client_id)
         .eq("tenant_id", tenantId);
 
-      if (clientTickets) {
-        const ticketIds = clientTickets.map(t => t.id);
-        query = query.in("ticket_id", ticketIds);
+      if (clientTasks) {
+        const taskIds = clientTasks.map(t => t.id);
+        query = query.in("task_id", taskIds);
       }
     }
 

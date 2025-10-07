@@ -66,8 +66,8 @@ export async function GET(
       .eq("client_id", portalAccess.client_id)
       .order("created_at", { ascending: false });
 
-    const { data: tickets } = await supabase
-      .from("tickets")
+    const { data: tasks } = await supabase
+      .from("tasks")
       .select(`
         id,
         title,
@@ -84,7 +84,7 @@ export async function GET(
     return NextResponse.json({
       client: portalAccess.client,
       invoices: invoices || [],
-      tickets: tickets || [],
+      tasks: tasks || [],
       portal_info: {
         token,
         expires_at: portalAccess.expires_at,

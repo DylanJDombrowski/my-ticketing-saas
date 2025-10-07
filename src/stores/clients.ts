@@ -128,40 +128,40 @@ export const useClientsStore = create<ClientsState>((set) => ({
   deleteClient: async (id: string, force?: boolean) => {
     try {
       // Check if client has associated records
-      const { data: tickets } = await supabase
-        .from("tickets")
+      const { data: tasks } = await supabase
+        .from("tasks")
         .select("id")
         .eq("client_id", id);
 
-      if (tickets && tickets.length > 0 && !force) {
+      if (tasks && tasks.length > 0 && !force) {
         return {
-          error: "HAS_TICKETS",
-          ticketCount: tickets.length
+          error: "HAS_TASKS",
+          taskCount: tasks.length
         };
       }
 
       // If force delete, cascade delete all associated records
-      if (force && tickets && tickets.length > 0) {
-        // Delete time entries for all tickets
+      if (force && tasks && tasks.length > 0) {
+        // Delete time entries for all tasks
         const { error: timeEntriesError } = await supabase
           .from("time_entries")
           .delete()
-          .in("ticket_id", tickets.map(t => t.id));
+          .in("task_id", tasks.map(t => t.id));
 
         if (timeEntriesError) {
           notify.error("Failed to delete associated time entries");
           return { error: timeEntriesError.message };
         }
 
-        // Delete all tickets
-        const { error: ticketsError } = await supabase
-          .from("tickets")
+        // Delete all tasks
+        const { error: tasksError } = await supabase
+          .from("tasks")
           .delete()
           .eq("client_id", id);
 
-        if (ticketsError) {
-          notify.error("Failed to delete associated tickets");
-          return { error: ticketsError.message };
+        if (tasksError) {
+          notify.error("Failed to delete associated tasks");
+          return { error: tasksError.message };
         }
       }
 

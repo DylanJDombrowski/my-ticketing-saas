@@ -693,18 +693,18 @@ ALTER TABLE ONLY "public"."stripe_connect_accounts"
 
 
 
-ALTER TABLE ONLY "public"."tenants"
-    ADD CONSTRAINT "tenants_pkey" PRIMARY KEY ("id");
-
-
-
 ALTER TABLE ONLY "public"."task_comments"
-    ADD CONSTRAINT "ticket_comments_pkey" PRIMARY KEY ("id");
+    ADD CONSTRAINT "task_comments_pkey" PRIMARY KEY ("id");
 
 
 
 ALTER TABLE ONLY "public"."tasks"
-    ADD CONSTRAINT "tickets_pkey" PRIMARY KEY ("id");
+    ADD CONSTRAINT "tasks_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "tenants_pkey" PRIMARY KEY ("id");
 
 
 
@@ -825,15 +825,31 @@ CREATE INDEX "idx_stripe_accounts_user" ON "public"."stripe_connect_accounts" US
 
 
 
-CREATE INDEX "idx_ticket_comments_tenant_id" ON "public"."task_comments" USING "btree" ("tenant_id");
+CREATE INDEX "idx_task_comments_task_id" ON "public"."task_comments" USING "btree" ("task_id");
 
 
 
-CREATE INDEX "idx_ticket_comments_ticket_id" ON "public"."task_comments" USING "btree" ("task_id");
+CREATE INDEX "idx_task_comments_tenant_id" ON "public"."task_comments" USING "btree" ("tenant_id");
 
 
 
-CREATE INDEX "idx_tickets_client_id" ON "public"."tasks" USING "btree" ("client_id");
+CREATE INDEX "idx_tasks_assigned_to" ON "public"."tasks" USING "btree" ("assigned_to");
+
+
+
+CREATE INDEX "idx_tasks_client_id" ON "public"."tasks" USING "btree" ("client_id");
+
+
+
+CREATE INDEX "idx_tasks_created_at" ON "public"."tasks" USING "btree" ("created_at");
+
+
+
+CREATE INDEX "idx_tasks_status" ON "public"."tasks" USING "btree" ("status");
+
+
+
+CREATE INDEX "idx_tasks_tenant_id" ON "public"."tasks" USING "btree" ("tenant_id");
 
 
 
@@ -841,15 +857,7 @@ CREATE INDEX "idx_tickets_due_date" ON "public"."tasks" USING "btree" ("due_date
 
 
 
-CREATE INDEX "idx_tickets_status" ON "public"."tasks" USING "btree" ("status");
-
-
-
 CREATE INDEX "idx_tickets_tenant_created" ON "public"."tasks" USING "btree" ("tenant_id", "created_at" DESC);
-
-
-
-CREATE INDEX "idx_tickets_tenant_id" ON "public"."tasks" USING "btree" ("tenant_id");
 
 
 
@@ -905,11 +913,15 @@ CREATE OR REPLACE TRIGGER "update_stripe_accounts_updated_at" BEFORE UPDATE ON "
 
 
 
+CREATE OR REPLACE TRIGGER "update_task_comments_updated_at" BEFORE UPDATE ON "public"."task_comments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
+CREATE OR REPLACE TRIGGER "update_tasks_updated_at" BEFORE UPDATE ON "public"."tasks" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+
+
+
 CREATE OR REPLACE TRIGGER "update_tenants_updated_at" BEFORE UPDATE ON "public"."tenants" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
-
-
-
-CREATE OR REPLACE TRIGGER "update_ticket_comments_updated_at" BEFORE UPDATE ON "public"."task_comments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
@@ -922,10 +934,6 @@ CREATE OR REPLACE TRIGGER "update_ticket_hours_on_time_entry_insert" AFTER INSER
 
 
 CREATE OR REPLACE TRIGGER "update_ticket_hours_on_time_entry_update" AFTER UPDATE ON "public"."time_entries" FOR EACH ROW EXECUTE FUNCTION "public"."update_ticket_actual_hours"();
-
-
-
-CREATE OR REPLACE TRIGGER "update_tickets_updated_at" BEFORE UPDATE ON "public"."tasks" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
@@ -1029,37 +1037,37 @@ ALTER TABLE ONLY "public"."stripe_connect_accounts"
 
 
 ALTER TABLE ONLY "public"."task_comments"
-    ADD CONSTRAINT "ticket_comments_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."profiles"("id");
+    ADD CONSTRAINT "task_comments_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."profiles"("id");
 
 
 
 ALTER TABLE ONLY "public"."task_comments"
-    ADD CONSTRAINT "ticket_comments_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+    ADD CONSTRAINT "task_comments_task_id_fkey" FOREIGN KEY ("task_id") REFERENCES "public"."tasks"("id") ON DELETE CASCADE;
 
 
 
 ALTER TABLE ONLY "public"."task_comments"
-    ADD CONSTRAINT "ticket_comments_ticket_id_fkey" FOREIGN KEY ("task_id") REFERENCES "public"."tasks"("id") ON DELETE CASCADE;
+    ADD CONSTRAINT "task_comments_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
 
 
 
 ALTER TABLE ONLY "public"."tasks"
-    ADD CONSTRAINT "tickets_assigned_to_fkey" FOREIGN KEY ("assigned_to") REFERENCES "public"."profiles"("id");
+    ADD CONSTRAINT "tasks_assigned_to_fkey" FOREIGN KEY ("assigned_to") REFERENCES "public"."profiles"("id");
 
 
 
 ALTER TABLE ONLY "public"."tasks"
-    ADD CONSTRAINT "tickets_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE CASCADE;
+    ADD CONSTRAINT "tasks_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE CASCADE;
 
 
 
 ALTER TABLE ONLY "public"."tasks"
-    ADD CONSTRAINT "tickets_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."profiles"("id");
+    ADD CONSTRAINT "tasks_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."profiles"("id");
 
 
 
 ALTER TABLE ONLY "public"."tasks"
-    ADD CONSTRAINT "tickets_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+    ADD CONSTRAINT "tasks_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
 
 
 
@@ -1069,12 +1077,12 @@ ALTER TABLE ONLY "public"."time_entries"
 
 
 ALTER TABLE ONLY "public"."time_entries"
-    ADD CONSTRAINT "time_entries_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
+    ADD CONSTRAINT "time_entries_task_id_fkey" FOREIGN KEY ("task_id") REFERENCES "public"."tasks"("id") ON DELETE CASCADE;
 
 
 
 ALTER TABLE ONLY "public"."time_entries"
-    ADD CONSTRAINT "time_entries_ticket_id_fkey" FOREIGN KEY ("task_id") REFERENCES "public"."tasks"("id") ON DELETE CASCADE;
+    ADD CONSTRAINT "time_entries_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
 
 
 
@@ -1124,14 +1132,6 @@ CREATE POLICY "Users can manage their tenant's tickets" ON "public"."tasks" USIN
 CREATE POLICY "Users can manage their tenant's time entries" ON "public"."time_entries" USING (("tenant_id" = ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
   WHERE ("profiles"."id" = "auth"."uid"()))));
-
-
-
-CREATE POLICY "Users can manage ticket comments" ON "public"."task_comments" USING (("task_id" IN ( SELECT "tasks"."id"
-   FROM "public"."tasks"
-  WHERE ("tasks"."tenant_id" = ( SELECT "profiles"."tenant_id"
-           FROM "public"."profiles"
-          WHERE ("profiles"."id" = "auth"."uid"()))))));
 
 
 
@@ -1278,7 +1278,59 @@ ALTER TABLE "public"."stripe_connect_accounts" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."task_comments" ENABLE ROW LEVEL SECURITY;
 
 
+CREATE POLICY "task_comments_delete" ON "public"."task_comments" FOR DELETE TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+   FROM "public"."profiles"
+  WHERE ("profiles"."id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "task_comments_insert" ON "public"."task_comments" FOR INSERT TO "authenticated" WITH CHECK (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+   FROM "public"."profiles"
+  WHERE ("profiles"."id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "task_comments_select" ON "public"."task_comments" FOR SELECT TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+   FROM "public"."profiles"
+  WHERE ("profiles"."id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "task_comments_update" ON "public"."task_comments" FOR UPDATE TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+   FROM "public"."profiles"
+  WHERE ("profiles"."id" = "auth"."uid"())))) WITH CHECK (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+   FROM "public"."profiles"
+  WHERE ("profiles"."id" = "auth"."uid"()))));
+
+
+
 ALTER TABLE "public"."tasks" ENABLE ROW LEVEL SECURITY;
+
+
+CREATE POLICY "tasks_delete" ON "public"."tasks" FOR DELETE TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+   FROM "public"."profiles"
+  WHERE ("profiles"."id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "tasks_insert" ON "public"."tasks" FOR INSERT TO "authenticated" WITH CHECK (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+   FROM "public"."profiles"
+  WHERE ("profiles"."id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "tasks_select" ON "public"."tasks" FOR SELECT TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+   FROM "public"."profiles"
+  WHERE ("profiles"."id" = "auth"."uid"()))));
+
+
+
+CREATE POLICY "tasks_update" ON "public"."tasks" FOR UPDATE TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+   FROM "public"."profiles"
+  WHERE ("profiles"."id" = "auth"."uid"())))) WITH CHECK (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+   FROM "public"."profiles"
+  WHERE ("profiles"."id" = "auth"."uid"()))));
+
 
 
 ALTER TABLE "public"."tenants" ENABLE ROW LEVEL SECURITY;
@@ -1288,32 +1340,6 @@ CREATE POLICY "tenants_select_own" ON "public"."tenants" FOR SELECT TO "authenti
    FROM "public"."profiles"
   WHERE ("profiles"."id" = "auth"."uid"())
  LIMIT 1)));
-
-
-
-CREATE POLICY "ticket_comments_delete" ON "public"."task_comments" FOR DELETE TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"()))));
-
-
-
-CREATE POLICY "ticket_comments_insert" ON "public"."task_comments" FOR INSERT TO "authenticated" WITH CHECK (("tenant_id" IN ( SELECT "profiles"."tenant_id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"()))));
-
-
-
-CREATE POLICY "ticket_comments_select" ON "public"."task_comments" FOR SELECT TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"()))));
-
-
-
-CREATE POLICY "ticket_comments_update" ON "public"."task_comments" FOR UPDATE TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"())))) WITH CHECK (("tenant_id" IN ( SELECT "profiles"."tenant_id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."id" = "auth"."uid"()))));
 
 
 
