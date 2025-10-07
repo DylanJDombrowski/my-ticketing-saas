@@ -35,9 +35,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/stores/auth";
-import { useTicketsStore } from "@/stores/tickets";
+import { useTasksStore } from "@/stores/tasks";
 import { useClientsStore } from "@/stores/clients";
-import { TicketModal } from "@/components/modals/ticket-modal";
+import { TaskModal } from "@/components/modals/task-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import {
   Plus,
@@ -49,23 +49,23 @@ import {
   Calendar,
   User,
 } from "lucide-react";
-import type { Ticket, TicketStatus, TicketPriority } from "@/lib/types";
+import type { Task, TaskStatus, TaskPriority } from "@/lib/types";
 
 export default function TicketsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<TicketStatus | "all">("all");
-  const [priorityFilter, setPriorityFilter] = useState<TicketPriority | "all">(
+  const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
+  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "all">(
     "all"
   );
   const [clientFilter, setClientFilter] = useState<string>("all");
-  const [showTicketModal, setShowTicketModal] = useState(false);
+  const [showTaskModal, setShowTaskModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [editingTicket, setEditingTicket] = useState<Ticket | null>(null);
-  const [deletingTicket, setDeletingTicket] = useState<Ticket | null>(null);
+  const [editingTask, setEditingTicket] = useState<Task | null>(null);
+  const [deletingTask, setDeletingTicket] = useState<Task | null>(null);
 
   const { profile } = useAuthStore();
-  const { tickets, loading, fetchTickets, deleteTicket, updateTicketStatus } =
-    useTicketsStore();
+  const { tickets, loading, fetchTickets, deleteTask, updateTaskStatus } =
+    useTasksStore();
   const { clients, fetchClients } = useClientsStore();
 
   useEffect(() => {
@@ -96,7 +96,7 @@ export default function TicketsPage() {
 
   const handleEditTicket = (ticket: Ticket) => {
     setEditingTicket(ticket);
-    setShowTicketModal(true);
+    setShowTaskModal(true);
   };
 
   const handleDeleteTicket = (ticket: Ticket) => {
@@ -117,9 +117,9 @@ export default function TicketsPage() {
 
   const handleStatusChange = async (
     ticketId: string,
-    newStatus: TicketStatus
+    newStatus: TaskStatus
   ) => {
-    const { error } = await updateTicketStatus(ticketId, newStatus);
+    const { error } = await updateTaskStatus(ticketId, newStatus);
     if (error) {
       // Error notification handled in store
       return;
@@ -127,11 +127,11 @@ export default function TicketsPage() {
   };
 
   const handleCloseModal = () => {
-    setShowTicketModal(false);
+    setShowTaskModal(false);
     setEditingTicket(null);
   };
 
-  const getStatusColor = (status: TicketStatus) => {
+  const getStatusColor = (status: TaskStatus) => {
     switch (status) {
       case "open":
         return "bg-blue-100 text-blue-800";
@@ -146,7 +146,7 @@ export default function TicketsPage() {
     }
   };
 
-  const getPriorityColor = (priority: TicketPriority) => {
+  const getPriorityColor = (priority: TaskPriority) => {
     switch (priority) {
       case "urgent":
         return "bg-red-100 text-red-800";
@@ -181,7 +181,7 @@ export default function TicketsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Tickets</h1>
-        <Button onClick={() => setShowTicketModal(true)}>
+        <Button onClick={() => setShowTaskModal(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Create Ticket
         </Button>
@@ -210,7 +210,7 @@ export default function TicketsPage() {
             <Select
               value={statusFilter}
               onValueChange={(value) =>
-                setStatusFilter(value as TicketStatus | "all")
+                setStatusFilter(value as TaskStatus | "all")
               }
             >
               <SelectTrigger className="w-full md:w-[150px]">
@@ -228,7 +228,7 @@ export default function TicketsPage() {
             <Select
               value={priorityFilter}
               onValueChange={(value) =>
-                setPriorityFilter(value as TicketPriority | "all")
+                setPriorityFilter(value as TaskPriority | "all")
               }
             >
               <SelectTrigger className="w-full md:w-[150px]">
@@ -277,7 +277,7 @@ export default function TicketsPage() {
                   {filteredTickets.map((ticket) => (
                     <TableRow key={ticket.id} className="cursor-pointer hover:bg-muted/50">
                       <TableCell>
-                        <Link href={`/dashboard/tickets/${ticket.id}`} className="block">
+                        <Link href={`/dashboard/tasks/${ticket.id}`} className="block">
                           <div className="space-y-1">
                             <div className="font-medium hover:text-blue-600">{ticket.title}</div>
                           {ticket.description && (
@@ -298,7 +298,7 @@ export default function TicketsPage() {
                         <Select
                           value={ticket.status}
                           onValueChange={(value) =>
-                            handleStatusChange(ticket.id, value as TicketStatus)
+                            handleStatusChange(ticket.id, value as TaskStatus)
                           }
                         >
                           <SelectTrigger className="w-[130px]">
@@ -387,7 +387,7 @@ export default function TicketsPage() {
                 statusFilter === "all" &&
                 priorityFilter === "all" &&
                 clientFilter === "all" && (
-                  <Button onClick={() => setShowTicketModal(true)}>
+                  <Button onClick={() => setShowTaskModal(true)}>
                     <Plus className="mr-2 h-4 w-4" />
                     Create Ticket
                   </Button>
@@ -398,8 +398,8 @@ export default function TicketsPage() {
       </Card>
 
       {/* Modals */}
-      <TicketModal
-        isOpen={showTicketModal}
+      <TaskModal
+        isOpen={showTaskModal}
         onClose={handleCloseModal}
         ticket={editingTicket}
       />

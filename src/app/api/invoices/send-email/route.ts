@@ -66,9 +66,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate PDF URL
+    // Generate client portal access token
+    const accessToken = generateSecureToken();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30); // 30 day expiry
+
+    // Create or update client portal access
+    const { error: portalError } = await supabase
+      .from("client_portal_access")
+      .upsert({
+        client_id: client.id,
+        access_token: accessToken,
+        expires_at: expiresAt.toISOString(),
+        is_active: true
+      }, {
+        onConflict: 'client_id'
+      });
+
+    if (portalError) {
+      console.error("Error creating portal access:", portalError);
+      // Don't fail the email send if portal creation fails
+    }
+
+    // Generate URLs
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get("origin") || "http://localhost:3000";
     const pdfUrl = `${baseUrl}/api/invoices/${invoice.id}/pdf`;
+    const portalUrl = `${baseUrl}/client-portal/${accessToken}`;
+    const paymentUrl = `${baseUrl}/client-portal/${accessToken}?invoice=${invoice.id}`;
 
     // Format currency
     const formatCurrency = (amount: number) =>
@@ -151,10 +175,29 @@ export async function POST(request: NextRequest) {
                 text-decoration: none;
                 border-radius: 6px;
                 font-weight: 600;
-                margin: 20px 0;
+                margin: 10px 8px;
               }
               .button:hover {
                 background: #5568d3;
+              }
+              .button-primary {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+              }
+              .button-primary:hover {
+                box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+              }
+              .button-secondary {
+                background: #ffffff;
+                color: #667eea;
+                border: 2px solid #667eea;
+              }
+              .button-secondary:hover {
+                background: #f8f9fa;
+              }
+              .buttons-container {
+                text-align: center;
+                margin: 30px 0;
               }
               .footer {
                 text-align: center;
@@ -210,8 +253,22 @@ export async function POST(request: NextRequest) {
                 ${formatCurrency(invoice.total_amount)}
               </div>
 
-              <div class="center">
-                <a href="${pdfUrl}" class="button">View Invoice PDF</a>
+              <div class="buttons-container">
+                <a href="${paymentUrl}" class="button button-primary">💳 Pay This Invoice</a>
+                <a href="${portalUrl}" class="button button-secondary">📊 View Client Portal</a>
+              </div>
+
+              <div style="text-align: center; margin: 20px 0;">
+                <a href="${pdfUrl}" style="color: #667eea; text-decoration: none; font-size: 14px;">
+                  📄 Download PDF
+                </a>
+              </div>
+
+              <div style="background: #f0f4ff; padding: 16px; border-radius: 6px; margin: 20px 0;">
+                <p style="margin: 0; font-size: 14px; color: #4a5568;">
+                  <strong>📱 Your Client Portal</strong><br/>
+                  Access your secure portal to view all invoices, track project progress, and manage payments in one place.
+                </p>
               </div>
 
               <p style="margin-top: 30px; font-size: 14px; color: #666;">
@@ -259,6 +316,7 @@ export async function POST(request: NextRequest) {
       success: true,
       emailId: data?.id,
       message: `Invoice sent to ${client.email}`,
+      portalUrl,
     });
   } catch (error) {
     console.error("Send invoice email error:", error);
@@ -267,4 +325,18 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Generate secure random token for client portal access
+function generateSecureToken(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let token = '';
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+
+  for (let i = 0; i < array.length; i++) {
+    token += chars[array[i] % chars.length];
+  }
+
+  return token;
 }

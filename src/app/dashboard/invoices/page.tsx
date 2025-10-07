@@ -49,6 +49,7 @@ import {
   CreditCard
 } from "lucide-react";
 import { InvoiceModal } from "@/components/modals/invoice-modal";
+import { SendInvoiceModal } from "@/components/modals/send-invoice-modal";
 import { AutoInvoiceGenerator } from "@/components/auto-invoice-generator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { notify } from "@/lib/notifications";
@@ -68,6 +69,8 @@ export default function InvoicesPage() {
   const [selectedInvoices, setSelectedInvoices] = useState<string[]>([]);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | undefined>();
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [invoiceToSend, setInvoiceToSend] = useState<Invoice | null>(null);
 
   const { profile } = useAuthStore();
   const {
@@ -112,18 +115,23 @@ export default function InvoicesPage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      `Send invoice ${invoice.invoice_number} to ${clientEmail}?`
-    );
+    setInvoiceToSend(invoice);
+    setShowSendModal(true);
+  };
 
-    if (confirmed) {
-      try {
-        await sendInvoice(invoice.id, clientEmail);
-        notify.success(`Invoice sent to ${clientEmail}`);
-        await fetchInvoices(profile.tenant_id);
-      } catch (error) {
-        notify.error(error instanceof Error ? error.message : "Failed to send invoice");
-      }
+  const confirmSendInvoice = async () => {
+    if (!invoiceToSend || !profile?.tenant_id) return;
+
+    const clientEmail = invoiceToSend.client?.email;
+    if (!clientEmail) return;
+
+    try {
+      await sendInvoice(invoiceToSend.id, clientEmail);
+      notify.success(`Invoice sent to ${clientEmail}`);
+      await fetchInvoices(profile.tenant_id);
+    } catch (error) {
+      notify.error(error instanceof Error ? error.message : "Failed to send invoice");
+      throw error;
     }
   };
 
@@ -519,6 +527,21 @@ export default function InvoicesPage() {
         }}
         invoiceId={editingInvoiceId}
       />
+
+      {/* Send Invoice Modal */}
+      {invoiceToSend && (
+        <SendInvoiceModal
+          isOpen={showSendModal}
+          onClose={() => {
+            setShowSendModal(false);
+            setInvoiceToSend(null);
+          }}
+          onConfirm={confirmSendInvoice}
+          invoiceNumber={invoiceToSend.invoice_number}
+          clientEmail={invoiceToSend.client?.email || ""}
+          totalAmount={invoiceToSend.total_amount}
+        />
+      )}
     </div>
   );
 }

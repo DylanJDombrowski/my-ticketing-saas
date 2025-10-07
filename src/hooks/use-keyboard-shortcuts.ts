@@ -73,7 +73,7 @@ export function useGlobalKeyboardShortcuts() {
     {
       key: 't',
       altKey: true,
-      action: () => router.push('/dashboard/tickets'),
+      action: () => router.push('/dashboard/tasks'),
       description: 'Go to Tickets',
       global: true
     },

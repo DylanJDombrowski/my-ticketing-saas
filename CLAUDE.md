@@ -36,10 +36,12 @@ This is a multi-tenant SaaS application where each user belongs to a tenant orga
 
 ### Core Data Models
 - **Clients:** Customer contacts managed by each tenant
-- **Tickets:** Support/work requests with status tracking (open, in_progress, resolved, closed)
-- **Time Entries:** Billable/non-billable time logged against tickets
+- **Tasks:** Work items with status tracking (open, in_progress, resolved, closed) - formerly called "Tickets"
+- **Time Entries:** Billable/non-billable time logged against tasks
 - **Invoices:** Generated from time entries with line items
 - **Payment Methods:** Configurable payment options per tenant
+
+**Note:** The database still uses "tickets" table names. The application code uses "Tasks" terminology. See `DATABASE_MIGRATION_TICKETS_TO_TASKS.md` for migration details.
 
 ### Authentication Flow
 1. User signs up/in via Supabase Auth
@@ -63,7 +65,7 @@ This is a multi-tenant SaaS application where each user belongs to a tenant orga
 ### State Management (Zustand Stores)
 - `src/stores/auth.ts` - User authentication and profile state
 - `src/stores/clients.ts` - Client management
-- `src/stores/tickets.ts` - Ticket operations
+- `src/stores/tasks.ts` - Task operations (formerly tickets.ts)
 - `src/stores/time-entries.ts` - Time tracking
 - `src/stores/invoices.ts` - Invoice generation
 

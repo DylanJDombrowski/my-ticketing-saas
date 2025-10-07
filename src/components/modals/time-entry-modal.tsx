@@ -25,7 +25,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthStore } from "@/stores/auth";
 import { useTimeEntriesStore } from "@/stores/time-entries";
-import { useTicketsStore } from "@/stores/tickets";
+import { useTasksStore } from "@/stores/tasks";
 import type { TimeEntry, CreateTimeEntryForm } from "@/lib/types";
 
 interface TimeEntryModalProps {
@@ -51,7 +51,7 @@ export function TimeEntryModal({
 
   const { profile } = useAuthStore();
   const { createTimeEntry, updateTimeEntry } = useTimeEntriesStore();
-  const { tickets, fetchTickets } = useTicketsStore();
+  const { tickets, fetchTickets } = useTasksStore();
 
   const isEditing = !!timeEntry;
 

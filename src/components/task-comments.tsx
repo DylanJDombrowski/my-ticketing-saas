@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { notify } from "@/lib/notifications";
 
-interface TicketComment {
+interface TaskComment {
   id: string;
   content: string;
   created_at: string;
@@ -46,8 +46,8 @@ interface TicketComment {
   };
 }
 
-interface TicketCommentsProps {
-  ticketId: string;
+interface TaskCommentsProps {
+  taskId: string;
   tenantId: string;
 }
 
@@ -55,8 +55,8 @@ interface CommentForm {
   content: string;
 }
 
-export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
-  const [comments, setComments] = useState<TicketComment[]>([]);
+export function TaskComments({ taskId, tenantId }: TaskCommentsProps) {
+  const [comments, setComments] = useState<TaskComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
@@ -77,14 +77,14 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
 
   useEffect(() => {
     fetchComments();
-  }, [ticketId]);
+  }, [taskId]);
 
   const fetchComments = async () => {
     try {
       setLoading(true);
 
       const { data, error } = await supabase
-        .from("ticket_comments")
+        .from("task_comments")
         .select(
           `
           id,
@@ -92,7 +92,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
           created_at,
           updated_at,
           created_by,
-          created_user:profiles!ticket_comments_created_by_fkey(
+          created_user:profiles!task_comments_created_by_fkey(
             id,
             first_name,
             last_name,
@@ -100,7 +100,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
           )
         `
         )
-        .eq("ticket_id", ticketId)
+        .eq("ticket_id", taskId)
         .eq("tenant_id", tenantId)
         .order("created_at", { ascending: true });
 
@@ -119,7 +119,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
       handleError("Failed to fetch comments", {
         operation: "fetchComments",
         tenantId,
-        details: { ticketId },
+        details: { taskId },
         error,
       });
     } finally {
@@ -134,9 +134,9 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
       setSubmitting(true);
 
       const { data: newComment, error } = await supabase
-        .from("ticket_comments")
+        .from("task_comments")
         .insert({
-          ticket_id: ticketId,
+          ticket_id: taskId,
           tenant_id: tenantId,
           content: data.content.trim(),
           created_by: profile.id,
@@ -148,7 +148,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
           created_at,
           updated_at,
           created_by,
-          created_user:profiles!ticket_comments_created_by_fkey(
+          created_user:profiles!task_comments_created_by_fkey(
             id,
             first_name,
             last_name,
@@ -175,7 +175,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
       handleError("Failed to add comment", {
         operation: "addComment",
         tenantId,
-        details: { ticketId, content: data.content },
+        details: { taskId, content: data.content },
         error,
       });
     } finally {
@@ -186,7 +186,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
   const updateComment = async (commentId: string, newContent: string) => {
     try {
       const { error } = await supabase
-        .from("ticket_comments")
+        .from("task_comments")
         .update({
           content: newContent.trim(),
           updated_at: new Date().toISOString(),
@@ -214,7 +214,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
       handleError("Failed to update comment", {
         operation: "updateComment",
         tenantId,
-        details: { ticketId, commentId },
+        details: { taskId, commentId },
         error,
       });
     }
@@ -227,7 +227,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
 
     try {
       const { error } = await supabase
-        .from("ticket_comments")
+        .from("task_comments")
         .delete()
         .eq("id", commentId)
         .eq("tenant_id", tenantId);
@@ -240,7 +240,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
       handleError("Failed to delete comment", {
         operation: "deleteComment",
         tenantId,
-        details: { ticketId, commentId },
+        details: { taskId, commentId },
         error,
       });
     }
@@ -262,7 +262,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
     }
   };
 
-  const getUserDisplayName = (comment: TicketComment) => {
+  const getUserDisplayName = (comment: TaskComment) => {
     if (comment.created_user) {
       const { first_name, last_name, email } = comment.created_user;
       if (first_name || last_name) {
@@ -273,7 +273,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
     return "Unknown User";
   };
 
-  const getUserInitials = (comment: TicketComment) => {
+  const getUserInitials = (comment: TaskComment) => {
     if (comment.created_user) {
       const { first_name, last_name, email } = comment.created_user;
       if (first_name || last_name) {
@@ -284,7 +284,7 @@ export function TicketComments({ ticketId, tenantId }: TicketCommentsProps) {
     return "U";
   };
 
-  const canModifyComment = (comment: TicketComment) => {
+  const canModifyComment = (comment: TaskComment) => {
     return comment.created_by === profile?.id;
   };
 

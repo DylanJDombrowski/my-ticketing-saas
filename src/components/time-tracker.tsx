@@ -30,7 +30,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/stores/auth";
 import { useTimeEntriesStore } from "@/stores/time-entries";
-import { useTicketsStore } from "@/stores/tickets";
+import { useTasksStore } from "@/stores/tasks";
 import { notify } from "@/lib/notifications";
 import { Play, Pause, Square, Clock, RotateCcw } from "lucide-react";
 
@@ -51,7 +51,7 @@ export function TimeTracker() {
 
   const { profile } = useAuthStore();
   const { createTimeEntry } = useTimeEntriesStore();
-  const { tickets, fetchTickets } = useTicketsStore();
+  const { tickets, fetchTickets } = useTasksStore();
 
   useEffect(() => {
     if (profile?.tenant_id) {

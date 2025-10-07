@@ -49,8 +49,8 @@ const navigation = [
     icon: Users,
   },
   {
-    name: "Tickets",
-    href: "/dashboard/tickets",
+    name: "Tasks",
+    href: "/dashboard/tasks",
     icon: Ticket,
   },
   {

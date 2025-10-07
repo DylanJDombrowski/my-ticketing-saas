@@ -22,18 +22,18 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthStore } from "@/stores/auth";
-import { useTicketsStore } from "@/stores/tickets";
+import { useTasksStore } from "@/stores/tasks";
 import { useClientsStore } from "@/stores/clients";
-import type { Ticket, CreateTicketForm, TicketPriority } from "@/lib/types";
+import type { Task, CreateTaskForm, TaskPriority } from "@/lib/types";
 
-interface TicketModalProps {
+interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  ticket?: Ticket | null;
+  task?: Task | null;
 }
 
-export function TicketModal({ isOpen, onClose, ticket }: TicketModalProps) {
-  const [formData, setFormData] = useState<CreateTicketForm>({
+export function TaskModal({ isOpen, onClose, task }: TaskModalProps) {
+  const [formData, setFormData] = useState<CreateTaskForm>({
     client_id: "",
     title: "",
     description: "",
@@ -45,10 +45,10 @@ export function TicketModal({ isOpen, onClose, ticket }: TicketModalProps) {
   const [loading, setLoading] = useState(false);
 
   const { profile } = useAuthStore();
-  const { createTicket, updateTicket } = useTicketsStore();
+  const { createTask, updateTask } = useTasksStore();
   const { clients, fetchClients } = useClientsStore();
 
-  const isEditing = !!ticket;
+  const isEditing = !!task;
 
   useEffect(() => {
     if (profile?.tenant_id) {
@@ -57,14 +57,14 @@ export function TicketModal({ isOpen, onClose, ticket }: TicketModalProps) {
   }, [profile?.tenant_id, fetchClients]);
 
   useEffect(() => {
-    if (ticket) {
+    if (task) {
       setFormData({
-        client_id: ticket.client_id,
-        title: ticket.title,
-        description: ticket.description || "",
-        priority: ticket.priority,
-        estimated_hours: ticket.estimated_hours,
-        due_date: ticket.due_date ? ticket.due_date.split("T")[0] : "",
+        client_id: task.client_id,
+        title: task.title,
+        description: task.description || "",
+        priority: task.priority,
+        estimated_hours: task.estimated_hours,
+        due_date: task.due_date ? task.due_date.split("T")[0] : "",
       });
     } else {
       setFormData({
@@ -77,10 +77,10 @@ export function TicketModal({ isOpen, onClose, ticket }: TicketModalProps) {
       });
     }
     setError("");
-  }, [ticket, isOpen]);
+  }, [task, isOpen]);
 
   const handleInputChange = (
-    field: keyof CreateTicketForm,
+    field: keyof CreateTaskForm,
     value: string | number | undefined
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -115,10 +115,10 @@ export function TicketModal({ isOpen, onClose, ticket }: TicketModalProps) {
 
       let result;
 
-      if (isEditing && ticket) {
-        result = await updateTicket(ticket.id, submitData);
+      if (isEditing && task) {
+        result = await updateTask(task.id, submitData);
       } else {
-        result = await createTicket(profile.tenant_id, submitData);
+        result = await createTask(profile.tenant_id, submitData);
       }
 
       if (result.error) {
@@ -145,12 +145,12 @@ export function TicketModal({ isOpen, onClose, ticket }: TicketModalProps) {
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Edit Ticket" : "Create New Ticket"}
+            {isEditing ? "Edit Task" : "Create New Task"}
           </DialogTitle>
           <DialogDescription>
             {isEditing
-              ? "Update the ticket information below."
-              : "Fill in the details to create a new support ticket."}
+              ? "Update the task information below."
+              : "Fill in the details to create a new task."}
           </DialogDescription>
         </DialogHeader>
 
@@ -188,7 +188,7 @@ export function TicketModal({ isOpen, onClose, ticket }: TicketModalProps) {
                 id="title"
                 value={formData.title}
                 onChange={(e) => handleInputChange("title", e.target.value)}
-                placeholder="Brief description of the issue"
+                placeholder="Brief description of the task"
                 required
               />
             </div>
@@ -201,7 +201,7 @@ export function TicketModal({ isOpen, onClose, ticket }: TicketModalProps) {
                 onChange={(e) =>
                   handleInputChange("description", e.target.value)
                 }
-                placeholder="Detailed description of the issue"
+                placeholder="Detailed description of the task"
                 rows={3}
               />
             </div>
@@ -212,7 +212,7 @@ export function TicketModal({ isOpen, onClose, ticket }: TicketModalProps) {
                 <Select
                   value={formData.priority}
                   onValueChange={(value) =>
-                    handleInputChange("priority", value as TicketPriority)
+                    handleInputChange("priority", value as TaskPriority)
                   }
                 >
                   <SelectTrigger>
@@ -272,8 +272,8 @@ export function TicketModal({ isOpen, onClose, ticket }: TicketModalProps) {
                   ? "Updating..."
                   : "Creating..."
                 : isEditing
-                ? "Update Ticket"
-                : "Create Ticket"}
+                ? "Update Task"
+                : "Create Task"}
             </Button>
           </DialogFooter>
         </form>

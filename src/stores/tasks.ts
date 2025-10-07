@@ -3,37 +3,37 @@ import { createBrowserClient } from "@/lib/supabase";
 import { notify } from "@/lib/notifications";
 import { handleError } from "@/lib/error-handling";
 import type {
-  Ticket,
-  CreateTicketForm,
-  TicketStatus,
-  TicketPriority,
+  Task,
+  CreateTaskForm,
+  TaskStatus,
+  TaskPriority,
 } from "@/lib/types";
 
-interface TicketsState {
-  tickets: Ticket[];
+interface TasksState {
+  tasks: Task[];
   loading: boolean;
-  selectedTicket: Ticket | null;
-  fetchTickets: (tenantId: string, filters?: TicketFilters) => Promise<void>;
-  fetchTicket: (id: string) => Promise<void>;
-  createTicket: (
+  selectedTask: Task | null;
+  fetchTasks: (tenantId: string, filters?: TaskFilters) => Promise<void>;
+  fetchTask: (id: string) => Promise<void>;
+  createTask: (
     tenantId: string,
-    ticketData: CreateTicketForm
+    taskData: CreateTaskForm
   ) => Promise<{ error?: string }>;
-  updateTicket: (
+  updateTask: (
     id: string,
-    ticketData: Partial<CreateTicketForm>
+    taskData: Partial<CreateTaskForm>
   ) => Promise<{ error?: string }>;
-  updateTicketStatus: (
+  updateTaskStatus: (
     id: string,
-    status: TicketStatus
+    status: TaskStatus
   ) => Promise<{ error?: string }>;
-  deleteTicket: (id: string) => Promise<{ error?: string }>;
-  setSelectedTicket: (ticket: Ticket | null) => void;
+  deleteTask: (id: string) => Promise<{ error?: string }>;
+  setSelectedTask: (task: Task | null) => void;
 }
 
-interface TicketFilters {
-  status?: TicketStatus;
-  priority?: TicketPriority;
+interface TaskFilters {
+  status?: TaskStatus;
+  priority?: TaskPriority;
   clientId?: string;
   assignedTo?: string;
 }
@@ -41,12 +41,12 @@ interface TicketFilters {
 // Create a single supabase instance for the store
 const supabase = createBrowserClient();
 
-export const useTicketsStore = create<TicketsState>((set) => ({
-  tickets: [],
+export const useTasksStore = create<TasksState>((set) => ({
+  tasks: [],
   loading: false,
-  selectedTicket: null,
+  selectedTask: null,
 
-  fetchTickets: async (tenantId: string, filters?: TicketFilters) => {
+  fetchTasks: async (tenantId: string, filters?: TaskFilters) => {
     set({ loading: true });
 
     try {
@@ -82,21 +82,21 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
       if (error) throw error;
 
-      set({ tickets: data || [], loading: false });
+      set({ tasks: data || [], loading: false });
     } catch (error) {
-      handleError("Failed to fetch tickets", {
-        operation: "fetchTickets",
+      handleError("Failed to fetch tasks", {
+        operation: "fetchTasks",
         tenantId,
         details: { filters },
         error,
       }, {
-        toastMessage: "Failed to load tickets. Please try again."
+        toastMessage: "Failed to load tasks. Please try again."
       });
       set({ loading: false });
     }
   },
 
-  fetchTicket: async (id: string) => {
+  fetchTask: async (id: string) => {
     try {
       const { data, error } = await supabase
         .from("tickets")
@@ -113,25 +113,25 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
       if (error) throw error;
 
-      set({ selectedTicket: data });
+      set({ selectedTask: data });
     } catch (error) {
-      handleError("Failed to fetch ticket details", {
-        operation: "fetchTicket",
-        details: { ticketId: id },
+      handleError("Failed to fetch task details", {
+        operation: "fetchTask",
+        details: { taskId: id },
         error,
       }, {
-        toastMessage: "Failed to load ticket details. Please try again."
+        toastMessage: "Failed to load task details. Please try again."
       });
     }
   },
 
-  createTicket: async (tenantId: string, ticketData: CreateTicketForm) => {
+  createTask: async (tenantId: string, taskData: CreateTaskForm) => {
     try {
       const { data, error } = await supabase
         .from("tickets")
         .insert({
           tenant_id: tenantId,
-          ...ticketData,
+          ...taskData,
         })
         .select(
           `
@@ -150,24 +150,24 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
       // Add to local state
       set((state) => ({
-        tickets: [data, ...state.tickets],
+        tasks: [data, ...state.tasks],
       }));
 
-      notify.success("Ticket created successfully");
+      notify.success("Task created successfully");
       return {};
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Failed to create ticket";
+        error instanceof Error ? error.message : "Failed to create task";
       notify.error(message);
       return { error: message };
     }
   },
 
-  updateTicket: async (id: string, ticketData: Partial<CreateTicketForm>) => {
+  updateTask: async (id: string, taskData: Partial<CreateTaskForm>) => {
     try {
       const { data, error } = await supabase
         .from("tickets")
-        .update(ticketData)
+        .update(taskData)
         .eq("id", id)
         .select(
           `
@@ -186,24 +186,24 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
       // Update local state
       set((state) => ({
-        tickets: state.tickets.map((ticket) =>
-          ticket.id === id ? data : ticket
+        tasks: state.tasks.map((task) =>
+          task.id === id ? data : task
         ),
-        selectedTicket:
-          state.selectedTicket?.id === id ? data : state.selectedTicket,
+        selectedTask:
+          state.selectedTask?.id === id ? data : state.selectedTask,
       }));
 
-      notify.success("Ticket updated successfully");
+      notify.success("Task updated successfully");
       return {};
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Failed to update ticket";
+        error instanceof Error ? error.message : "Failed to update task";
       notify.error(message);
       return { error: message };
     }
   },
 
-  updateTicketStatus: async (id: string, status: TicketStatus) => {
+  updateTaskStatus: async (id: string, status: TaskStatus) => {
     try {
       const { data, error } = await supabase
         .from("tickets")
@@ -226,26 +226,26 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
       // Update local state
       set((state) => ({
-        tickets: state.tickets.map((ticket) =>
-          ticket.id === id ? data : ticket
+        tasks: state.tasks.map((task) =>
+          task.id === id ? data : task
         ),
-        selectedTicket:
-          state.selectedTicket?.id === id ? data : state.selectedTicket,
+        selectedTask:
+          state.selectedTask?.id === id ? data : state.selectedTask,
       }));
 
-      notify.success("Ticket status updated");
+      notify.success("Task status updated");
       return {};
     } catch (error: unknown) {
       const message =
         error instanceof Error
           ? error.message
-          : "Failed to update ticket status";
+          : "Failed to update task status";
       notify.error(message);
       return { error: message };
     }
   },
 
-  deleteTicket: async (id: string) => {
+  deleteTask: async (id: string) => {
     try {
       const { error } = await supabase.from("tickets").delete().eq("id", id);
 
@@ -256,22 +256,22 @@ export const useTicketsStore = create<TicketsState>((set) => ({
 
       // Remove from local state
       set((state) => ({
-        tickets: state.tickets.filter((ticket) => ticket.id !== id),
-        selectedTicket:
-          state.selectedTicket?.id === id ? null : state.selectedTicket,
+        tasks: state.tasks.filter((task) => task.id !== id),
+        selectedTask:
+          state.selectedTask?.id === id ? null : state.selectedTask,
       }));
 
-      notify.success("Ticket deleted successfully");
+      notify.success("Task deleted successfully");
       return {};
     } catch (error: unknown) {
       const message =
-        error instanceof Error ? error.message : "Failed to delete ticket";
+        error instanceof Error ? error.message : "Failed to delete task";
       notify.error(message);
       return { error: message };
     }
   },
 
-  setSelectedTicket: (ticket: Ticket | null) => {
-    set({ selectedTicket: ticket });
+  setSelectedTask: (task: Task | null) => {
+    set({ selectedTask: task });
   },
 }));

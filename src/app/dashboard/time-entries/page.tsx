@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/stores/auth";
 import { useTimeEntriesStore } from "@/stores/time-entries";
-import { useTicketsStore } from "@/stores/tickets";
+import { useTasksStore } from "@/stores/tasks";
 import { TimeEntryModal } from "@/components/modals/time-entry-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
 import { TimeTracker } from "@/components/time-tracker";
@@ -78,7 +78,7 @@ export default function TimeEntriesPage() {
   const { profile } = useAuthStore();
   const { timeEntries, loading, fetchTimeEntries, deleteTimeEntry } =
     useTimeEntriesStore();
-  const { tickets, fetchTickets } = useTicketsStore();
+  const { tickets, fetchTickets } = useTasksStore();
 
   useEffect(() => {
     if (profile?.tenant_id) {

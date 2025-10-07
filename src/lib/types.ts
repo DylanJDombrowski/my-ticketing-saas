@@ -1,6 +1,10 @@
 export type SubscriptionPlan = "free" | "pro" | "enterprise";
-export type TicketStatus = "open" | "in_progress" | "resolved" | "closed";
-export type TicketPriority = "low" | "medium" | "high" | "urgent";
+export type TaskStatus = "open" | "in_progress" | "resolved" | "closed";
+export type TaskPriority = "low" | "medium" | "high" | "urgent";
+
+// Legacy type aliases for backwards compatibility
+export type TicketStatus = TaskStatus;
+export type TicketPriority = TaskPriority;
 
 export interface Tenant {
   id: string;
@@ -42,14 +46,14 @@ export interface Client {
   updated_at: string;
 }
 
-export interface Ticket {
+export interface Task {
   id: string;
   tenant_id: string;
   client_id: string;
   title: string;
   description?: string;
-  status: TicketStatus;
-  priority: TicketPriority;
+  status: TaskStatus;
+  priority: TaskPriority;
   assigned_to?: string;
   estimated_hours?: number;
   actual_hours: number;
@@ -68,16 +72,20 @@ export interface Ticket {
   created_user?: Profile;
 }
 
-export interface TicketComment {
+export interface TaskComment {
   id: string;
   tenant_id: string;
-  ticket_id: string;
+  task_id: string;
   content: string;
   created_by?: string;
   created_at: string;
   updated_at: string;
   created_user?: Profile;
 }
+
+// Legacy type aliases for backwards compatibility
+export type Ticket = Task;
+export type TicketComment = TaskComment;
 
 export interface TimeEntry {
   id: string;
@@ -90,8 +98,10 @@ export interface TimeEntry {
   entry_date: string;
   created_at: string;
   updated_at: string;
-  ticket?: Ticket;
+  task?: Task;
   user?: Profile;
+  // Legacy field for backwards compatibility
+  ticket?: Task;
 }
 
 // Form types
@@ -103,14 +113,17 @@ export interface CreateClientForm {
   hourly_rate?: number;
 }
 
-export interface CreateTicketForm {
+export interface CreateTaskForm {
   client_id: string;
   title: string;
   description?: string;
-  priority: TicketPriority;
+  priority: TaskPriority;
   estimated_hours?: number;
   due_date?: string;
 }
+
+// Legacy type alias for backwards compatibility
+export type CreateTicketForm = CreateTaskForm;
 
 export interface CreateTimeEntryForm {
   ticket_id: string;
@@ -237,7 +250,7 @@ export interface InvoiceFormData {
 
 // Sprint 4: Business Automation Types
 export type ApprovalStatus = "draft" | "submitted" | "approved" | "rejected";
-export type NotificationType = "invoice_sent" | "invoice_overdue" | "ticket_comment" | "sla_warning" | "time_entry_approval";
+export type NotificationType = "invoice_sent" | "invoice_overdue" | "task_comment" | "sla_warning" | "time_entry_approval";
 export type NotificationStatus = "pending" | "sent" | "failed";
 
 // Enhanced Invoice with automation features
@@ -261,13 +274,15 @@ export interface SLARule {
   id: string;
   tenant_id: string;
   client_id?: string;
-  ticket_priority: TicketPriority;
+  task_priority: TaskPriority;
   response_time_hours?: number;
   resolution_time_hours?: number;
   is_active: boolean;
   created_at: string;
   updated_at: string;
   client?: Client;
+  // Legacy field for backwards compatibility
+  ticket_priority?: TaskPriority;
 }
 
 // Client Portal Access
@@ -299,7 +314,7 @@ export interface NotificationLog {
 // Forms for Sprint 4 features
 export interface CreateSLARuleForm {
   client_id?: string;
-  ticket_priority: TicketPriority;
+  task_priority: TaskPriority;
   response_time_hours?: number;
   resolution_time_hours?: number;
 }

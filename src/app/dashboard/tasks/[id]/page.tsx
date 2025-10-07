@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth";
-import { useTicketsStore } from "@/stores/tickets";
+import { useTasksStore } from "@/stores/tasks";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,8 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TicketComments } from "@/components/ticket-comments";
-import { TicketModal } from "@/components/modals/ticket-modal";
+import { TaskComments } from "@/components/task-comments";
+import { TaskModal } from "@/components/modals/task-modal";
 import {
   ArrowLeft,
   Calendar,
@@ -31,7 +31,7 @@ import {
   BarChart3,
   MessageSquare,
 } from "lucide-react";
-import type { TicketStatus } from "@/lib/types";
+import type { TaskStatus } from "@/lib/types";
 
 const statusColors = {
   open: "bg-blue-100 text-blue-800",
@@ -47,27 +47,27 @@ const priorityColors = {
   urgent: "bg-red-100 text-red-800",
 };
 
-export default function TicketDetailPage() {
+export default function TaskDetailPage() {
   const [showEditModal, setShowEditModal] = useState(false);
   const params = useParams();
   const router = useRouter();
 
-  const ticketId = params.id as string;
+  const taskId = params.id as string;
   const { profile } = useAuthStore();
-  const { selectedTicket, loading, fetchTicket, updateTicketStatus } =
-    useTicketsStore();
+  const { selectedTask, loading, fetchTask, updateTaskStatus } =
+    useTasksStore();
 
   useEffect(() => {
-    if (profile?.tenant_id && ticketId) {
-      fetchTicket(ticketId);
+    if (profile?.tenant_id && taskId) {
+      fetchTask(taskId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.tenant_id, ticketId]);
+     
+  }, [profile?.tenant_id, taskId]);
 
-  const handleStatusChange = async (newStatus: TicketStatus) => {
-    if (!selectedTicket) return;
+  const handleStatusChange = async (newStatus: TaskStatus) => {
+    if (!selectedTask) return;
 
-    await updateTicketStatus(selectedTicket.id, newStatus);
+    await updateTaskStatus(selectedTask.id, newStatus);
   };
 
   const formatDate = (dateString: string) => {
@@ -105,7 +105,7 @@ export default function TicketDetailPage() {
     );
   }
 
-  if (!selectedTicket) {
+  if (!selectedTask) {
     return (
       <div className="space-y-6">
         <div className="flex items-center space-x-4">
@@ -139,13 +139,13 @@ export default function TicketDetailPage() {
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">{selectedTicket.title}</h1>
-            <p className="text-muted-foreground">Ticket details and activity</p>
+            <h1 className="text-3xl font-bold">{selectedTask.title}</h1>
+            <p className="text-muted-foreground">Task details and activity</p>
           </div>
         </div>
         <Button onClick={() => setShowEditModal(true)}>
           <Edit className="h-4 w-4 mr-2" />
-          Edit Ticket
+          Edit Task
         </Button>
       </div>
 
@@ -156,23 +156,23 @@ export default function TicketDetailPage() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Ticket Information</CardTitle>
+                <CardTitle>Task Information</CardTitle>
                 <div className="flex items-center space-x-2">
-                  <Badge className={statusColors[selectedTicket.status]}>
-                    {selectedTicket.status.replace("_", " ")}
+                  <Badge className={statusColors[selectedTask.status]}>
+                    {selectedTask.status.replace("_", " ")}
                   </Badge>
-                  <Badge className={priorityColors[selectedTicket.priority]}>
-                    {selectedTicket.priority}
+                  <Badge className={priorityColors[selectedTask.priority]}>
+                    {selectedTask.priority}
                   </Badge>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {selectedTicket.description && (
+              {selectedTask.description && (
                 <div>
                   <h4 className="font-medium mb-2">Description</h4>
                   <p className="text-gray-700 whitespace-pre-wrap">
-                    {selectedTicket.description}
+                    {selectedTask.description}
                   </p>
                 </div>
               )}
@@ -183,17 +183,17 @@ export default function TicketDetailPage() {
                   <div>
                     <p className="text-sm text-muted-foreground">Client</p>
                     <p className="font-medium">
-                      {selectedTicket.client?.name || "Unknown Client"}
-                      {selectedTicket.client?.company && (
+                      {selectedTask.client?.name || "Unknown Client"}
+                      {selectedTask.client?.company && (
                         <span className="text-sm text-muted-foreground ml-1">
-                          ({selectedTicket.client.company})
+                          ({selectedTask.client.company})
                         </span>
                       )}
                     </p>
                   </div>
                 </div>
 
-                {selectedTicket.assigned_user && (
+                {selectedTask.assigned_user && (
                   <div className="flex items-center space-x-2">
                     <User className="h-4 w-4 text-muted-foreground" />
                     <div>
@@ -201,20 +201,20 @@ export default function TicketDetailPage() {
                         Assigned to
                       </p>
                       <p className="font-medium">
-                        {selectedTicket.assigned_user.first_name}{" "}
-                        {selectedTicket.assigned_user.last_name}
+                        {selectedTask.assigned_user.first_name}{" "}
+                        {selectedTask.assigned_user.last_name}
                       </p>
                     </div>
                   </div>
                 )}
 
-                {selectedTicket.due_date && (
+                {selectedTask.due_date && (
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm text-muted-foreground">Due Date</p>
                       <p className="font-medium">
-                        {formatDate(selectedTicket.due_date)}
+                        {formatDate(selectedTask.due_date)}
                       </p>
                     </div>
                   </div>
@@ -227,10 +227,10 @@ export default function TicketDetailPage() {
                       Time Tracking
                     </p>
                     <p className="font-medium">
-                      {selectedTicket.actual_hours}h logged
-                      {selectedTicket.estimated_hours && (
+                      {selectedTask.actual_hours}h logged
+                      {selectedTask.estimated_hours && (
                         <span className="text-sm text-muted-foreground ml-1">
-                          / {selectedTicket.estimated_hours}h estimated
+                          / {selectedTask.estimated_hours}h estimated
                         </span>
                       )}
                     </p>
@@ -242,17 +242,17 @@ export default function TicketDetailPage() {
                 <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
                   <div>
                     <span className="font-medium">Created:</span>{" "}
-                    {formatDateTime(selectedTicket.created_at)}
-                    {selectedTicket.created_user && (
+                    {formatDateTime(selectedTask.created_at)}
+                    {selectedTask.created_user && (
                       <span className="ml-1">
-                        by {selectedTicket.created_user.first_name}{" "}
-                        {selectedTicket.created_user.last_name}
+                        by {selectedTask.created_user.first_name}{" "}
+                        {selectedTask.created_user.last_name}
                       </span>
                     )}
                   </div>
                   <div>
                     <span className="font-medium">Last Updated:</span>{" "}
-                    {formatDateTime(selectedTicket.updated_at)}
+                    {formatDateTime(selectedTask.updated_at)}
                   </div>
                 </div>
               </div>
@@ -261,8 +261,8 @@ export default function TicketDetailPage() {
 
           {/* Comments Section */}
           {profile?.tenant_id && (
-            <TicketComments
-              ticketId={selectedTicket.id}
+            <TaskComments
+              taskId={selectedTask.id}
               tenantId={profile.tenant_id}
             />
           )}
@@ -282,8 +282,8 @@ export default function TicketDetailPage() {
               <div>
                 <label className="text-sm font-medium">Update Status</label>
                 <Select
-                  value={selectedTicket.status}
-                  onValueChange={(value: TicketStatus) =>
+                  value={selectedTask.status}
+                  onValueChange={(value: TaskStatus) =>
                     handleStatusChange(value)
                   }
                 >
@@ -302,18 +302,18 @@ export default function TicketDetailPage() {
               <div className="pt-4 border-t space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Priority:</span>
-                  <Badge className={priorityColors[selectedTicket.priority]}>
-                    {selectedTicket.priority}
+                  <Badge className={priorityColors[selectedTask.priority]}>
+                    {selectedTask.priority}
                   </Badge>
                 </div>
 
-                {selectedTicket.estimated_hours && (
+                {selectedTask.estimated_hours && (
                   <div className="flex justify-between text-sm">
                     <span>Progress:</span>
                     <span>
                       {Math.round(
-                        (selectedTicket.actual_hours /
-                          selectedTicket.estimated_hours) *
+                        (selectedTask.actual_hours /
+                          selectedTask.estimated_hours) *
                           100
                       )}
                       %
@@ -336,7 +336,7 @@ export default function TicketDetailPage() {
                 onClick={() => setShowEditModal(true)}
               >
                 <Edit className="h-4 w-4 mr-2" />
-                Edit Ticket
+                Edit Task
               </Button>
 
               <Button
@@ -368,10 +368,10 @@ export default function TicketDetailPage() {
       </div>
 
       {/* Edit Modal */}
-      <TicketModal
+      <TaskModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
-        ticket={selectedTicket}
+        ticket={selectedTask}
       />
     </div>
   );
