@@ -108,8 +108,8 @@ export default function TimeEntriesPage() {
     // Format time entries for export
     const exportData = timeEntries.map((entry) => ({
       entry_date: entry.entry_date,
-      ticket_title: (entry.ticket as any)?.title || "Unknown",
-      client_name: (entry.ticket as any)?.client?.name || "Unknown Client",
+      ticket_title: (entry.task as any)?.title || "Unknown",
+      client_name: (entry.task as any)?.client?.name || "Unknown Client",
       description: entry.description || "",
       hours: entry.hours,
       is_billable: entry.is_billable ? "Yes" : "No",
@@ -367,10 +367,10 @@ export default function TimeEntriesPage() {
                         <TableCell>
                           <div className="space-y-1">
                             <div className="font-medium text-xs sm:text-sm line-clamp-2">
-                              {(entry.ticket as any)?.title || "Unknown"}
+                              {(entry.task as any)?.title || "Unknown"}
                             </div>
                             <div className="text-xs text-gray-600">
-                              {(entry.ticket as any)?.client?.name ||
+                              {(entry.task as any)?.client?.name ||
                                 "Unknown Client"}
                             </div>
                           </div>

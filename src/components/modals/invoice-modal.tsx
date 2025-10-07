@@ -113,7 +113,7 @@ export function InvoiceModal({
 
       // Filter by client if specified
       const filtered = clientId
-        ? timeEntries.filter((entry) => entry.ticket?.client?.id === clientId)
+        ? timeEntries.filter((entry) => entry.task?.client?.id === clientId)
         : timeEntries;
 
       setAvailableTimeEntries(filtered);
@@ -144,7 +144,7 @@ export function InvoiceModal({
     const subtotal = selectedEntries.reduce((sum, entry) => {
       // Use client's hourly rate, or user's default rate, or fallback to 0
       const rate =
-        entry.ticket?.client?.hourly_rate ??
+        entry.task?.client?.hourly_rate ??
         entry.user?.default_hourly_rate ??
         0;
       return sum + entry.hours * rate;
@@ -295,7 +295,7 @@ export function InvoiceModal({
                     <TableBody>
                       {availableTimeEntries.map((entry) => {
                         const rate =
-                          entry.ticket?.client?.hourly_rate ??
+                          entry.task?.client?.hourly_rate ??
                           entry.user?.default_hourly_rate ??
                           0;
                         const amount = entry.hours * rate;
@@ -317,7 +317,7 @@ export function InvoiceModal({
                               {entry.description || "No description"}
                             </TableCell>
                             <TableCell>
-                              {entry.ticket?.title || "Unknown ticket"}
+                              {entry.task?.title || "Unknown task"}
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center">

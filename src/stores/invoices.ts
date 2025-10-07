@@ -116,8 +116,8 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
       if (entriesError) throw entriesError;
 
       const lineItems: InvoiceLineItem[] = (entries || []).map((entry) => {
-        const ticket = Array.isArray(entry.ticket) ? entry.ticket[0] : entry.ticket;
-        const client = Array.isArray(ticket?.client) ? ticket.client[0] : ticket?.client;
+        const task = Array.isArray(entry.task) ? entry.task[0] : entry.task;
+        const client = Array.isArray(task?.client) ? task.client[0] : task?.client;
         const user = Array.isArray(entry.user) ? entry.user[0] : entry.user;
         const rate =
           client?.hourly_rate ?? user?.default_hourly_rate ?? 0;

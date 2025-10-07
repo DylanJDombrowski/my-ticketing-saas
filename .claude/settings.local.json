@@ -27,7 +27,8 @@
       "Bash(python3:*)",
       "Bash(grep:*)",
       "Bash(psql:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(npx supabase:*)"
     ],
     "deny": [],
     "ask": []

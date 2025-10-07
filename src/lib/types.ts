@@ -90,7 +90,7 @@ export type TicketComment = TaskComment;
 export interface TimeEntry {
   id: string;
   tenant_id: string;
-  ticket_id: string;
+  task_id: string;
   profile_id: string;
   description?: string;
   hours: number;
@@ -102,6 +102,7 @@ export interface TimeEntry {
   user?: Profile;
   // Legacy field for backwards compatibility
   ticket?: Task;
+  ticket_id?: string;
 }
 
 // Form types
@@ -126,7 +127,7 @@ export interface CreateTaskForm {
 export type CreateTicketForm = CreateTaskForm;
 
 export interface CreateTimeEntryForm {
-  ticket_id: string;
+  task_id: string;
   description?: string;
   hours: number;
   is_billable: boolean;
@@ -249,41 +250,8 @@ export interface InvoiceFormData {
 }
 
 // Sprint 4: Business Automation Types
-export type ApprovalStatus = "draft" | "submitted" | "approved" | "rejected";
-export type NotificationType = "invoice_sent" | "invoice_overdue" | "task_comment" | "sla_warning" | "time_entry_approval";
+export type NotificationType = "invoice_sent" | "invoice_overdue" | "task_comment";
 export type NotificationStatus = "pending" | "sent" | "failed";
-
-// Enhanced Invoice with automation features
-export interface InvoiceWithAutomation extends Invoice {
-  recurrence_rule?: string;
-  next_run_at?: string;
-  approval_status: ApprovalStatus;
-  approved_by?: string;
-  approved_at?: string;
-}
-
-// Enhanced TimeEntry with approval workflow
-export interface TimeEntryWithApproval extends TimeEntry {
-  approval_status: ApprovalStatus;
-  approved_by?: string;
-  approved_at?: string;
-}
-
-// SLA Rules for monitoring
-export interface SLARule {
-  id: string;
-  tenant_id: string;
-  client_id?: string;
-  task_priority: TaskPriority;
-  response_time_hours?: number;
-  resolution_time_hours?: number;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-  client?: Client;
-  // Legacy field for backwards compatibility
-  ticket_priority?: TaskPriority;
-}
 
 // Client Portal Access
 export interface ClientPortalAccess {
@@ -312,26 +280,12 @@ export interface NotificationLog {
 }
 
 // Forms for Sprint 4 features
-export interface CreateSLARuleForm {
-  client_id?: string;
-  task_priority: TaskPriority;
-  response_time_hours?: number;
-  resolution_time_hours?: number;
-}
-
 export interface AutoInvoiceGenerationForm {
   client_id: string;
   date_range_start: string;
   date_range_end: string;
   include_non_billable: boolean;
-  auto_approve: boolean;
   send_notification: boolean;
-}
-
-export interface BulkTimeEntryApprovalForm {
-  time_entry_ids: string[];
-  action: "approve" | "reject";
-  notes?: string;
 }
 
 // Stripe Payment Types

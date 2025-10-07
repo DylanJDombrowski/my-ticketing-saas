@@ -40,7 +40,7 @@ export function TimeEntryModal({
   timeEntry,
 }: TimeEntryModalProps) {
   const [formData, setFormData] = useState<CreateTimeEntryForm>({
-    ticket_id: "",
+    task_id: "",
     description: "",
     hours: 0,
     is_billable: true,
@@ -64,7 +64,7 @@ export function TimeEntryModal({
   useEffect(() => {
     if (timeEntry) {
       setFormData({
-        ticket_id: timeEntry.ticket_id,
+        task_id: timeEntry.task_id,
         description: timeEntry.description || "",
         hours: timeEntry.hours,
         is_billable: timeEntry.is_billable,
@@ -72,7 +72,7 @@ export function TimeEntryModal({
       });
     } else {
       setFormData({
-        ticket_id: "",
+        task_id: "",
         description: "",
         hours: 0,
         is_billable: true,
@@ -100,8 +100,8 @@ export function TimeEntryModal({
       return;
     }
 
-    if (!formData.ticket_id) {
-      setError("Please select a ticket");
+    if (!formData.task_id) {
+      setError("Please select a task");
       setLoading(false);
       return;
     }
@@ -152,7 +152,7 @@ export function TimeEntryModal({
           <DialogDescription>
             {isEditing
               ? "Update the time entry details below."
-              : "Record time spent working on a ticket."}
+              : "Record time spent working on a task."}
           </DialogDescription>
         </DialogHeader>
 
@@ -165,10 +165,10 @@ export function TimeEntryModal({
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="ticket_id">Ticket *</Label>
+              <Label htmlFor="task_id">Task *</Label>
               <Select
-                value={formData.ticket_id}
-                onValueChange={(value) => handleInputChange("ticket_id", value)}
+                value={formData.task_id}
+                onValueChange={(value) => handleInputChange("task_id", value)}
                 required
               >
                 <SelectTrigger>

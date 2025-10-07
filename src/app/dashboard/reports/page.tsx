@@ -231,7 +231,7 @@ export default function ReportsPage() {
             hours,
             is_billable,
             user_id,
-            ticket_id,
+            task_id,
             profiles(first_name, last_name)
           `)
           .eq("tenant_id", profile!.tenant_id)
@@ -244,8 +244,8 @@ export default function ReportsPage() {
           .select(`
             hours,
             is_billable,
-            ticket_id,
-            tickets(client_id, clients(id, name)),
+            task_id,
+            tasks(client_id, clients(id, name)),
             created_at
           `)
           .eq("tenant_id", profile!.tenant_id)
@@ -319,8 +319,8 @@ export default function ReportsPage() {
       // Process client reports
       const clientMap = new Map<string, ClientReport>();
       (clientRevenueResponse.data || []).forEach(entry => {
-        const tickets = Array.isArray(entry.tickets) ? entry.tickets[0] : entry.tickets;
-        const clients = Array.isArray(tickets?.clients) ? tickets.clients[0] : tickets?.clients;
+        const tasks = Array.isArray(entry.tasks) ? entry.tasks[0] : entry.tasks;
+        const clients = Array.isArray(tasks?.clients) ? tasks.clients[0] : tasks?.clients;
         if (!clients) return;
 
         const clientId = clients.id;

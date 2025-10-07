@@ -26,8 +26,6 @@ import {
   Menu,
   X,
   Bell,
-  CheckCircle,
-  Timer,
   Settings,
   CreditCard,
 } from "lucide-react";
@@ -64,11 +62,6 @@ const navigation = [
     shortcut: ["Alt", "E"],
   },
   {
-    name: "Approvals",
-    href: "/dashboard/approvals",
-    icon: CheckCircle,
-  },
-  {
     name: "Invoices",
     href: "/dashboard/invoices",
     icon: FileText,
@@ -79,11 +72,6 @@ const navigation = [
     href: "/dashboard/reports",
     icon: BarChart3,
     shortcut: ["Alt", "R"],
-  },
-  {
-    name: "SLA",
-    href: "/dashboard/sla",
-    icon: Timer,
   },
   {
     name: "Notifications",

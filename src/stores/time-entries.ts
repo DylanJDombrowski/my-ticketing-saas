@@ -35,7 +35,7 @@ interface TimeEntriesState {
 }
 
 interface TimeEntryFilters {
-  ticketId?: string;
+  taskId?: string;
   userId?: string;
   startDate?: string;
   endDate?: string;
@@ -56,15 +56,15 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
         .select(
           `
           *,
-          ticket:tickets(id, title, client:clients(id, name)),
+          task:tasks(id, title, client:clients(id, name)),
           user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email)
         `
         )
         .eq("tenant_id", tenantId);
 
       // Apply filters
-      if (filters?.ticketId) {
-        query = query.eq("ticket_id", filters.ticketId);
+      if (filters?.taskId) {
+        query = query.eq("task_id", filters.taskId);
       }
       if (filters?.userId) {
         query = query.eq("user_id", filters.userId);
@@ -103,7 +103,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
         .select(
           `
           *,
-          ticket:tickets(id, title, client:clients(id, name, hourly_rate)),
+          task:tasks(id, title, client:clients(id, name, hourly_rate)),
           user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email, default_hourly_rate),
           invoice_line_items!left(id)
         `
@@ -113,7 +113,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
         .is("invoice_line_items.id", null);
 
       if (clientId) {
-        query = query.eq("ticket.client_id", clientId);
+        query = query.eq("task.client_id", clientId);
       }
 
       const { data, error } = await query.order("entry_date", {
@@ -148,7 +148,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
         .select(
           `
           *,
-          ticket:tickets(id, title, client:clients(id, name)),
+          task:tasks(id, title, client:clients(id, name)),
           user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email)
         `
         )
@@ -188,7 +188,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
         .select(
           `
           *,
-          ticket:tickets(id, title, client:clients(id, name)),
+          task:tasks(id, title, client:clients(id, name)),
           user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email)
         `
         )
@@ -263,7 +263,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
     rates: Record<string, number>
   ) => {
     return timeEntries.reduce((sum, entry) => {
-      const clientId = entry.ticket?.client?.id;
+      const clientId = entry.task?.client?.id;
       const rate =
         (clientId && rates[clientId] !== undefined
           ? rates[clientId]
