@@ -30,12 +30,22 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 
 ## 📚 Documentation
 
-- **[VISION.md](VISION.md)** - Product vision, roadmap, and go-to-market strategy
-- **[LAUNCH_CHECKLIST.md](LAUNCH_CHECKLIST.md)** - Step-by-step guide from development to beta launch
-- **[STRIPE_SETUP.md](STRIPE_SETUP.md)** - Complete Stripe payment integration setup
-- **[PROGRESS.md](PROGRESS.md)** - Sprint tracking and development history
-- **[CLAUDE.md](CLAUDE.md)** - AI coding assistant instructions
-- **[TESTING.md](TESTING.md)** - Testing framework and best practices
+### Essential Docs
+- **[VISION.md](VISION.md)** - Product vision and roadmap
+- **[CLAUDE.md](CLAUDE.md)** - Architecture overview and AI assistant instructions
+- **[PROGRESS.md](PROGRESS.md)** - Current sprint status and development tracking
+
+### Setup Guides (`/docs/setup`)
+- **[Invoice & Email Setup](docs/setup/INVOICE_EMAIL_SETUP.md)** - Configure invoice emails with client portal links
+- **[Stripe Setup](docs/setup/STRIPE_SETUP.md)** - Complete Stripe Connect payment integration
+- **[Resend Setup](docs/setup/RESEND_SETUP.md)** - Email service configuration
+
+### Database Migrations (`/docs/migrations`)
+- **[Tickets to Tasks Migration](docs/migrations/TICKETS_TO_TASKS_MIGRATION.md)** - Rename database tables
+- **[Constraint Rename Guide](docs/migrations/RUN_CONSTRAINT_RENAME.md)** - Update foreign key constraints
+
+### All Documentation
+See **[docs/INDEX.md](docs/INDEX.md)** for complete documentation index
 
 ---
 
@@ -44,7 +54,7 @@ Open [http://localhost:3000](http://localhost:3000) to see the app.
 ### Core Functionality
 - ✅ **Multi-tenant SaaS** - Secure tenant isolation with Row Level Security
 - ✅ **Client Management** - Track customers and their contact information
-- ✅ **Ticket System** - Organize work with 4 statuses and 4 priority levels
+- ✅ **Task System** - Organize work with 4 statuses and 4 priority levels
 - ✅ **Time Tracking** - Real-time timer with pause/resume and manual entries
 - ✅ **Time Approval Workflows** - Manager approval before billing
 

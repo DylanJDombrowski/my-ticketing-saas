@@ -561,22 +561,10 @@ COMMENT ON COLUMN "public"."stripe_connect_accounts"."payouts_enabled" IS 'Can r
 
 
 
-CREATE TABLE IF NOT EXISTS "public"."tenants" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "name" character varying(100) NOT NULL,
-    "subscription_plan" "public"."subscription_plan" DEFAULT 'free'::"public"."subscription_plan",
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"()
-);
-
-
-ALTER TABLE "public"."tenants" OWNER TO "postgres";
-
-
-CREATE TABLE IF NOT EXISTS "public"."ticket_comments" (
+CREATE TABLE IF NOT EXISTS "public"."task_comments" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "tenant_id" "uuid" NOT NULL,
-    "ticket_id" "uuid" NOT NULL,
+    "task_id" "uuid" NOT NULL,
     "content" "text" NOT NULL,
     "created_by" "uuid",
     "created_at" timestamp with time zone DEFAULT "now"(),
@@ -584,10 +572,10 @@ CREATE TABLE IF NOT EXISTS "public"."ticket_comments" (
 );
 
 
-ALTER TABLE "public"."ticket_comments" OWNER TO "postgres";
+ALTER TABLE "public"."task_comments" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."tickets" (
+CREATE TABLE IF NOT EXISTS "public"."tasks" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "tenant_id" "uuid" NOT NULL,
     "client_id" "uuid" NOT NULL,
@@ -605,13 +593,25 @@ CREATE TABLE IF NOT EXISTS "public"."tickets" (
 );
 
 
-ALTER TABLE "public"."tickets" OWNER TO "postgres";
+ALTER TABLE "public"."tasks" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."tenants" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "name" character varying(100) NOT NULL,
+    "subscription_plan" "public"."subscription_plan" DEFAULT 'free'::"public"."subscription_plan",
+    "created_at" timestamp with time zone DEFAULT "now"(),
+    "updated_at" timestamp with time zone DEFAULT "now"()
+);
+
+
+ALTER TABLE "public"."tenants" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."time_entries" (
     "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
     "tenant_id" "uuid" NOT NULL,
-    "ticket_id" "uuid" NOT NULL,
+    "task_id" "uuid" NOT NULL,
     "user_id" "uuid" NOT NULL,
     "description" "text",
     "hours" numeric(10,2) NOT NULL,
@@ -698,12 +698,12 @@ ALTER TABLE ONLY "public"."tenants"
 
 
 
-ALTER TABLE ONLY "public"."ticket_comments"
+ALTER TABLE ONLY "public"."task_comments"
     ADD CONSTRAINT "ticket_comments_pkey" PRIMARY KEY ("id");
 
 
 
-ALTER TABLE ONLY "public"."tickets"
+ALTER TABLE ONLY "public"."tasks"
     ADD CONSTRAINT "tickets_pkey" PRIMARY KEY ("id");
 
 
@@ -825,35 +825,35 @@ CREATE INDEX "idx_stripe_accounts_user" ON "public"."stripe_connect_accounts" US
 
 
 
-CREATE INDEX "idx_ticket_comments_tenant_id" ON "public"."ticket_comments" USING "btree" ("tenant_id");
+CREATE INDEX "idx_ticket_comments_tenant_id" ON "public"."task_comments" USING "btree" ("tenant_id");
 
 
 
-CREATE INDEX "idx_ticket_comments_ticket_id" ON "public"."ticket_comments" USING "btree" ("ticket_id");
+CREATE INDEX "idx_ticket_comments_ticket_id" ON "public"."task_comments" USING "btree" ("task_id");
 
 
 
-CREATE INDEX "idx_tickets_client_id" ON "public"."tickets" USING "btree" ("client_id");
+CREATE INDEX "idx_tickets_client_id" ON "public"."tasks" USING "btree" ("client_id");
 
 
 
-CREATE INDEX "idx_tickets_due_date" ON "public"."tickets" USING "btree" ("due_date") WHERE ("due_date" IS NOT NULL);
+CREATE INDEX "idx_tickets_due_date" ON "public"."tasks" USING "btree" ("due_date") WHERE ("due_date" IS NOT NULL);
 
 
 
-CREATE INDEX "idx_tickets_status" ON "public"."tickets" USING "btree" ("status");
+CREATE INDEX "idx_tickets_status" ON "public"."tasks" USING "btree" ("status");
 
 
 
-CREATE INDEX "idx_tickets_tenant_created" ON "public"."tickets" USING "btree" ("tenant_id", "created_at" DESC);
+CREATE INDEX "idx_tickets_tenant_created" ON "public"."tasks" USING "btree" ("tenant_id", "created_at" DESC);
 
 
 
-CREATE INDEX "idx_tickets_tenant_id" ON "public"."tickets" USING "btree" ("tenant_id");
+CREATE INDEX "idx_tickets_tenant_id" ON "public"."tasks" USING "btree" ("tenant_id");
 
 
 
-CREATE INDEX "idx_tickets_tenant_status" ON "public"."tickets" USING "btree" ("tenant_id", "status");
+CREATE INDEX "idx_tickets_tenant_status" ON "public"."tasks" USING "btree" ("tenant_id", "status");
 
 
 
@@ -869,7 +869,7 @@ CREATE INDEX "idx_time_entries_tenant_id" ON "public"."time_entries" USING "btre
 
 
 
-CREATE INDEX "idx_time_entries_ticket_id" ON "public"."time_entries" USING "btree" ("ticket_id");
+CREATE INDEX "idx_time_entries_ticket_id" ON "public"."time_entries" USING "btree" ("task_id");
 
 
 
@@ -909,7 +909,7 @@ CREATE OR REPLACE TRIGGER "update_tenants_updated_at" BEFORE UPDATE ON "public".
 
 
 
-CREATE OR REPLACE TRIGGER "update_ticket_comments_updated_at" BEFORE UPDATE ON "public"."ticket_comments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+CREATE OR REPLACE TRIGGER "update_ticket_comments_updated_at" BEFORE UPDATE ON "public"."task_comments" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
@@ -925,7 +925,7 @@ CREATE OR REPLACE TRIGGER "update_ticket_hours_on_time_entry_update" AFTER UPDAT
 
 
 
-CREATE OR REPLACE TRIGGER "update_tickets_updated_at" BEFORE UPDATE ON "public"."tickets" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
+CREATE OR REPLACE TRIGGER "update_tickets_updated_at" BEFORE UPDATE ON "public"."tasks" FOR EACH ROW EXECUTE FUNCTION "public"."update_updated_at_column"();
 
 
 
@@ -1028,37 +1028,37 @@ ALTER TABLE ONLY "public"."stripe_connect_accounts"
 
 
 
-ALTER TABLE ONLY "public"."ticket_comments"
+ALTER TABLE ONLY "public"."task_comments"
     ADD CONSTRAINT "ticket_comments_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."profiles"("id");
 
 
 
-ALTER TABLE ONLY "public"."ticket_comments"
+ALTER TABLE ONLY "public"."task_comments"
     ADD CONSTRAINT "ticket_comments_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
 
 
 
-ALTER TABLE ONLY "public"."ticket_comments"
-    ADD CONSTRAINT "ticket_comments_ticket_id_fkey" FOREIGN KEY ("ticket_id") REFERENCES "public"."tickets"("id") ON DELETE CASCADE;
+ALTER TABLE ONLY "public"."task_comments"
+    ADD CONSTRAINT "ticket_comments_ticket_id_fkey" FOREIGN KEY ("task_id") REFERENCES "public"."tasks"("id") ON DELETE CASCADE;
 
 
 
-ALTER TABLE ONLY "public"."tickets"
+ALTER TABLE ONLY "public"."tasks"
     ADD CONSTRAINT "tickets_assigned_to_fkey" FOREIGN KEY ("assigned_to") REFERENCES "public"."profiles"("id");
 
 
 
-ALTER TABLE ONLY "public"."tickets"
+ALTER TABLE ONLY "public"."tasks"
     ADD CONSTRAINT "tickets_client_id_fkey" FOREIGN KEY ("client_id") REFERENCES "public"."clients"("id") ON DELETE CASCADE;
 
 
 
-ALTER TABLE ONLY "public"."tickets"
+ALTER TABLE ONLY "public"."tasks"
     ADD CONSTRAINT "tickets_created_by_fkey" FOREIGN KEY ("created_by") REFERENCES "public"."profiles"("id");
 
 
 
-ALTER TABLE ONLY "public"."tickets"
+ALTER TABLE ONLY "public"."tasks"
     ADD CONSTRAINT "tickets_tenant_id_fkey" FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id") ON DELETE CASCADE;
 
 
@@ -1074,7 +1074,7 @@ ALTER TABLE ONLY "public"."time_entries"
 
 
 ALTER TABLE ONLY "public"."time_entries"
-    ADD CONSTRAINT "time_entries_ticket_id_fkey" FOREIGN KEY ("ticket_id") REFERENCES "public"."tickets"("id") ON DELETE CASCADE;
+    ADD CONSTRAINT "time_entries_ticket_id_fkey" FOREIGN KEY ("task_id") REFERENCES "public"."tasks"("id") ON DELETE CASCADE;
 
 
 
@@ -1115,7 +1115,7 @@ CREATE POLICY "Users can manage their tenant's invoices" ON "public"."invoices" 
 
 
 
-CREATE POLICY "Users can manage their tenant's tickets" ON "public"."tickets" USING (("tenant_id" = ( SELECT "profiles"."tenant_id"
+CREATE POLICY "Users can manage their tenant's tickets" ON "public"."tasks" USING (("tenant_id" = ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
   WHERE ("profiles"."id" = "auth"."uid"()))));
 
@@ -1127,9 +1127,9 @@ CREATE POLICY "Users can manage their tenant's time entries" ON "public"."time_e
 
 
 
-CREATE POLICY "Users can manage ticket comments" ON "public"."ticket_comments" USING (("ticket_id" IN ( SELECT "tickets"."id"
-   FROM "public"."tickets"
-  WHERE ("tickets"."tenant_id" = ( SELECT "profiles"."tenant_id"
+CREATE POLICY "Users can manage ticket comments" ON "public"."task_comments" USING (("task_id" IN ( SELECT "tasks"."id"
+   FROM "public"."tasks"
+  WHERE ("tasks"."tenant_id" = ( SELECT "profiles"."tenant_id"
            FROM "public"."profiles"
           WHERE ("profiles"."id" = "auth"."uid"()))))));
 
@@ -1275,6 +1275,12 @@ CREATE POLICY "sla_rules_tenant_policy" ON "public"."sla_rules" TO "authenticate
 ALTER TABLE "public"."stripe_connect_accounts" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."task_comments" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."tasks" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."tenants" ENABLE ROW LEVEL SECURITY;
 
 
@@ -1285,28 +1291,25 @@ CREATE POLICY "tenants_select_own" ON "public"."tenants" FOR SELECT TO "authenti
 
 
 
-ALTER TABLE "public"."ticket_comments" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "ticket_comments_delete" ON "public"."ticket_comments" FOR DELETE TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+CREATE POLICY "ticket_comments_delete" ON "public"."task_comments" FOR DELETE TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
   WHERE ("profiles"."id" = "auth"."uid"()))));
 
 
 
-CREATE POLICY "ticket_comments_insert" ON "public"."ticket_comments" FOR INSERT TO "authenticated" WITH CHECK (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+CREATE POLICY "ticket_comments_insert" ON "public"."task_comments" FOR INSERT TO "authenticated" WITH CHECK (("tenant_id" IN ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
   WHERE ("profiles"."id" = "auth"."uid"()))));
 
 
 
-CREATE POLICY "ticket_comments_select" ON "public"."ticket_comments" FOR SELECT TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+CREATE POLICY "ticket_comments_select" ON "public"."task_comments" FOR SELECT TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
   WHERE ("profiles"."id" = "auth"."uid"()))));
 
 
 
-CREATE POLICY "ticket_comments_update" ON "public"."ticket_comments" FOR UPDATE TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
+CREATE POLICY "ticket_comments_update" ON "public"."task_comments" FOR UPDATE TO "authenticated" USING (("tenant_id" IN ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
   WHERE ("profiles"."id" = "auth"."uid"())))) WITH CHECK (("tenant_id" IN ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
@@ -1314,10 +1317,7 @@ CREATE POLICY "ticket_comments_update" ON "public"."ticket_comments" FOR UPDATE 
 
 
 
-ALTER TABLE "public"."tickets" ENABLE ROW LEVEL SECURITY;
-
-
-CREATE POLICY "tickets_policy" ON "public"."tickets" TO "authenticated" USING (("tenant_id" = ( SELECT "profiles"."tenant_id"
+CREATE POLICY "tickets_policy" ON "public"."tasks" TO "authenticated" USING (("tenant_id" = ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
   WHERE ("profiles"."id" = "auth"."uid"())))) WITH CHECK (("tenant_id" = ( SELECT "profiles"."tenant_id"
    FROM "public"."profiles"
@@ -1615,21 +1615,21 @@ GRANT ALL ON TABLE "public"."stripe_connect_accounts" TO "service_role";
 
 
 
+GRANT ALL ON TABLE "public"."task_comments" TO "anon";
+GRANT ALL ON TABLE "public"."task_comments" TO "authenticated";
+GRANT ALL ON TABLE "public"."task_comments" TO "service_role";
+
+
+
+GRANT ALL ON TABLE "public"."tasks" TO "anon";
+GRANT ALL ON TABLE "public"."tasks" TO "authenticated";
+GRANT ALL ON TABLE "public"."tasks" TO "service_role";
+
+
+
 GRANT ALL ON TABLE "public"."tenants" TO "anon";
 GRANT ALL ON TABLE "public"."tenants" TO "authenticated";
 GRANT ALL ON TABLE "public"."tenants" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."ticket_comments" TO "anon";
-GRANT ALL ON TABLE "public"."ticket_comments" TO "authenticated";
-GRANT ALL ON TABLE "public"."ticket_comments" TO "service_role";
-
-
-
-GRANT ALL ON TABLE "public"."tickets" TO "anon";
-GRANT ALL ON TABLE "public"."tickets" TO "authenticated";
-GRANT ALL ON TABLE "public"."tickets" TO "service_role";
 
 
 
