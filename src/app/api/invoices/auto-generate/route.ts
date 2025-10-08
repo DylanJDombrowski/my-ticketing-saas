@@ -55,7 +55,6 @@ export async function POST(request: NextRequest) {
       date_range_start,
       date_range_end,
       include_non_billable,
-      auto_approve,
       send_notification
     } = body;
 
@@ -90,8 +89,7 @@ export async function POST(request: NextRequest) {
       .eq("tenant_id", tenantId)
       .gte("entry_date", date_range_start)
       .lte("entry_date", date_range_end)
-      .is("invoice_id", null) // Only unbilled entries
-      .eq("approval_status", "approved"); // Only approved entries
+      .is("invoice_id", null); // Only unbilled entries
 
     if (client_id) {
       // Filter by specific client through tasks
@@ -205,10 +203,7 @@ export async function POST(request: NextRequest) {
             tax_rate: taxRate,
             tax_amount: taxAmount,
             total_amount: totalAmount,
-            status: auto_approve ? 'sent' : 'draft',
-            approval_status: auto_approve ? 'approved' : 'draft',
-            approved_by: auto_approve ? user.id : null,
-            approved_at: auto_approve ? new Date().toISOString() : null,
+            status: 'draft',
             due_date: dueDate.toISOString().split('T')[0],
             payment_instructions: "Payment is due within 30 days of invoice date.",
             notes: `Auto-generated invoice for time period: ${date_range_start} to ${date_range_end}`,

@@ -214,7 +214,7 @@ export function TimeTracker() {
 
     try {
       const { error } = await createTimeEntry(profile.tenant_id, profile.id, {
-        ticket_id: session.ticketId,
+        task_id: session.ticketId,
         description: session.description,
         hours: totalHours,
         is_billable: session.isBillable,

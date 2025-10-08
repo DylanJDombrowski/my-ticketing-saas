@@ -55,7 +55,6 @@ export function AutoInvoiceGenerator() {
         .split("T")[0], // 30 days ago
       date_range_end: new Date().toISOString().split("T")[0], // today
       include_non_billable: false,
-      auto_approve: false,
       send_notification: false,
     },
   });
@@ -181,20 +180,6 @@ export function AutoInvoiceGenerator() {
                   />
                   <Label htmlFor="include-non-billable" className="text-sm">
                     Include non-billable time entries
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="auto-approve"
-                    checked={form.watch("auto_approve")}
-                    onCheckedChange={(checked) =>
-                      form.setValue("auto_approve", checked as boolean)
-                    }
-                  />
-                  <Label htmlFor="auto-approve" className="text-sm">
-                    Auto-approve and mark as &quot;Sent&quot; (otherwise saved
-                    as &quot;Draft&quot;)
                   </Label>
                 </div>
 
