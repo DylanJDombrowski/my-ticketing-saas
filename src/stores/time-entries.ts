@@ -35,11 +35,13 @@ interface TimeEntriesState {
 }
 
 interface TimeEntryFilters {
-  taskId?: string;
+  clientId?: string;
   userId?: string;
   startDate?: string;
   endDate?: string;
   billableOnly?: boolean;
+  /** @deprecated Task system removed */
+  taskId?: string;
 }
 
 export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
@@ -56,15 +58,16 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
         .select(
           `
           *,
-          task:tasks(id, title, client:clients(id, name)),
-          user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email)
+          client:clients(id, name, hourly_rate),
+          user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email),
+          invoice:invoices(id, invoice_number, status)
         `
         )
         .eq("tenant_id", tenantId);
 
       // Apply filters
-      if (filters?.taskId) {
-        query = query.eq("task_id", filters.taskId);
+      if (filters?.clientId) {
+        query = query.eq("client_id", filters.clientId);
       }
       if (filters?.userId) {
         query = query.eq("user_id", filters.userId);
@@ -103,17 +106,17 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
         .select(
           `
           *,
-          task:tasks(id, title, client:clients(id, name, hourly_rate)),
+          client:clients(id, name, hourly_rate),
           user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email, default_hourly_rate),
           invoice_line_items!left(id)
         `
         )
         .eq("tenant_id", tenantId)
         .eq("is_billable", true)
-        .is("invoice_line_items.id", null);
+        .is("invoice_id", null); // Time entries not yet on an invoice
 
       if (clientId) {
-        query = query.eq("task.client_id", clientId);
+        query = query.eq("client_id", clientId);
       }
 
       const { data, error } = await query.order("entry_date", {
@@ -142,14 +145,15 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
         .from("time_entries")
         .insert({
           tenant_id: tenantId,
-          user_id: userId,
+          profile_id: userId,
           ...timeEntryData,
         })
         .select(
           `
           *,
-          task:tasks(id, title, client:clients(id, name)),
-          user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email)
+          client:clients(id, name, hourly_rate),
+          user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email),
+          invoice:invoices(id, invoice_number, status)
         `
         )
         .single();
@@ -188,8 +192,9 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
         .select(
           `
           *,
-          task:tasks(id, title, client:clients(id, name)),
-          user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email)
+          client:clients(id, name, hourly_rate),
+          user:profiles!time_entries_user_id_fkey(id, first_name, last_name, email),
+          invoice:invoices(id, invoice_number, status)
         `
         )
         .single();
@@ -263,7 +268,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
     rates: Record<string, number>
   ) => {
     return timeEntries.reduce((sum, entry) => {
-      const clientId = entry.task?.client?.id;
+      const clientId = entry.client?.id;
       const rate =
         (clientId && rates[clientId] !== undefined
           ? rates[clientId]

@@ -109,15 +109,14 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
       const { data: entries, error: entriesError } = await supabase
         .from("time_entries")
         .select(
-          `id, description, hours, task:tasks(client:clients(id, hourly_rate)), user:profiles!time_entries_user_id_fkey(id, default_hourly_rate)`
+          `id, description, hours, client:clients(id, hourly_rate), user:profiles!time_entries_user_id_fkey(id, default_hourly_rate)`
         )
         .in("id", invoiceData.time_entry_ids);
 
       if (entriesError) throw entriesError;
 
       const lineItems: InvoiceLineItem[] = (entries || []).map((entry) => {
-        const task = Array.isArray(entry.task) ? entry.task[0] : entry.task;
-        const client = Array.isArray(task?.client) ? task.client[0] : task?.client;
+        const client = Array.isArray(entry.client) ? entry.client[0] : entry.client;
         const user = Array.isArray(entry.user) ? entry.user[0] : entry.user;
         const rate =
           client?.hourly_rate ?? user?.default_hourly_rate ?? 0;

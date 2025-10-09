@@ -36,10 +36,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuthStore } from "@/stores/auth";
 import { useTimeEntriesStore } from "@/stores/time-entries";
-import { useTasksStore } from "@/stores/tasks";
+import { useClientsStore } from "@/stores/clients";
 import { TimeEntryModal } from "@/components/modals/time-entry-modal";
 import { ConfirmModal } from "@/components/modals/confirm-modal";
-import { TimeTracker } from "@/components/time-tracker";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import {
   Plus,
@@ -48,7 +47,6 @@ import {
   Trash2,
   Clock,
   Calendar,
-  User,
   FileDown,
 } from "lucide-react";
 import type { TimeEntry } from "@/lib/types";
@@ -64,7 +62,7 @@ export default function TimeEntriesPage() {
     const today = new Date();
     return today.toISOString().split("T")[0];
   });
-  const [ticketFilter, setTicketFilter] = useState<string>("all");
+  const [clientFilter, setClientFilter] = useState<string>("all");
   const [billableFilter, setBillableFilter] = useState<string>("all");
   const [showTimeEntryModal, setShowTimeEntryModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -78,11 +76,11 @@ export default function TimeEntriesPage() {
   const { profile } = useAuthStore();
   const { timeEntries, loading, fetchTimeEntries, deleteTimeEntry } =
     useTimeEntriesStore();
-  const { tasks, fetchTasks } = useTasksStore();
+  const { clients, fetchClients } = useClientsStore();
 
   useEffect(() => {
     if (profile?.tenant_id) {
-      fetchTasks(profile.tenant_id);
+      fetchClients(profile.tenant_id);
       loadTimeEntries();
     }
   }, [profile?.tenant_id]);
@@ -93,7 +91,7 @@ export default function TimeEntriesPage() {
     const filters = {
       startDate: dateFilter,
       endDate: endDateFilter,
-      ticketId: ticketFilter === "all" ? undefined : ticketFilter,
+      clientId: clientFilter === "all" ? undefined : clientFilter,
       billableOnly: billableFilter === "billable" ? true : undefined,
     };
 
@@ -102,17 +100,17 @@ export default function TimeEntriesPage() {
 
   useEffect(() => {
     loadTimeEntries();
-  }, [dateFilter, endDateFilter, ticketFilter, billableFilter]);
+  }, [dateFilter, endDateFilter, clientFilter, billableFilter]);
 
   const handleExportTimeEntries = () => {
     // Format time entries for export
     const exportData = timeEntries.map((entry) => ({
       entry_date: entry.entry_date,
-      ticket_title: (entry.task as any)?.title || "Unknown",
-      client_name: (entry.task as any)?.client?.name || "Unknown Client",
+      client_name: (entry.client as any)?.name || "Unknown Client",
       description: entry.description || "",
       hours: entry.hours,
       is_billable: entry.is_billable ? "Yes" : "No",
+      invoice: (entry.invoice as any)?.invoice_number || "Not invoiced",
       user_name: (entry.user as any)?.email || "Unknown User",
     }));
 
@@ -234,9 +232,6 @@ export default function TimeEntriesPage() {
         </div>
       </div>
 
-      {/* Time Tracker Widget */}
-      <TimeTracker />
-
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -284,7 +279,7 @@ export default function TimeEntriesPage() {
         <CardHeader>
           <CardTitle>Time Entry Management</CardTitle>
           <CardDescription>
-            Track and manage time spent on tasks
+            Track billable and non-billable hours for clients
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -310,15 +305,15 @@ export default function TimeEntriesPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
-              <Select value={ticketFilter} onValueChange={setTicketFilter}>
+              <Select value={clientFilter} onValueChange={setClientFilter}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Filter by task" />
+                  <SelectValue placeholder="Filter by client" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Tasks</SelectItem>
-                  {tasks.map((task) => (
-                    <SelectItem key={task.id} value={task.id}>
-                      {task.title} ({task.client?.name})
+                  <SelectItem value="all">All Clients</SelectItem>
+                  {clients.filter(c => c.is_active).map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name} {client.company ? `(${client.company})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -345,11 +340,11 @@ export default function TimeEntriesPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead className="min-w-[100px]">Date</TableHead>
-                      <TableHead className="min-w-[150px]">Ticket</TableHead>
+                      <TableHead className="min-w-[150px]">Client</TableHead>
                       <TableHead className="min-w-[120px]">Description</TableHead>
                       <TableHead className="min-w-[80px]">Hours</TableHead>
                       <TableHead className="min-w-[90px]">Billable</TableHead>
-                      <TableHead className="min-w-[120px]">User</TableHead>
+                      <TableHead className="min-w-[120px]">Invoice</TableHead>
                       <TableHead className="w-[70px]"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -367,12 +362,13 @@ export default function TimeEntriesPage() {
                         <TableCell>
                           <div className="space-y-1">
                             <div className="font-medium text-xs sm:text-sm line-clamp-2">
-                              {(entry.task as any)?.title || "Unknown"}
+                              {(entry.client as any)?.name || "Unknown Client"}
                             </div>
-                            <div className="text-xs text-gray-600">
-                              {(entry.task as any)?.client?.name ||
-                                "Unknown Client"}
-                            </div>
+                            {(entry.client as any)?.company && (
+                              <div className="text-xs text-gray-600">
+                                {(entry.client as any)?.company}
+                              </div>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -397,17 +393,15 @@ export default function TimeEntriesPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center">
-                            <User className="mr-2 h-3 w-3 text-gray-400 flex-shrink-0" />
-                            <span className="text-xs sm:text-sm truncate max-w-[100px]">
-                              {(entry.user as any)?.first_name &&
-                              (entry.user as any)?.last_name
-                                ? `${(entry.user as any).first_name} ${
-                                    (entry.user as any).last_name
-                                  }`
-                                : (entry.user as any)?.email || "Unknown"}
-                            </span>
-                          </div>
+                          {(entry.invoice as any)?.invoice_number ? (
+                            <div className="text-xs sm:text-sm">
+                              <Badge variant="outline">
+                                {(entry.invoice as any).invoice_number}
+                              </Badge>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">Not invoiced</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>

@@ -46,7 +46,8 @@ import {
   Zap,
   Send,
   Check,
-  CreditCard
+  CreditCard,
+  Bell
 } from "lucide-react";
 import { InvoiceModal } from "@/components/modals/invoice-modal";
 import { SendInvoiceModal } from "@/components/modals/send-invoice-modal";
@@ -193,6 +194,36 @@ export default function InvoicesPage() {
       console.error("Payment error:", error);
       notify.error(
         error instanceof Error ? error.message : "Failed to initiate payment"
+      );
+    }
+  };
+
+  const handleSendReminder = async (invoiceId: string) => {
+    try {
+      const response = await fetch("/api/invoices/send-reminder", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ invoiceId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send reminder");
+      }
+
+      notify.success("Payment reminder sent successfully!");
+
+      // Refresh invoices to get updated reminder count
+      if (profile?.tenant_id) {
+        fetchInvoices(profile.tenant_id);
+      }
+    } catch (error) {
+      console.error("Reminder error:", error);
+      notify.error(
+        error instanceof Error ? error.message : "Failed to send reminder"
       );
     }
   };
@@ -450,6 +481,12 @@ export default function InvoicesPage() {
                             <Download className="h-4 w-4 mr-2" />
                             Download PDF
                           </DropdownMenuItem>
+                          {(invoice.status === 'sent' || invoice.status === 'overdue') && (
+                            <DropdownMenuItem onClick={() => handleSendReminder(invoice.id)}>
+                              <Bell className="h-4 w-4 mr-2" />
+                              Send Payment Reminder
+                            </DropdownMenuItem>
+                          )}
                           {invoice.status === 'draft' && (
                             <DropdownMenuItem
                               onClick={() => {

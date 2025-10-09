@@ -1,60 +1,52 @@
-# TryBillable.com - Product Vision & Roadmap
+# Billable - Product Vision & Roadmap
 
-**The billable hours platform that actually gets you paid.**
+**Invoice clients in 60 seconds. Get paid via Stripe.**
 
 ---
 
 ## 🎯 Mission Statement
 
-TryBillable empowers consultants, freelancers, and small agencies to focus on their craft by eliminating the friction between doing work and getting paid. We replace 3-4 disconnected tools with one beautifully simple platform that tracks time, generates professional invoices, and collects payments automatically.
+Billable helps freelancers get paid faster by making invoicing stupidly simple. No projects. No timesheets. No bullshit. Just create an invoice, send it, and get paid via Stripe.
 
 ---
 
 ## 🌟 Vision
 
-To become the #1 time-to-payment platform for professional services, trusted by 100,000+ consultants worldwide by 2027.
+To become the fastest invoicing tool for freelancers, processing $100M+ in payments by 2027.
 
-**Our North Star Metric:** Average time from work completion to payment received (Target: <7 days)
+**Our North Star Metric:** Time from "create invoice" to client payment (Target: <3 days)
 
 ---
 
 ## 💡 Core Value Propositions
 
-### For Solo Consultants & Freelancers
-1. **Speed:** From timer to invoice in 60 seconds
-2. **Professional:** Client portal makes you look enterprise-grade
-3. **Simplicity:** Everything you need, nothing you don't
-4. **Automation:** Set it once, never chase payments again
-
-### For Small Agencies (2-10 people)
-1. **Visibility:** See team utilization and profitability in real-time
-2. **Accountability:** Built-in time approval workflows
-3. **SLA Compliance:** Never miss a client deadline
-4. **Cost Savings:** Replace $200/month in tools with one $49 subscription
+### For Freelancers
+1. **Stupidly Fast:** Create and send an invoice in 60 seconds
+2. **Stripe-Native:** Payments go directly to your Stripe account (no middleman)
+3. **Auto Reminders:** One-click payment reminders when invoices are unpaid
+4. **Optional Time Tracking:** Log hours if you want, or just create invoices directly
 
 ---
 
 ## 🎨 Product Positioning
 
-**Category:** Time Tracking + Invoicing + Client Portal (3-in-1)
+**Category:** Invoice-First Freelancer Tool (Stripe Connect for Invoicing)
 
 **Competitors:**
-- Toggle Track (time tracking only, no invoicing)
-- FreshBooks (invoicing-first, clunky time tracking)
-- Harvest (expensive, feature bloat)
-- Clockify (free but limited, poor UX)
+- FreshBooks (expensive, feature bloat, legacy UI)
+- Invoice Ninja (open source but complex setup)
+- Stripe Invoicing (bare-bones, no client management)
+- PayPal Invoicing (outdated, high fees)
 
 **Our Differentiation:**
-- ✅ Billing-focused (not generic project management)
-- ✅ Client portal included (not an upsell)
-- ✅ Stripe payments built-in (not a third-party integration)
-- ✅ SLA monitoring (unique to us)
+- ✅ Invoice-first (not time-tracking-first)
+- ✅ Stripe Connect only (users link their own Stripe)
+- ✅ 60-second invoice creation (vs 10+ minutes elsewhere)
+- ✅ One-click payment reminders ("Bug Client" button)
 - ✅ Modern UX (built with Next.js 15, not PHP)
 
-**Tagline Options:**
-1. "Time tracking that actually gets you paid"
-2. "From timer to invoice in 3 clicks"
-3. "The billable hours platform for professionals"
+**Tagline:**
+"Invoice clients in 60 seconds. Get paid via Stripe."
 
 ---
 

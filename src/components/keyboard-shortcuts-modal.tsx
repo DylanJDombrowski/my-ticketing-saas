@@ -25,7 +25,6 @@ export function KeyboardShortcutsModal() {
 
   // Determine current page shortcuts
   const getCurrentPageShortcuts = () => {
-    if (pathname.includes("/tasks")) return pageShortcuts.tasks;
     if (pathname.includes("/time-entries")) return pageShortcuts.timeEntries;
     if (pathname.includes("/clients")) return pageShortcuts.clients;
     if (pathname.includes("/invoices")) return pageShortcuts.invoices;
@@ -47,7 +46,6 @@ export function KeyboardShortcutsModal() {
   }, []);
 
   const getPageName = () => {
-    if (pathname.includes("/tickets")) return "Tickets";
     if (pathname.includes("/time-entries")) return "Time Entries";
     if (pathname.includes("/clients")) return "Clients";
     if (pathname.includes("/invoices")) return "Invoices";

@@ -71,13 +71,6 @@ export function useGlobalKeyboardShortcuts() {
       global: true
     },
     {
-      key: 't',
-      altKey: true,
-      action: () => router.push('/dashboard/tasks'),
-      description: 'Go to Tasks',
-      global: true
-    },
-    {
       key: 'e',
       altKey: true,
       action: () => router.push('/dashboard/time-entries'),
@@ -117,29 +110,6 @@ export function useGlobalKeyboardShortcuts() {
 
 // Page-specific shortcuts for different sections
 export const pageShortcuts = {
-  tasks: [
-    {
-      key: 'n',
-      action: () => window.dispatchEvent(new CustomEvent('create-task')),
-      description: 'Create New Task'
-    },
-    {
-      key: 'f',
-      action: () => {
-        const searchInput = document.querySelector('input[placeholder*="Search"]') as HTMLInputElement;
-        if (searchInput) {
-          searchInput.focus();
-        }
-      },
-      description: 'Focus Search'
-    },
-    {
-      key: 'o',
-      action: () => window.dispatchEvent(new CustomEvent('filter-open-tasks')),
-      description: 'Filter Open Tasks'
-    }
-  ],
-
   timeEntries: [
     {
       key: 'n',

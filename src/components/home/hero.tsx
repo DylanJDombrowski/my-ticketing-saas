@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Clock, Users, Zap } from "lucide-react";
+import { ArrowRight, Zap, CreditCard, Bell } from "lucide-react";
 
 export function Hero() {
   return (
@@ -16,15 +16,14 @@ export function Hero() {
             </span>
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl lg:text-7xl">
-            Time Tracking & Invoicing{" "}
+            Invoice clients in 60 seconds.{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-              Made Simple
+              Get paid via Stripe.
             </span>
           </h1>
           <p className="mt-6 text-xl leading-8 text-gray-600 max-w-2xl mx-auto">
-            Stop juggling spreadsheets and chasing payments. Billable brings together
-            time tracking, client management, ticketing, and professional invoicing
-            in one beautiful platform.
+            The stupid-simple invoicing tool for freelancers who just want to get paid.
+            No projects. No timesheets. No bullshit.
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -53,37 +52,34 @@ export function Hero() {
                 <Zap className="h-7 w-7 text-white" />
               </div>
               <h3 className="mt-5 text-lg font-bold text-gray-900">
-                Quick Setup
+                Stupidly Fast
               </h3>
               <p className="mt-2 text-sm text-gray-600 text-center leading-relaxed">
-                Start tracking time and creating invoices in under 5 minutes.
-                No complex onboarding required.
+                Create an invoice in 60 seconds. Your clients pay with one click.
               </p>
             </div>
 
             <div className="flex flex-col items-center p-6 rounded-xl bg-white shadow-md hover:shadow-lg transition-shadow">
               <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg">
-                <Clock className="h-7 w-7 text-white" />
+                <CreditCard className="h-7 w-7 text-white" />
               </div>
               <h3 className="mt-5 text-lg font-bold text-gray-900">
-                Smart Time Tracking
+                Stripe-Native
               </h3>
               <p className="mt-2 text-sm text-gray-600 text-center leading-relaxed">
-                Track billable hours effortlessly with built-in timers and
-                automatic invoice generation.
+                Payments go straight to your Stripe account. No middleman.
               </p>
             </div>
 
             <div className="flex flex-col items-center p-6 rounded-xl bg-white shadow-md hover:shadow-lg transition-shadow">
               <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-green-500 to-green-600 shadow-lg">
-                <Users className="h-7 w-7 text-white" />
+                <Bell className="h-7 w-7 text-white" />
               </div>
               <h3 className="mt-5 text-lg font-bold text-gray-900">
-                Client Management
+                Auto Reminders
               </h3>
               <p className="mt-2 text-sm text-gray-600 text-center leading-relaxed">
-                Organize clients, tickets, and projects in one centralized
-                dashboard.
+                One-click payment reminders when invoices go unpaid. No awkward emails.
               </p>
             </div>
           </div>

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import {
   Card,
   CardContent,
@@ -10,36 +11,32 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { createBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
-import { Users, Ticket, Clock, AlertTriangle } from "lucide-react";
+import { DollarSign, Clock, FileText, TrendingUp, Plus } from "lucide-react";
 
 interface DashboardStats {
-  totalClients: number;
-  totalTickets: number;
-  openTickets: number;
-  inProgressTickets: number;
-  resolvedTickets: number;
-  closedTickets: number;
-  overdueTickets: number;
-  monthlyHours: number;
-  billableHours: number;
+  revenueThisMonth: number;
+  pendingInvoicesAmount: number;
+  pendingInvoicesCount: number;
+  billableHoursThisMonth: number;
 }
 
-interface RecentTicket {
+interface RecentInvoice {
   id: string;
-  title: string;
+  invoice_number: string;
   status: string;
-  priority: string;
+  total_amount: number;
   client_name: string;
+  paid_at?: string;
   created_at: string;
 }
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [recentTickets, setRecentTickets] = useState<RecentTicket[]>([]);
+  const [recentInvoices, setRecentInvoices] = useState<RecentInvoice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [ticketsLoading, setTicketsLoading] = useState(false);
   const { profile } = useAuthStore();
 
   const supabase = createBrowserClient();
@@ -50,126 +47,73 @@ export default function DashboardPage() {
     try {
       setLoading(true);
 
-      // Calculate month start once
+      // Calculate month start
       const monthStart = new Date(
         new Date().getFullYear(),
         new Date().getMonth(),
         1
       ).toISOString();
 
-      // Priority 1: Fetch critical stats first for immediate UI update
+      // Fetch all data in parallel
       const [
-        clientsResponse,
-        allTicketsResponse,
+        invoicesResponse,
         timeEntriesResponse
       ] = await Promise.all([
-        // Client count only (optimized with head: true)
+        // All invoices
         supabase
-          .from("clients")
-          .select("id", { count: "exact", head: true })
+          .from("invoices")
+          .select("id, invoice_number, status, total_amount, paid_at, created_at, client:clients(name)")
           .eq("tenant_id", profile.tenant_id)
-          .eq("is_active", true),
+          .order("created_at", { ascending: false }),
 
-        // All tasks for stats calculation (minimal fields)
-        supabase
-          .from("tasks")
-          .select("id, status, due_date")
-          .eq("tenant_id", profile.tenant_id),
-
-        // Monthly time entries (minimal fields)
+        // Billable hours this month
         supabase
           .from("time_entries")
-          .select("hours, is_billable")
+          .select("hours")
           .eq("tenant_id", profile.tenant_id)
-          .gte("created_at", monthStart)
+          .eq("is_billable", true)
+          .gte("entry_date", monthStart)
       ]);
 
-      const tasks = allTicketsResponse.data || [];
+      const invoices = invoicesResponse.data || [];
       const timeEntries = timeEntriesResponse.data || [];
 
-      // Optimize calculations with single pass
-      const now = new Date();
-      const taskStats = tasks.reduce(
-        (acc, task) => {
-          // Count by status
-          const status = task.status as keyof typeof acc;
-          if (status in acc) {
-            acc[status]++;
-          }
+      // Calculate revenue this month (paid invoices)
+      const revenueThisMonth = invoices
+        .filter(inv => inv.status === "paid" && inv.paid_at && inv.paid_at >= monthStart)
+        .reduce((sum, inv) => sum + inv.total_amount, 0);
 
-          // Check if overdue
-          if (
-            task.due_date &&
-            new Date(task.due_date) < now &&
-            task.status !== "resolved" &&
-            task.status !== "closed"
-          ) {
-            acc.overdue++;
-          }
-
-          return acc;
-        },
-        {
-          open: 0,
-          in_progress: 0,
-          resolved: 0,
-          closed: 0,
-          overdue: 0
-        }
+      // Calculate pending invoices (sent but not paid)
+      const pendingInvoices = invoices.filter(
+        inv => inv.status === "sent" || inv.status === "overdue" || inv.status === "partial"
       );
+      const pendingAmount = pendingInvoices.reduce((sum, inv) => sum + inv.total_amount, 0);
 
-      // Optimize time calculations with single pass
-      const timeStats = timeEntries.reduce(
-        (acc, entry) => {
-          acc.total += entry.hours;
-          if (entry.is_billable) {
-            acc.billable += entry.hours;
-          }
-          return acc;
-        },
-        { total: 0, billable: 0 }
-      );
+      // Calculate billable hours this month
+      const billableHours = timeEntries.reduce((sum, entry) => sum + entry.hours, 0);
 
       const dashboardStats: DashboardStats = {
-        totalClients: clientsResponse.count || 0,
-        totalTickets: tasks.length,
-        openTickets: taskStats.open,
-        inProgressTickets: taskStats.in_progress,
-        resolvedTickets: taskStats.resolved,
-        closedTickets: taskStats.closed,
-        overdueTickets: taskStats.overdue,
-        monthlyHours: timeStats.total,
-        billableHours: timeStats.billable,
+        revenueThisMonth,
+        pendingInvoicesAmount: pendingAmount,
+        pendingInvoicesCount: pendingInvoices.length,
+        billableHoursThisMonth: billableHours,
       };
 
       setStats(dashboardStats);
+
+      // Format recent invoices (last 5)
+      const formattedInvoices = invoices.slice(0, 5).map((invoice) => ({
+        id: invoice.id,
+        invoice_number: invoice.invoice_number,
+        status: invoice.status,
+        total_amount: invoice.total_amount,
+        client_name: (invoice.client as any)?.name || "Unknown",
+        paid_at: invoice.paid_at,
+        created_at: invoice.created_at,
+      }));
+
+      setRecentInvoices(formattedInvoices);
       setLoading(false);
-
-      // Priority 2: Fetch recent tasks in background (non-blocking)
-      setTicketsLoading(true);
-      try {
-        const recentTasksResponse = await supabase
-          .from("tasks")
-          .select("id, title, status, priority, created_at, client:clients(name)")
-          .eq("tenant_id", profile.tenant_id)
-          .order("created_at", { ascending: false })
-          .limit(5);
-
-        const formattedTasks = (recentTasksResponse.data || []).map((task) => ({
-          id: task.id,
-          title: task.title,
-          status: task.status,
-          priority: task.priority,
-          client_name: (task.client as any)?.name || "Unknown",
-          created_at: task.created_at,
-        }));
-
-        setRecentTickets(formattedTasks);
-      } catch (tasksError) {
-        console.error("Error fetching recent tasks:", tasksError);
-      } finally {
-        setTicketsLoading(false);
-      }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
       setLoading(false);
@@ -180,47 +124,33 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  // Memoize color functions to avoid recreating on every render
-  const getStatusColor = useCallback((status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case "open":
-        return "bg-blue-100 text-blue-800";
-      case "in_progress":
-        return "bg-yellow-100 text-yellow-800";
-      case "resolved":
+      case "paid":
         return "bg-green-100 text-green-800";
-      case "closed":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  }, []);
-
-  const getPriorityColor = useCallback((priority: string) => {
-    switch (priority) {
-      case "urgent":
+      case "sent":
+        return "bg-blue-100 text-blue-800";
+      case "overdue":
         return "bg-red-100 text-red-800";
-      case "high":
-        return "bg-orange-100 text-orange-800";
-      case "medium":
-        return "bg-blue-100 text-blue-800";
-      case "low":
-        return "bg-green-100 text-green-800";
+      case "draft":
+        return "bg-gray-100 text-gray-800";
+      case "partial":
+        return "bg-yellow-100 text-yellow-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
-  }, []);
+  };
 
-  // Memoize formatted tickets to avoid recalculating on every render
-  const formattedRecentTickets = useMemo(() => {
-    return recentTickets.map((ticket) => ({
-      ...ticket,
-      formattedDate: new Date(ticket.created_at).toLocaleDateString(),
-      statusColor: getStatusColor(ticket.status),
-      priorityColor: getPriorityColor(ticket.priority),
-      formattedStatus: ticket.status.replace("_", " ")
-    }));
-  }, [recentTickets, getStatusColor, getPriorityColor]);
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
 
   if (loading) {
     return (
@@ -246,112 +176,134 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Cards - Invoice-First Focus */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium">Total Clients</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <CardTitle className="text-sm font-medium">Revenue This Month</CardTitle>
+            <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats?.totalClients || 0}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium">Open Tickets</CardTitle>
-            <Ticket className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">{stats?.openTickets || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.inProgressTickets || 0} in progress
+            <div className="text-2xl font-bold text-green-600">
+              {formatCurrency(stats?.revenueThisMonth || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              From paid invoices
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium">Monthly Hours</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <CardTitle className="text-sm font-medium">Pending Invoices</CardTitle>
+            <FileText className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">
-              {stats?.monthlyHours?.toFixed(1) || "0.0"}
+            <div className="text-2xl font-bold text-orange-600">
+              {formatCurrency(stats?.pendingInvoicesAmount || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.billableHours?.toFixed(1) || "0.0"} billable
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats?.pendingInvoicesCount || 0} unpaid invoices
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium">Overdue</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <CardTitle className="text-sm font-medium">Hours This Month</CardTitle>
+            <Clock className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold text-red-600">
-              {stats?.overdueTickets || 0}
+            <div className="text-2xl font-bold">
+              {(stats?.billableHoursThisMonth || 0).toFixed(1)}h
             </div>
-            <p className="text-xs text-muted-foreground">Need attention</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Billable only
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <Link href="/dashboard/invoices">
+              <Button variant="outline" size="sm" className="w-full justify-start">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Invoice
+              </Button>
+            </Link>
+            <Link href="/dashboard/time-entries">
+              <Button variant="outline" size="sm" className="w-full justify-start">
+                <Clock className="mr-2 h-4 w-4" />
+                Log Time
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Tickets */}
+      {/* Recent Invoices */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Tickets</CardTitle>
-          <CardDescription>
-            Latest tickets created in your workspace
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Recent Invoices</CardTitle>
+              <CardDescription>
+                Your latest invoices and their status
+              </CardDescription>
+            </div>
+            <Link href="/dashboard/invoices">
+              <Button variant="outline" size="sm">
+                View All
+              </Button>
+            </Link>
+          </div>
         </CardHeader>
         <CardContent>
-          {ticketsLoading ? (
+          {recentInvoices.length > 0 ? (
             <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="animate-pulse flex items-center justify-between p-4 border rounded-lg">
-                  <div className="space-y-2 flex-1">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="h-6 bg-gray-200 rounded-full w-16"></div>
-                    <div className="h-6 bg-gray-200 rounded-full w-20"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : formattedRecentTickets.length > 0 ? (
-            <div className="space-y-3 sm:space-y-4">
-              {formattedRecentTickets.map((ticket) => (
+              {recentInvoices.map((invoice) => (
                 <div
-                  key={ticket.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 border rounded-lg hover:bg-gray-50 transition-colors space-y-2 sm:space-y-0"
+                  key={invoice.id}
+                  className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
                 >
-                  <div className="space-y-1 min-w-0 flex-1">
-                    <p className="font-medium text-sm sm:text-base line-clamp-2">{ticket.title}</p>
-                    <p className="text-xs sm:text-sm text-muted-foreground">
-                      {ticket.client_name} • {ticket.formattedDate}
-                    </p>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{invoice.invoice_number}</p>
+                      <Badge className={getStatusColor(invoice.status)}>
+                        {invoice.status}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span>{invoice.client_name}</span>
+                      <span>•</span>
+                      <span>
+                        {invoice.paid_at
+                          ? `Paid ${formatDate(invoice.paid_at)}`
+                          : `Created ${formatDate(invoice.created_at)}`}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2 flex-shrink-0">
-                    <Badge className={`${ticket.priorityColor} text-xs`}>
-                      {ticket.priority}
-                    </Badge>
-                    <Badge className={`${ticket.statusColor} text-xs`}>
-                      {ticket.formattedStatus}
-                    </Badge>
+                  <div className="text-right">
+                    <p className="font-semibold">{formatCurrency(invoice.total_amount)}</p>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-center text-muted-foreground py-8">
-              No tickets found. Create your first ticket to get started!
-            </p>
+            <div className="text-center py-8">
+              <FileText className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+              <p className="text-muted-foreground mb-4">No invoices yet</p>
+              <Link href="/dashboard/invoices">
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Your First Invoice
+                </Button>
+              </Link>
+            </div>
           )}
         </CardContent>
       </Card>

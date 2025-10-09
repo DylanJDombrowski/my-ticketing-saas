@@ -17,7 +17,6 @@ import { useAuthStore } from "@/stores/auth";
 import {
   LayoutDashboard,
   Users,
-  Ticket,
   BarChart3,
   LogOut,
   User,
@@ -48,12 +47,6 @@ const navigation = [
     href: "/dashboard/clients",
     icon: Users,
     shortcut: ["Alt", "C"],
-  },
-  {
-    name: "Tasks",
-    href: "/dashboard/tasks",
-    icon: Ticket,
-    shortcut: ["Alt", "T"],
   },
   {
     name: "Time Entries",
@@ -120,7 +113,7 @@ export default function DashboardLayout({
             <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg">
               <div className="flex h-16 items-center justify-between px-6 border-b">
                 <h1 className="text-lg font-bold text-gray-900 truncate">
-                  {profile?.tenant?.name || "Ticketing SaaS"}
+                  {profile?.tenant?.name || "Billable"}
                 </h1>
                 <Button
                   variant="ghost"
@@ -178,7 +171,7 @@ export default function DashboardLayout({
         <div className="hidden lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:block lg:w-64 lg:bg-white lg:shadow-lg">
           <div className="flex h-16 items-center px-6 border-b">
             <h1 className="text-xl font-bold text-gray-900">
-              {profile?.tenant?.name || "Ticketing SaaS"}
+              {profile?.tenant?.name || "Billable"}
             </h1>
           </div>
 

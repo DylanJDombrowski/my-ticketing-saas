@@ -25,7 +25,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthStore } from "@/stores/auth";
 import { useTimeEntriesStore } from "@/stores/time-entries";
-import { useTasksStore } from "@/stores/tasks";
+import { useClientsStore } from "@/stores/clients";
 import type { TimeEntry, CreateTimeEntryForm } from "@/lib/types";
 
 interface TimeEntryModalProps {
@@ -40,7 +40,7 @@ export function TimeEntryModal({
   timeEntry,
 }: TimeEntryModalProps) {
   const [formData, setFormData] = useState<CreateTimeEntryForm>({
-    task_id: "",
+    client_id: "",
     description: "",
     hours: 0,
     is_billable: true,
@@ -51,28 +51,29 @@ export function TimeEntryModal({
 
   const { profile } = useAuthStore();
   const { createTimeEntry, updateTimeEntry } = useTimeEntriesStore();
-  const { tasks, fetchTasks } = useTasksStore();
+  const { clients, fetchClients } = useClientsStore();
 
   const isEditing = !!timeEntry;
 
   useEffect(() => {
     if (profile?.tenant_id) {
-      fetchTasks(profile.tenant_id);
+      fetchClients(profile.tenant_id);
     }
-  }, [profile?.tenant_id, fetchTasks]);
+  }, [profile?.tenant_id, fetchClients]);
 
   useEffect(() => {
     if (timeEntry) {
       setFormData({
-        task_id: timeEntry.task_id,
+        client_id: timeEntry.client_id,
         description: timeEntry.description || "",
         hours: timeEntry.hours,
         is_billable: timeEntry.is_billable,
         entry_date: timeEntry.entry_date,
+        invoice_id: timeEntry.invoice_id,
       });
     } else {
       setFormData({
-        task_id: "",
+        client_id: "",
         description: "",
         hours: 0,
         is_billable: true,
@@ -100,8 +101,8 @@ export function TimeEntryModal({
       return;
     }
 
-    if (!formData.task_id) {
-      setError("Please select a task");
+    if (!formData.client_id) {
+      setError("Please select a client");
       setLoading(false);
       return;
     }
@@ -152,7 +153,7 @@ export function TimeEntryModal({
           <DialogDescription>
             {isEditing
               ? "Update the time entry details below."
-              : "Record time spent working on a task."}
+              : "Log time for a client. Add it to an invoice later or create line items manually."}
           </DialogDescription>
         </DialogHeader>
 
@@ -165,19 +166,19 @@ export function TimeEntryModal({
             )}
 
             <div className="grid gap-2">
-              <Label htmlFor="task_id">Task *</Label>
+              <Label htmlFor="client_id">Client *</Label>
               <Select
-                value={formData.task_id}
-                onValueChange={(value) => handleInputChange("task_id", value)}
+                value={formData.client_id}
+                onValueChange={(value) => handleInputChange("client_id", value)}
                 required
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a task" />
+                  <SelectValue placeholder="Select a client" />
                 </SelectTrigger>
                 <SelectContent>
-                  {tasks.map((task) => (
-                    <SelectItem key={task.id} value={task.id}>
-                      {task.title} - {task.client?.name}
+                  {clients.filter(c => c.is_active).map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {client.name} {client.company ? `(${client.company})` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>

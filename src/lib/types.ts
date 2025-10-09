@@ -1,8 +1,9 @@
 export type SubscriptionPlan = "free" | "pro" | "enterprise";
+
+// Legacy types - Tasks/Tickets system removed
+// Kept for backwards compatibility during migration
 export type TaskStatus = "open" | "in_progress" | "resolved" | "closed";
 export type TaskPriority = "low" | "medium" | "high" | "urgent";
-
-// Legacy type aliases for backwards compatibility
 export type TicketStatus = TaskStatus;
 export type TicketPriority = TaskPriority;
 
@@ -46,6 +47,12 @@ export interface Client {
   updated_at: string;
 }
 
+// ============================================
+// DEPRECATED: Task/Ticket system removed
+// Kept for backwards compatibility only
+// ============================================
+
+/** @deprecated Tasks system removed - use direct time entries instead */
 export interface Task {
   id: string;
   tenant_id: string;
@@ -72,6 +79,7 @@ export interface Task {
   created_user?: Profile;
 }
 
+/** @deprecated Task comments removed with tasks system */
 export interface TaskComment {
   id: string;
   tenant_id: string;
@@ -83,25 +91,35 @@ export interface TaskComment {
   created_user?: Profile;
 }
 
-// Legacy type aliases for backwards compatibility
+/** @deprecated Use Task type instead (kept for migration) */
 export type Ticket = Task;
+/** @deprecated Use TaskComment type instead (kept for migration) */
 export type TicketComment = TaskComment;
 
 export interface TimeEntry {
   id: string;
   tenant_id: string;
-  task_id: string;
+  client_id: string;  // Direct client association (no task required)
   profile_id: string;
+  invoice_id?: string;  // Optional: link to invoice
   description?: string;
   hours: number;
   is_billable: boolean;
   entry_date: string;
   created_at: string;
   updated_at: string;
-  task?: Task;
+  // Relations
+  client?: Client;
   user?: Profile;
-  // Legacy field for backwards compatibility
+  invoice?: Invoice;
+  // Legacy fields - kept for backwards compatibility
+  /** @deprecated Task system removed */
+  task_id?: string;
+  /** @deprecated Task system removed */
+  task?: Task;
+  /** @deprecated Use task instead */
   ticket?: Task;
+  /** @deprecated Use task_id instead */
   ticket_id?: string;
 }
 
@@ -114,6 +132,7 @@ export interface CreateClientForm {
   hourly_rate?: number;
 }
 
+/** @deprecated Task system removed */
 export interface CreateTaskForm {
   client_id: string;
   title: string;
@@ -123,15 +142,19 @@ export interface CreateTaskForm {
   due_date?: string;
 }
 
-// Legacy type alias for backwards compatibility
+/** @deprecated Task system removed */
 export type CreateTicketForm = CreateTaskForm;
 
 export interface CreateTimeEntryForm {
-  task_id: string;
+  client_id: string;  // Direct client selection (no task required)
   description?: string;
   hours: number;
   is_billable: boolean;
   entry_date: string;
+  invoice_id?: string;  // Optional: attach to existing invoice
+  // Legacy field - kept for backwards compatibility
+  /** @deprecated Task system removed */
+  task_id?: string;
 }
 
 export type InvoiceStatus = "draft" | "sent" | "paid" | "partial" | "overdue" | "cancelled";
@@ -161,6 +184,9 @@ export interface Invoice {
   sent_to_email?: string;
   paid_at?: string;
   amount_paid?: number;
+  // Reminder tracking (new for "Bug Client" feature)
+  last_reminder_sent_at?: string;
+  reminder_count?: number;
   // Relations
   client?: Client;
   line_items?: InvoiceLineItem[];
