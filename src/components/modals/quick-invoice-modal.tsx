@@ -51,7 +51,7 @@ export function QuickInvoiceModal({
 
   const { profile } = useAuthStore();
   const { clients } = useClientsStore();
-  const { createInvoice } = useInvoicesStore();
+  const { createQuickInvoice } = useInvoicesStore();
 
   const {
     handleSubmit,
@@ -110,7 +110,7 @@ export function QuickInvoiceModal({
         notes: "",
       };
 
-      const result = await createInvoice(
+      const result = await createQuickInvoice(
         profile.tenant_id,
         invoiceData,
         validItems.map((item) => ({

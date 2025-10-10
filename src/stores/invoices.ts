@@ -19,6 +19,11 @@ interface InvoicesState {
     tenantId: string,
     invoiceData: CreateInvoiceForm
   ) => Promise<{ error?: string; invoice?: Invoice }>;
+  createQuickInvoice: (
+    tenantId: string,
+    invoiceData: Omit<CreateInvoiceForm, 'time_entry_ids'>,
+    lineItems: Array<{ description: string; quantity: number; unit_price: number }>
+  ) => Promise<{ error?: string; invoice?: Invoice }>;
   sendInvoice: (
     id: string,
     clientEmail: string
@@ -199,6 +204,73 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
       console.error("Error creating invoice:", error);
       const message =
         error instanceof Error ? error.message : "Failed to create invoice";
+      notify.error(message);
+      return { error: message };
+    }
+  },
+
+  createQuickInvoice: async (
+    tenantId: string,
+    invoiceData: Omit<CreateInvoiceForm, 'time_entry_ids'>,
+    lineItems: Array<{ description: string; quantity: number; unit_price: number }>
+  ) => {
+    try {
+      // Calculate totals from line items
+      const subtotal = lineItems.reduce(
+        (sum, item) => sum + item.quantity * item.unit_price,
+        0
+      );
+      const taxRate = invoiceData.tax_rate ?? 0;
+      const taxAmount = subtotal * (taxRate / 100);
+      const totalAmount = subtotal + taxAmount;
+      const invoiceNumber = await get().generateInvoiceNumber(tenantId);
+
+      // Create the invoice
+      const { data: invoice, error: invoiceError } = await supabase
+        .from("invoices")
+        .insert({
+          tenant_id: tenantId,
+          client_id: invoiceData.client_id,
+          invoice_number: invoiceNumber,
+          subtotal,
+          tax_rate: taxRate,
+          tax_amount: taxAmount,
+          total_amount: totalAmount,
+          due_date: invoiceData.due_date,
+          payment_instructions: invoiceData.payment_instructions,
+          notes: invoiceData.notes,
+        })
+        .select()
+        .single();
+
+      if (invoiceError) throw invoiceError;
+
+      // Create line items (without time_entry_id since this is a quick invoice)
+      const itemsToInsert = lineItems.map((item) => ({
+        invoice_id: invoice.id,
+        description: item.description,
+        hours: item.quantity,
+        rate: item.unit_price,
+        amount: item.quantity * item.unit_price,
+        time_entry_id: null, // No time entry for quick invoices
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("invoice_line_items")
+        .insert(itemsToInsert);
+
+      if (itemsError) throw itemsError;
+
+      const fullInvoice = { ...invoice, line_items: itemsToInsert } as Invoice;
+
+      set((state) => ({ invoices: [fullInvoice, ...state.invoices] }));
+
+      notify.success("Quick invoice created successfully");
+      return { invoice: fullInvoice };
+    } catch (error: unknown) {
+      console.error("Error creating quick invoice:", error);
+      const message =
+        error instanceof Error ? error.message : "Failed to create quick invoice";
       notify.error(message);
       return { error: message };
     }
