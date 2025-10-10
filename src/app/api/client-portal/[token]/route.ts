@@ -66,25 +66,14 @@ export async function GET(
       .eq("client_id", portalAccess.client_id)
       .order("created_at", { ascending: false });
 
-    const { data: tasks } = await supabase
-      .from("tasks")
-      .select(`
-        id,
-        title,
-        description,
-        status,
-        priority,
-        created_at,
-        updated_at
-      `)
-      .eq("client_id", portalAccess.client_id)
-      .order("created_at", { ascending: false })
-      .limit(10);
+    // Tasks table was removed, return empty array
+    // TODO: Re-add if tasks/tickets functionality is needed
+    const tasks: never[] = [];
 
     return NextResponse.json({
       client: portalAccess.client,
       invoices: invoices || [],
-      tasks: tasks || [],
+      tickets: tasks || [], // Changed from 'tasks' to 'tickets' to match frontend
       portal_info: {
         token,
         expires_at: portalAccess.expires_at,
