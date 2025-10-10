@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { createBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
 import { useClientsStore } from "@/stores/clients";
-import { DollarSign, Clock, FileText, Zap, Plus } from "lucide-react";
+import { DollarSign, Clock, FileText, Zap } from "lucide-react";
 import { QuickInvoiceModal } from "@/components/modals/quick-invoice-modal";
 
 interface DashboardStats {
@@ -59,14 +59,13 @@ export default function DashboardPage() {
       ).toISOString();
 
       // Fetch all data in parallel
-      const [
-        invoicesResponse,
-        timeEntriesResponse
-      ] = await Promise.all([
+      const [invoicesResponse, timeEntriesResponse] = await Promise.all([
         // All invoices
         supabase
           .from("invoices")
-          .select("id, invoice_number, status, total_amount, paid_at, created_at, client:clients(name)")
+          .select(
+            "id, invoice_number, status, total_amount, paid_at, created_at, client:clients(name)"
+          )
           .eq("tenant_id", profile.tenant_id)
           .order("created_at", { ascending: false }),
 
@@ -76,7 +75,7 @@ export default function DashboardPage() {
           .select("hours")
           .eq("tenant_id", profile.tenant_id)
           .eq("is_billable", true)
-          .gte("entry_date", monthStart)
+          .gte("entry_date", monthStart),
       ]);
 
       const invoices = invoicesResponse.data || [];
@@ -84,17 +83,29 @@ export default function DashboardPage() {
 
       // Calculate revenue this month (paid invoices)
       const revenueThisMonth = invoices
-        .filter(inv => inv.status === "paid" && inv.paid_at && inv.paid_at >= monthStart)
+        .filter(
+          (inv) =>
+            inv.status === "paid" && inv.paid_at && inv.paid_at >= monthStart
+        )
         .reduce((sum, inv) => sum + inv.total_amount, 0);
 
       // Calculate pending invoices (sent but not paid)
       const pendingInvoices = invoices.filter(
-        inv => inv.status === "sent" || inv.status === "overdue" || inv.status === "partial"
+        (inv) =>
+          inv.status === "sent" ||
+          inv.status === "overdue" ||
+          inv.status === "partial"
       );
-      const pendingAmount = pendingInvoices.reduce((sum, inv) => sum + inv.total_amount, 0);
+      const pendingAmount = pendingInvoices.reduce(
+        (sum, inv) => sum + inv.total_amount,
+        0
+      );
 
       // Calculate billable hours this month
-      const billableHours = timeEntries.reduce((sum, entry) => sum + entry.hours, 0);
+      const billableHours = timeEntries.reduce(
+        (sum, entry) => sum + entry.hours,
+        0
+      );
 
       const dashboardStats: DashboardStats = {
         revenueThisMonth,
@@ -197,7 +208,9 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Revenue This Month</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Revenue This Month
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -212,7 +225,9 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Invoices</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Pending Invoices
+            </CardTitle>
             <FileText className="h-4 w-4 text-orange-600" />
           </CardHeader>
           <CardContent>
@@ -227,16 +242,16 @@ export default function DashboardPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Hours This Month</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Hours This Month
+            </CardTitle>
             <Clock className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {(stats?.billableHoursThisMonth || 0).toFixed(1)}h
             </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Billable only
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">Billable only</p>
           </CardContent>
         </Card>
 
@@ -255,7 +270,11 @@ export default function DashboardPage() {
               Quick Invoice
             </Button>
             <Link href="/dashboard/time-entries">
-              <Button variant="outline" size="sm" className="w-full justify-start">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+              >
                 <Clock className="mr-2 h-4 w-4" />
                 Log Time
               </Button>
@@ -307,7 +326,9 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">{formatCurrency(invoice.total_amount)}</p>
+                    <p className="font-semibold">
+                      {formatCurrency(invoice.total_amount)}
+                    </p>
                   </div>
                 </div>
               ))}
