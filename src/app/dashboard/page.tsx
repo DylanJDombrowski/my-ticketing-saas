@@ -14,7 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { createBrowserClient } from "@/lib/supabase";
 import { useAuthStore } from "@/stores/auth";
-import { DollarSign, Clock, FileText, TrendingUp, Plus } from "lucide-react";
+import { useClientsStore } from "@/stores/clients";
+import { DollarSign, Clock, FileText, Zap, Plus } from "lucide-react";
+import { QuickInvoiceModal } from "@/components/modals/quick-invoice-modal";
 
 interface DashboardStats {
   revenueThisMonth: number;
@@ -37,7 +39,9 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentInvoices, setRecentInvoices] = useState<RecentInvoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showQuickInvoice, setShowQuickInvoice] = useState(false);
   const { profile } = useAuthStore();
+  const { fetchClients } = useClientsStore();
 
   const supabase = createBrowserClient();
 
@@ -121,8 +125,11 @@ export default function DashboardPage() {
   }, [profile?.tenant_id, supabase]);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+    if (profile?.tenant_id) {
+      fetchDashboardData();
+      fetchClients(profile.tenant_id);
+    }
+  }, [fetchDashboardData, profile?.tenant_id, fetchClients]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -170,10 +177,20 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back, {profile?.first_name || "User"}!
-        </p>
+        <div>
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome back, {profile?.first_name || "User"}!
+          </p>
+        </div>
+        <Button
+          size="lg"
+          onClick={() => setShowQuickInvoice(true)}
+          className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg"
+        >
+          <Zap className="mr-2 h-5 w-5" />
+          Quick Invoice
+        </Button>
       </div>
 
       {/* Stats Cards - Invoice-First Focus */}
@@ -223,18 +240,20 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <Zap className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
-            <Link href="/dashboard/invoices">
-              <Button variant="outline" size="sm" className="w-full justify-start">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Invoice
-              </Button>
-            </Link>
+            <Button
+              onClick={() => setShowQuickInvoice(true)}
+              className="w-full justify-start bg-blue-600 hover:bg-blue-700"
+              size="sm"
+            >
+              <Zap className="mr-2 h-4 w-4" />
+              Quick Invoice
+            </Button>
             <Link href="/dashboard/time-entries">
               <Button variant="outline" size="sm" className="w-full justify-start">
                 <Clock className="mr-2 h-4 w-4" />
@@ -297,16 +316,20 @@ export default function DashboardPage() {
             <div className="text-center py-8">
               <FileText className="mx-auto h-12 w-12 text-gray-400 mb-3" />
               <p className="text-muted-foreground mb-4">No invoices yet</p>
-              <Link href="/dashboard/invoices">
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Your First Invoice
-                </Button>
-              </Link>
+              <Button onClick={() => setShowQuickInvoice(true)}>
+                <Zap className="mr-2 h-4 w-4" />
+                Create Your First Invoice
+              </Button>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Quick Invoice Modal */}
+      <QuickInvoiceModal
+        isOpen={showQuickInvoice}
+        onClose={() => setShowQuickInvoice(false)}
+      />
     </div>
   );
 }

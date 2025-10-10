@@ -17,14 +17,12 @@ import { useAuthStore } from "@/stores/auth";
 import {
   LayoutDashboard,
   Users,
-  BarChart3,
   LogOut,
   User,
   Clock,
   FileText,
   Menu,
   X,
-  Bell,
   Settings,
   CreditCard,
 } from "lucide-react";
@@ -59,17 +57,6 @@ const navigation = [
     href: "/dashboard/invoices",
     icon: FileText,
     shortcut: ["Alt", "I"],
-  },
-  {
-    name: "Reports",
-    href: "/dashboard/reports",
-    icon: BarChart3,
-    shortcut: ["Alt", "R"],
-  },
-  {
-    name: "Notifications",
-    href: "/dashboard/notifications",
-    icon: Bell,
   },
   {
     name: "Settings",

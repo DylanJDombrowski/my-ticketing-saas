@@ -6,71 +6,50 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Ticket,
   Users,
   Clock,
-  BarChart3,
+  FileText,
+  CreditCard,
+  Bell,
   Shield,
-  Zap,
-  Calendar,
-  MessageSquare,
-  Target,
 } from "lucide-react";
 
 const features = [
   {
-    icon: Clock,
-    title: "Smart Time Tracking",
+    icon: FileText,
+    title: "Professional Invoices",
     description:
-      "Track billable hours with a built-in timer, detailed descriptions, and automatic project integration.",
+      "Beautiful PDF invoices that look great and get paid. Create one in under 60 seconds.",
+  },
+  {
+    icon: CreditCard,
+    title: "Stripe Payments",
+    description:
+      "Connect your Stripe account. Clients pay with one click. Money goes straight to you.",
+  },
+  {
+    icon: Bell,
+    title: "Payment Reminders",
+    description:
+      "One-click reminders for overdue invoices. No awkward follow-up emails needed.",
+  },
+  {
+    icon: Clock,
+    title: "Optional Time Tracking",
+    description:
+      "Track billable hours if you want. Or just create invoices directly. Your choice.",
   },
   {
     icon: Users,
     title: "Client Management",
     description:
-      "Organize client information, track communication history, and manage multiple accounts seamlessly.",
-  },
-  {
-    icon: Ticket,
-    title: "Project & Task Tracking",
-    description:
-      "Create and track work items with priority levels, due dates, and status updates for complete visibility.",
-  },
-  {
-    icon: BarChart3,
-    title: "Professional Invoicing",
-    description:
-      "Generate beautiful PDF invoices from tracked time, accept online payments, and get paid faster.",
+      "Keep track of your clients and their contact info. Simple and organized.",
   },
   {
     icon: Shield,
-    title: "Secure & Private",
+    title: "Secure & Reliable",
     description:
-      "Enterprise-grade security with isolated data and role-based access controls for your team.",
-  },
-  {
-    icon: Zap,
-    title: "Accept Payments",
-    description:
-      "Connect your Stripe account and let clients pay invoices instantly with credit cards.",
-  },
-  {
-    icon: Calendar,
-    title: "Reports & Analytics",
-    description:
-      "Get insights into billable hours, revenue trends, and client profitability with detailed reporting.",
-  },
-  {
-    icon: MessageSquare,
-    title: "Client Portal",
-    description:
-      "Give clients secure access to view their invoices, tasks, and payment history.",
-  },
-  {
-    icon: Target,
-    title: "SLA Monitoring",
-    description:
-      "Set service level agreements and get automatic alerts when response times are at risk.",
+      "Bank-level security. Your data is encrypted and backed up. Always.",
   },
 ];
 
@@ -80,15 +59,15 @@ export function Features() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <div className="inline-flex items-center rounded-full bg-purple-50 px-4 py-1.5 text-sm font-medium text-purple-700 ring-1 ring-inset ring-purple-700/10 mb-4">
-            <Target className="mr-1.5 h-3.5 w-3.5" />
-            Powerful Features
+            <FileText className="mr-1.5 h-3.5 w-3.5" />
+            Simple & Powerful
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-5xl">
-            Everything you need to run your business
+            Everything you need. Nothing you don&apos;t.
           </h2>
           <p className="mt-6 text-lg text-gray-600 leading-relaxed">
-            From time tracking to invoicing, Billable has all the tools you need to manage
-            clients, track billable hours, and get paid faster—all in one streamlined platform.
+            Billable focuses on getting you paid fast. Create invoices, accept payments,
+            and track what matters—without the bloat.
           </p>
         </div>
 

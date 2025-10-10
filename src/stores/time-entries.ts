@@ -145,7 +145,7 @@ export const useTimeEntriesStore = create<TimeEntriesState>((set) => ({
         .from("time_entries")
         .insert({
           tenant_id: tenantId,
-          profile_id: userId,
+          user_id: userId,
           ...timeEntryData,
         })
         .select(
