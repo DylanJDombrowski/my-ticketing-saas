@@ -71,28 +71,58 @@ export async function POST(request: NextRequest) {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30); // 30 day expiry
 
-    // Create or update client portal access
-    const { error: portalError } = await supabase
+    // Check if client already has an active portal access
+    const { data: existingAccess } = await supabase
       .from("client_portal_access")
-      .upsert({
-        client_id: client.id,
-        access_token: accessToken,
-        expires_at: expiresAt.toISOString(),
-        is_active: true
-      }, {
-        onConflict: 'client_id'
-      });
+      .select("id, access_token")
+      .eq("client_id", client.id)
+      .eq("is_active", true)
+      .single();
 
-    if (portalError) {
-      console.error("Error creating portal access:", portalError);
-      // Don't fail the email send if portal creation fails
+    let finalAccessToken = accessToken;
+
+    if (existingAccess) {
+      // Update existing access
+      const { error: updateError } = await supabase
+        .from("client_portal_access")
+        .update({
+          expires_at: expiresAt.toISOString(),
+          is_active: true
+        })
+        .eq("id", existingAccess.id);
+
+      if (updateError) {
+        console.error("[Send Invoice] Error updating portal access:", updateError);
+      }
+      finalAccessToken = existingAccess.access_token;
+    } else {
+      // Create new portal access
+      const { data: newAccess, error: insertError } = await supabase
+        .from("client_portal_access")
+        .insert({
+          client_id: client.id,
+          access_token: accessToken,
+          expires_at: expiresAt.toISOString(),
+          is_active: true
+        })
+        .select("access_token")
+        .single();
+
+      if (insertError) {
+        console.error("[Send Invoice] Error creating portal access:", insertError);
+      } else if (newAccess) {
+        finalAccessToken = newAccess.access_token;
+      }
     }
 
     // Generate URLs
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || request.headers.get("origin") || "http://localhost:3000";
     const pdfUrl = `${baseUrl}/api/invoices/${invoice.id}/pdf`;
-    const portalUrl = `${baseUrl}/client-portal/${accessToken}`;
-    const paymentUrl = `${baseUrl}/client-portal/${accessToken}?invoice=${invoice.id}`;
+    const portalUrl = `${baseUrl}/client-portal/${finalAccessToken}`;
+    const paymentUrl = `${baseUrl}/client-portal/${finalAccessToken}?invoice=${invoice.id}`;
+
+    console.log('[Send Invoice] Portal URL:', portalUrl);
+    console.log('[Send Invoice] Token:', finalAccessToken);
 
     // Format currency
     const formatCurrency = (amount: number) =>

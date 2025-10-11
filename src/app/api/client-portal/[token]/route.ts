@@ -11,6 +11,8 @@ export async function GET(
   try {
     const supabase = await createServerClient();
 
+    console.log('[Client Portal] Token received:', token);
+
     const { data: portalAccess, error: accessError } = await supabase
       .from("client_portal_access")
       .select(`
@@ -38,8 +40,25 @@ export async function GET(
       .eq("is_active", true)
       .single();
 
+    if (accessError) {
+      console.error('[Client Portal] Access error:', accessError);
+      console.error('[Client Portal] Error details:', JSON.stringify(accessError, null, 2));
+    }
+
+    if (!portalAccess) {
+      console.log('[Client Portal] No portal access found for token');
+    }
+
     if (accessError || !portalAccess) {
-      return NextResponse.json({ error: "Invalid or expired access token" }, { status: 401 });
+      return NextResponse.json({
+        error: "Invalid or expired access token",
+        debug: process.env.NODE_ENV === 'development' ? {
+          hasError: !!accessError,
+          errorMessage: accessError?.message,
+          errorCode: accessError?.code,
+          hasData: !!portalAccess
+        } : undefined
+      }, { status: 401 });
     }
 
     if (portalAccess.expires_at && new Date(portalAccess.expires_at) < new Date()) {
