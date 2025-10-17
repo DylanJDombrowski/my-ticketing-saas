@@ -84,16 +84,36 @@ export default function ClientPortalPage() {
 
   const fetchPortalData = async () => {
     try {
+      console.log("🔍 Client Portal - Fetching portal data...");
+      console.log("  Token:", token ? `${token.substring(0, 8)}...` : "No token");
+      console.log("  API URL:", `/api/client-portal/${token}`);
+
       const response = await fetch(`/api/client-portal/${token}`);
+      console.log("📡 API Response:");
+      console.log("  Status:", response.status, response.statusText);
+      console.log("  OK:", response.ok);
+
       const result = await response.json();
+      console.log("📦 Response Data:", result);
 
       if (!response.ok) {
+        console.error("❌ API Error Response:", result);
+        if (result.debug) {
+          console.error("🔧 Debug Info:", result.debug);
+        }
         throw new Error(result.error || "Failed to load portal data");
       }
 
+      console.log("✅ Portal data loaded successfully");
+      console.log("  Client:", result.client?.name);
+      console.log("  Invoices:", result.invoices?.length || 0);
+
       setData(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error("❌ Client Portal Error:", err);
+      const errorMessage = err instanceof Error ? err.message : "An error occurred";
+      console.error("  Error Message:", errorMessage);
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

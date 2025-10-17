@@ -34,6 +34,12 @@ export async function middleware(req: NextRequest) {
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
+  // Client portal routes - allow anonymous access (no auth required)
+  // IMPORTANT: This must come BEFORE getUser() call to avoid unnecessary auth check
+  if (req.nextUrl.pathname.startsWith("/client-portal")) {
+    return supabaseResponse;
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
