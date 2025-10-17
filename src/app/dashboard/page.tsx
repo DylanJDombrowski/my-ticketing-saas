@@ -48,11 +48,13 @@ export default function DashboardPage() {
   const fetchDashboardData = useCallback(async () => {
     if (!profile?.tenant_id) return;
 
+    let timeoutId: NodeJS.Timeout | null = null;
+
     try {
       setLoading(true);
 
       // Set a timeout to prevent infinite loading
-      const timeoutId = setTimeout(() => {
+      timeoutId = setTimeout(() => {
         setLoading(false);
       }, 10000); // 10 second timeout
 
@@ -133,10 +135,10 @@ export default function DashboardPage() {
       }));
 
       setRecentInvoices(formattedInvoices);
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
     } catch (error) {
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
     }
   }, [profile?.tenant_id, supabase]);
