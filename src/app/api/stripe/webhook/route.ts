@@ -52,19 +52,26 @@ export async function POST(request: NextRequest) {
           break;
         }
 
+        if (!session.subscription) {
+          console.error("No subscription in session");
+          break;
+        }
+
         // Update tenant with subscription info
         const subscription = await stripe.subscriptions.retrieve(
           session.subscription as string
         );
+
+        const periodEnd = subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000).toISOString()
+          : null;
 
         await supabase
           .from("tenants")
           .update({
             stripe_subscription_id: subscription.id,
             subscription_status: subscription.status,
-            subscription_current_period_end: new Date(
-              subscription.current_period_end * 1000
-            ).toISOString(),
+            subscription_current_period_end: periodEnd,
             invoice_limit: 999999, // Unlimited for paid
           })
           .eq("id", tenantId);
@@ -88,13 +95,15 @@ export async function POST(request: NextRequest) {
           const invoiceLimit =
             subscription.status === "active" ? 999999 : 2;
 
+          const periodEnd = subscription.current_period_end
+            ? new Date(subscription.current_period_end * 1000).toISOString()
+            : null;
+
           await supabase
             .from("tenants")
             .update({
               subscription_status: subscription.status,
-              subscription_current_period_end: new Date(
-                subscription.current_period_end * 1000
-              ).toISOString(),
+              subscription_current_period_end: periodEnd,
               invoice_limit: invoiceLimit,
             })
             .eq("id", tenant.id);
