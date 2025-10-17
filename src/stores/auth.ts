@@ -36,6 +36,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     if (error) {
       notify.error(error.message);
+      set({ loading: false });
       return { error: error.message };
     }
 
@@ -52,7 +53,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         .eq("id", data.user.id)
         .single();
 
-      set({ user: data.user, profile });
+      set({ user: data.user, profile, loading: false });
       notify.success("Signed in successfully");
     }
 
@@ -127,11 +128,14 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (!profile || !profile.tenant_id) {
         notify.error("Account created but setup incomplete. Please contact support.");
+        set({ loading: false });
         return { error: "Profile creation failed" };
       }
 
-      set({ user: data.user, profile });
+      set({ user: data.user, profile, loading: false });
       notify.success("Account created successfully");
+    } else {
+      set({ loading: false });
     }
 
     return {};

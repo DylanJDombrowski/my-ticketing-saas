@@ -41,11 +41,13 @@ export default function LoginPage() {
 
     if (error) {
       setError(error);
+      setLoading(false);
     } else {
+      // Small delay to ensure auth store state propagates
+      await new Promise(resolve => setTimeout(resolve, 100));
       router.push("/dashboard");
+      // Keep loading true during navigation
     }
-
-    setLoading(false);
   };
 
   return (
