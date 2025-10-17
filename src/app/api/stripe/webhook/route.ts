@@ -57,20 +57,25 @@ export async function POST(request: NextRequest) {
           break;
         }
 
-        // Update tenant with subscription info
-        const subscription = await stripe.subscriptions.retrieve(
-          session.subscription as string
-        );
+        // Get subscription ID from session
+        const subscriptionId = typeof session.subscription === 'string'
+          ? session.subscription
+          : session.subscription.id;
 
-        const periodEnd = subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000).toISOString()
+        // Retrieve full subscription details
+        const subscriptionResponse = await stripe.subscriptions.retrieve(subscriptionId);
+
+        // Extract the subscription data
+        const subscriptionData: any = subscriptionResponse;
+        const periodEnd = subscriptionData.current_period_end
+          ? new Date(subscriptionData.current_period_end * 1000).toISOString()
           : null;
 
         await supabase
           .from("tenants")
           .update({
-            stripe_subscription_id: subscription.id,
-            subscription_status: subscription.status,
+            stripe_subscription_id: subscriptionData.id,
+            subscription_status: subscriptionData.status,
             subscription_current_period_end: periodEnd,
             invoice_limit: 999999, // Unlimited for paid
           })
@@ -81,8 +86,10 @@ export async function POST(request: NextRequest) {
       }
 
       case "customer.subscription.updated": {
-        const subscription = event.data.object as Stripe.Subscription;
-        const customerId = subscription.customer as string;
+        const subscriptionData: any = event.data.object;
+        const customerId = typeof subscriptionData.customer === 'string'
+          ? subscriptionData.customer
+          : subscriptionData.customer.id;
 
         // Find tenant by customer ID
         const { data: tenant } = await supabase
@@ -93,16 +100,16 @@ export async function POST(request: NextRequest) {
 
         if (tenant) {
           const invoiceLimit =
-            subscription.status === "active" ? 999999 : 2;
+            subscriptionData.status === "active" ? 999999 : 2;
 
-          const periodEnd = subscription.current_period_end
-            ? new Date(subscription.current_period_end * 1000).toISOString()
+          const periodEnd = subscriptionData.current_period_end
+            ? new Date(subscriptionData.current_period_end * 1000).toISOString()
             : null;
 
           await supabase
             .from("tenants")
             .update({
-              subscription_status: subscription.status,
+              subscription_status: subscriptionData.status,
               subscription_current_period_end: periodEnd,
               invoice_limit: invoiceLimit,
             })
@@ -112,15 +119,17 @@ export async function POST(request: NextRequest) {
             "[Stripe Webhook] Subscription updated for tenant:",
             tenant.id,
             "Status:",
-            subscription.status
+            subscriptionData.status
           );
         }
         break;
       }
 
       case "customer.subscription.deleted": {
-        const subscription = event.data.object as Stripe.Subscription;
-        const customerId = subscription.customer as string;
+        const subscriptionData: any = event.data.object;
+        const customerId = typeof subscriptionData.customer === 'string'
+          ? subscriptionData.customer
+          : subscriptionData.customer.id;
 
         // Find tenant by customer ID
         const { data: tenant } = await supabase

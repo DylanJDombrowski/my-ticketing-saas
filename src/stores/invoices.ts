@@ -18,7 +18,7 @@ interface InvoicesState {
   createInvoice: (
     tenantId: string,
     invoiceData: CreateInvoiceForm
-  ) => Promise<{ error?: string; invoice?: Invoice }>;
+  ) => Promise<{ error?: string; invoice?: Invoice; limitInfo?: any }>;
   createQuickInvoice: (
     tenantId: string,
     invoiceData: Omit<CreateInvoiceForm, 'time_entry_ids'>,
