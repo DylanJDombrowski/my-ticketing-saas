@@ -58,9 +58,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate payment link (client portal)
+    // Get or create client portal access token
+    const { data: existingAccess } = await supabase
+      .from("client_portal_access")
+      .select("access_token, expires_at")
+      .eq("client_id", client.id)
+      .eq("is_active", true)
+      .single();
+
+    let accessToken = existingAccess?.access_token;
+
+    // If no active access or expired, create/update one
+    if (!existingAccess || (existingAccess.expires_at && new Date(existingAccess.expires_at) < new Date())) {
+      // Generate new token
+      const newToken = generateSecureToken();
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30); // 30 day expiry
+
+      if (existingAccess) {
+        // Update existing
+        await supabase
+          .from("client_portal_access")
+          .update({
+            access_token: newToken,
+            expires_at: expiresAt.toISOString(),
+            is_active: true
+          })
+          .eq("client_id", client.id);
+        accessToken = newToken;
+      } else {
+        // Create new
+        const { data: newAccess } = await supabase
+          .from("client_portal_access")
+          .insert({
+            client_id: client.id,
+            access_token: newToken,
+            expires_at: expiresAt.toISOString(),
+            is_active: true
+          })
+          .select("access_token")
+          .single();
+        accessToken = newAccess?.access_token || newToken;
+      }
+    }
+
+    // Generate payment link with proper access token
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const paymentLink = `${appUrl}/client-portal/${invoice.id}`;
+    const paymentLink = `${appUrl}/client-portal/${accessToken}?invoice=${invoice.id}`;
 
     // Format amount
     const formattedAmount = new Intl.NumberFormat("en-US", {
@@ -153,6 +197,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "Reminder sent successfully",
+      portalUrl: paymentLink,
     });
   } catch (error) {
     console.error("Send reminder error:", error);
@@ -161,4 +206,18 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+// Generate secure random token for client portal access
+function generateSecureToken(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let token = '';
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+
+  for (let i = 0; i < array.length; i++) {
+    token += chars[array[i] % chars.length];
+  }
+
+  return token;
 }

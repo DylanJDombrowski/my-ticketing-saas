@@ -6,6 +6,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useInvoicesStore } from "@/stores/invoices";
 import { useTimeEntriesStore } from "@/stores/time-entries";
 import { useClientsStore } from "@/stores/clients";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 import {
   Dialog,
   DialogContent,
@@ -62,6 +63,8 @@ export function InvoiceModal({
     []
   );
   const [loading, setLoading] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [limitInfo, setLimitInfo] = useState<any>(null);
 
   const { profile } = useAuthStore();
   const { clients, fetchClients } = useClientsStore();
@@ -178,7 +181,20 @@ export function InvoiceModal({
         notes: data.notes || undefined,
       };
 
-      await createInvoice(profile.tenant_id, invoiceData);
+      const result = await createInvoice(profile.tenant_id, invoiceData);
+
+      // Check if invoice limit was reached
+      if (result.error === "invoice_limit_reached") {
+        setLimitInfo(result.limitInfo);
+        setShowUpgradePrompt(true);
+        return;
+      }
+
+      if (result.error) {
+        // Other errors are handled by the store's notify
+        return;
+      }
+
       handleClose();
     } catch (error) {
       console.error("Error creating invoice:", error);
@@ -423,6 +439,19 @@ export function InvoiceModal({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Upgrade Prompt */}
+      {showUpgradePrompt && limitInfo && (
+        <UpgradePrompt
+          isOpen={showUpgradePrompt}
+          onClose={() => {
+            setShowUpgradePrompt(false);
+            setLoading(false);
+          }}
+          currentCount={limitInfo.current}
+          limit={limitInfo.limit}
+        />
+      )}
     </Dialog>
   );
 }

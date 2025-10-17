@@ -111,6 +111,17 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
 
   createInvoice: async (tenantId: string, invoiceData: CreateInvoiceForm) => {
     try {
+      // Check invoice limit before creating
+      const limitCheck = await fetch(`/api/subscription/check-limit?tenant_id=${tenantId}`);
+      const limitData = await limitCheck.json();
+
+      if (!limitData.allowed) {
+        return {
+          error: "invoice_limit_reached",
+          limitInfo: limitData,
+        };
+      }
+
       const { data: entries, error: entriesError } = await supabase
         .from("time_entries")
         .select(
@@ -215,6 +226,17 @@ export const useInvoicesStore = create<InvoicesState>((set, get) => ({
     lineItems: Array<{ description: string; quantity: number; unit_price: number }>
   ) => {
     try {
+      // Check invoice limit before creating
+      const limitCheck = await fetch(`/api/subscription/check-limit?tenant_id=${tenantId}`);
+      const limitData = await limitCheck.json();
+
+      if (!limitData.allowed) {
+        return {
+          error: "invoice_limit_reached",
+          limitInfo: limitData,
+        };
+      }
+
       // Calculate totals from line items
       const subtotal = lineItems.reduce(
         (sum, item) => sum + item.quantity * item.unit_price,

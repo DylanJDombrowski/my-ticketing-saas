@@ -19,7 +19,6 @@ import {
   FileText,
   Eye,
   DollarSign,
-  Ticket,
   AlertCircle,
   CheckCircle,
   Clock,
@@ -35,16 +34,6 @@ interface Invoice {
   created_at: string;
   payment_instructions?: string;
   notes?: string;
-}
-
-interface TicketInfo {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  priority: string;
-  created_at: string;
-  updated_at: string;
 }
 
 interface ClientInfo {
@@ -65,7 +54,6 @@ interface ClientInfo {
 interface PortalData {
   client: ClientInfo;
   invoices: Invoice[];
-  tickets: TicketInfo[];
   portal_info: {
     token: string;
     expires_at: string | null;
@@ -81,19 +69,6 @@ const statusColors = {
   cancelled: "bg-gray-100 text-gray-800",
 };
 
-const ticketStatusColors = {
-  open: "bg-blue-100 text-blue-800",
-  in_progress: "bg-yellow-100 text-yellow-800",
-  resolved: "bg-green-100 text-green-800",
-  closed: "bg-gray-100 text-gray-800",
-};
-
-const priorityColors = {
-  low: "bg-green-100 text-green-800",
-  medium: "bg-yellow-100 text-yellow-800",
-  high: "bg-orange-100 text-orange-800",
-  urgent: "bg-red-100 text-red-800",
-};
 
 export default function ClientPortalPage() {
   const params = useParams();
@@ -183,7 +158,7 @@ export default function ClientPortalPage() {
     );
   }
 
-  const { client, invoices, tickets, portal_info } = data;
+  const { client, invoices, portal_info } = data;
 
   // Calculate invoice statistics
   const totalAmount = invoices.reduce((sum, inv) => sum + inv.total_amount, 0);
@@ -209,8 +184,7 @@ export default function ClientPortalPage() {
                   Welcome, {client.name}!
                 </h2>
                 <p className="text-gray-600">
-                  Access your invoices, view tickets, and manage your account
-                  information.
+                  Access your invoices and manage your account information.
                 </p>
               </div>
               <div className="text-right">
@@ -284,20 +258,8 @@ export default function ClientPortalPage() {
           </Card>
         </div>
 
-        {/* Tabs for Invoices and Tickets */}
-        <Tabs defaultValue="invoices" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="invoices" className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              Invoices ({invoices.length})
-            </TabsTrigger>
-            <TabsTrigger value="tickets" className="flex items-center gap-2">
-              <Ticket className="h-4 w-4" />
-              Support Tickets ({tickets.length})
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="invoices">
+        {/* Invoices Section */}
+        <div className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Your Invoices</CardTitle>
@@ -389,74 +351,7 @@ export default function ClientPortalPage() {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-
-          <TabsContent value="tickets">
-            <Card>
-              <CardHeader>
-                <CardTitle>Support Tickets</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  View your support tickets and their current status.
-                </p>
-              </CardHeader>
-              <CardContent>
-                {tickets.length > 0 ? (
-                  <div className="space-y-4">
-                    {tickets.map((ticket) => (
-                      <div key={ticket.id} className="border rounded-lg p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h4 className="font-medium text-gray-900">
-                              {ticket.title}
-                            </h4>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {ticket.description}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              className={
-                                priorityColors[
-                                  ticket.priority as keyof typeof priorityColors
-                                ]
-                              }
-                            >
-                              {ticket.priority}
-                            </Badge>
-                            <Badge
-                              className={
-                                ticketStatusColors[
-                                  ticket.status as keyof typeof ticketStatusColors
-                                ]
-                              }
-                            >
-                              {ticket.status}
-                            </Badge>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between text-sm text-gray-500">
-                          <span>Created: {formatDate(ticket.created_at)}</span>
-                          <span>Updated: {formatDate(ticket.updated_at)}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Ticket className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      No support tickets
-                    </h3>
-                    <p className="text-gray-500">
-                      Your support tickets will appear here when they are
-                      created.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        </div>
       </div>
     </ClientPortalLayout>
   );

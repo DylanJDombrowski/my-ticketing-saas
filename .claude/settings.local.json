@@ -28,7 +28,8 @@
       "Bash(grep:*)",
       "Bash(psql:*)",
       "Bash(tree:*)",
-      "Bash(npx supabase:*)"
+      "Bash(npx supabase:*)",
+      "Bash(supabase db:*)"
     ],
     "deny": [],
     "ask": []
