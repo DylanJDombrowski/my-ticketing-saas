@@ -51,6 +51,11 @@ export default function DashboardPage() {
     try {
       setLoading(true);
 
+      // Set a timeout to prevent infinite loading
+      const timeoutId = setTimeout(() => {
+        setLoading(false);
+      }, 10000); // 10 second timeout
+
       // Calculate month start
       const monthStart = new Date(
         new Date().getFullYear(),
@@ -128,9 +133,10 @@ export default function DashboardPage() {
       }));
 
       setRecentInvoices(formattedInvoices);
+      clearTimeout(timeoutId);
       setLoading(false);
     } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   }, [profile?.tenant_id, supabase]);
@@ -140,7 +146,8 @@ export default function DashboardPage() {
       fetchDashboardData();
       fetchClients(profile.tenant_id);
     }
-  }, [fetchDashboardData, profile?.tenant_id, fetchClients]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.tenant_id]);
 
   const getStatusColor = (status: string) => {
     switch (status) {

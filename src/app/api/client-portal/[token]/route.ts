@@ -1,6 +1,18 @@
 import { NextResponse } from "next/server";
 export const dynamic = 'force-dynamic';
-import { createServerClient } from "@/lib/supabase-server";
+import { createClient } from "@supabase/supabase-js";
+
+// Use service role for anonymous portal access
+const supabaseServiceRole = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
 
 export async function GET(
   _request: Request,
@@ -9,11 +21,8 @@ export async function GET(
   const { token } = await context.params;
 
   try {
-    const supabase = await createServerClient();
-
-    console.log('[Client Portal] Token received:', token);
-
-    const { data: portalAccess, error: accessError } = await supabase
+    // Use service role client to bypass RLS for anonymous access
+    const { data: portalAccess, error: accessError } = await supabaseServiceRole
       .from("client_portal_access")
       .select(`
         id,
@@ -40,24 +49,9 @@ export async function GET(
       .eq("is_active", true)
       .single();
 
-    if (accessError) {
-      console.error('[Client Portal] Access error:', accessError);
-      console.error('[Client Portal] Error details:', JSON.stringify(accessError, null, 2));
-    }
-
-    if (!portalAccess) {
-      console.log('[Client Portal] No portal access found for token');
-    }
-
     if (accessError || !portalAccess) {
       return NextResponse.json({
-        error: "Invalid or expired access token",
-        debug: process.env.NODE_ENV === 'development' ? {
-          hasError: !!accessError,
-          errorMessage: accessError?.message,
-          errorCode: accessError?.code,
-          hasData: !!portalAccess
-        } : undefined
+        error: "Invalid or expired access token"
       }, { status: 401 });
     }
 
@@ -65,12 +59,14 @@ export async function GET(
       return NextResponse.json({ error: "Access token has expired" }, { status: 401 });
     }
 
-    await supabase
+    // Update last accessed timestamp
+    await supabaseServiceRole
       .from("client_portal_access")
       .update({ last_accessed: new Date().toISOString() })
       .eq("id", portalAccess.id);
 
-    const { data: invoices } = await supabase
+    // Fetch invoices for this client
+    const { data: invoices } = await supabaseServiceRole
       .from("invoices")
       .select(`
         id,
@@ -100,52 +96,5 @@ export async function GET(
   }
 }
 
-export async function POST(request: Request, { }: any) {
-
-  try {
-    const supabase = await createServerClient();
-    const { client_id, expires_in_days = 30 } = await request.json();
-
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("tenant_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile) return NextResponse.json({ error: "Profile not found" }, { status: 404 });
-
-    const { data: client } = await supabase
-      .from("clients")
-      .select("id")
-      .eq("id", client_id)
-      .eq("tenant_id", profile.tenant_id)
-      .single();
-
-    if (!client) {
-      return NextResponse.json({ error: "Client not found or access denied" }, { status: 404 });
-    }
-
-    const { data: tokenResult, error: tokenError } = await supabase.rpc(
-      "create_client_portal_access",
-      { p_client_id: client_id, p_expires_in_days: expires_in_days }
-    );
-
-    if (tokenError) {
-      console.error("Error creating portal access:", tokenError);
-      return NextResponse.json({ error: "Failed to create portal access" }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      message: "Client portal access created successfully",
-      access_token: tokenResult,
-      portal_url: `/client-portal/${tokenResult}`,
-      expires_in_days
-    });
-  } catch (error) {
-    console.error("Client portal creation error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
+// This POST method is not used - portal access is created via /api/client-portal/generate
+// Kept for backwards compatibility

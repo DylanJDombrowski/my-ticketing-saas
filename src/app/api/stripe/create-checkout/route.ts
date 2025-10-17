@@ -2,6 +2,8 @@ import {  NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createServerClient } from "@/lib/supabase-server";
 
+export const dynamic = 'force-dynamic';
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2025-09-30.clover",
 });
@@ -27,11 +29,22 @@ export async function POST() {
       .eq("id", user.id)
       .single();
 
-    if (profileError || !profile) {
+    if (profileError) {
+      return NextResponse.json({
+        error: "Profile not found",
+        details: profileError.message
+      }, { status: 404 });
+    }
+
+    if (!profile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
     const tenant = Array.isArray(profile.tenant) ? profile.tenant[0] : profile.tenant;
+
+    if (!tenant) {
+      return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
+    }
 
     // Get or create Stripe customer
     let customerId = tenant?.stripe_customer_id;
