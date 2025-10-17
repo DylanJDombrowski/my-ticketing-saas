@@ -23,7 +23,7 @@ interface InvoicesState {
     tenantId: string,
     invoiceData: Omit<CreateInvoiceForm, 'time_entry_ids'>,
     lineItems: Array<{ description: string; quantity: number; unit_price: number }>
-  ) => Promise<{ error?: string; invoice?: Invoice }>;
+  ) => Promise<{ error?: string; invoice?: Invoice; limitInfo?: any }>;
   sendInvoice: (
     id: string,
     clientEmail: string

@@ -176,6 +176,20 @@ $$;
 ALTER FUNCTION "public"."handle_new_user"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."increment_invoice_count"("tenant_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+BEGIN
+  UPDATE tenants
+  SET invoice_count = COALESCE(invoice_count, 0) + 1
+  WHERE id = tenant_id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."increment_invoice_count"("tenant_id" "uuid") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."mark_overdue_invoices"() RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     AS $$
@@ -196,6 +210,36 @@ ALTER FUNCTION "public"."mark_overdue_invoices"() OWNER TO "postgres";
 
 COMMENT ON FUNCTION "public"."mark_overdue_invoices"() IS 'Automatically marks invoices as overdue if past due date';
 
+
+
+CREATE OR REPLACE FUNCTION "public"."reset_invoice_count"("tenant_id" "uuid") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    AS $$
+BEGIN
+  UPDATE tenants
+  SET invoice_count = 0
+  WHERE id = tenant_id;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."reset_invoice_count"("tenant_id" "uuid") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."trigger_increment_invoice_count"() RETURNS "trigger"
+    LANGUAGE "plpgsql"
+    AS $$
+BEGIN
+  UPDATE tenants
+  SET invoice_count = COALESCE(invoice_count, 0) + 1
+  WHERE id = NEW.tenant_id;
+
+  RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION "public"."trigger_increment_invoice_count"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."update_invoice_payment"("p_invoice_id" "uuid", "p_amount_paid" numeric, "p_payment_method" character varying DEFAULT 'stripe'::character varying, "p_stripe_payment_intent_id" character varying DEFAULT NULL::character varying) RETURNS "void"
@@ -539,11 +583,29 @@ CREATE TABLE IF NOT EXISTS "public"."tenants" (
     "name" character varying(100) NOT NULL,
     "subscription_plan" "public"."subscription_plan" DEFAULT 'free'::"public"."subscription_plan",
     "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"()
+    "updated_at" timestamp with time zone DEFAULT "now"(),
+    "stripe_customer_id" "text",
+    "stripe_subscription_id" "text",
+    "subscription_status" "text" DEFAULT 'free'::"text",
+    "subscription_current_period_end" timestamp with time zone,
+    "invoice_count" integer DEFAULT 0,
+    "invoice_limit" integer DEFAULT 2
 );
 
 
 ALTER TABLE "public"."tenants" OWNER TO "postgres";
+
+
+COMMENT ON COLUMN "public"."tenants"."subscription_status" IS 'Stripe subscription status: free, active, past_due, canceled, incomplete, trialing';
+
+
+
+COMMENT ON COLUMN "public"."tenants"."invoice_count" IS 'Number of invoices created by tenant (resets on subscription)';
+
+
+
+COMMENT ON COLUMN "public"."tenants"."invoice_limit" IS 'Maximum invoices allowed (2 for free, unlimited for paid)';
+
 
 
 CREATE TABLE IF NOT EXISTS "public"."time_entries" (
@@ -645,6 +707,16 @@ ALTER TABLE ONLY "public"."stripe_connect_accounts"
 
 ALTER TABLE ONLY "public"."tenants"
     ADD CONSTRAINT "tenants_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "tenants_stripe_customer_id_key" UNIQUE ("stripe_customer_id");
+
+
+
+ALTER TABLE ONLY "public"."tenants"
+    ADD CONSTRAINT "tenants_stripe_subscription_id_key" UNIQUE ("stripe_subscription_id");
 
 
 
@@ -757,6 +829,14 @@ CREATE INDEX "idx_stripe_accounts_user" ON "public"."stripe_connect_accounts" US
 
 
 
+CREATE INDEX "idx_tenants_stripe_customer" ON "public"."tenants" USING "btree" ("stripe_customer_id");
+
+
+
+CREATE INDEX "idx_tenants_subscription_status" ON "public"."tenants" USING "btree" ("subscription_status");
+
+
+
 CREATE INDEX "idx_time_entries_client" ON "public"."time_entries" USING "btree" ("client_id");
 
 
@@ -782,6 +862,10 @@ CREATE INDEX "idx_time_entries_user_date" ON "public"."time_entries" USING "btre
 
 
 CREATE INDEX "idx_time_entries_user_id" ON "public"."time_entries" USING "btree" ("user_id");
+
+
+
+CREATE OR REPLACE TRIGGER "on_invoice_created" AFTER INSERT ON "public"."invoices" FOR EACH ROW EXECUTE FUNCTION "public"."trigger_increment_invoice_count"();
 
 
 
@@ -978,6 +1062,18 @@ CREATE POLICY "Users can view own Stripe account" ON "public"."stripe_connect_ac
 
 
 CREATE POLICY "Users can view own payment methods" ON "public"."payment_methods" FOR SELECT TO "authenticated" USING (("profile_id" = "auth"."uid"()));
+
+
+
+CREATE POLICY "authenticated_can_manage_portal_access" ON "public"."client_portal_access" TO "authenticated" USING (("client_id" IN ( SELECT "c"."id"
+   FROM (("public"."clients" "c"
+     JOIN "public"."tenants" "t" ON (("t"."id" = "c"."tenant_id")))
+     JOIN "public"."profiles" "p" ON (("p"."tenant_id" = "t"."id")))
+  WHERE ("p"."id" = "auth"."uid"())))) WITH CHECK (("client_id" IN ( SELECT "c"."id"
+   FROM (("public"."clients" "c"
+     JOIN "public"."tenants" "t" ON (("t"."id" = "c"."tenant_id")))
+     JOIN "public"."profiles" "p" ON (("p"."tenant_id" = "t"."id")))
+  WHERE ("p"."id" = "auth"."uid"()))));
 
 
 
@@ -1316,9 +1412,27 @@ GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
 
 
 
+GRANT ALL ON FUNCTION "public"."increment_invoice_count"("tenant_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."increment_invoice_count"("tenant_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."increment_invoice_count"("tenant_id" "uuid") TO "service_role";
+
+
+
 GRANT ALL ON FUNCTION "public"."mark_overdue_invoices"() TO "anon";
 GRANT ALL ON FUNCTION "public"."mark_overdue_invoices"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."mark_overdue_invoices"() TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."reset_invoice_count"("tenant_id" "uuid") TO "anon";
+GRANT ALL ON FUNCTION "public"."reset_invoice_count"("tenant_id" "uuid") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."reset_invoice_count"("tenant_id" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."trigger_increment_invoice_count"() TO "anon";
+GRANT ALL ON FUNCTION "public"."trigger_increment_invoice_count"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."trigger_increment_invoice_count"() TO "service_role";
 
 
 

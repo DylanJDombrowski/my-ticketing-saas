@@ -116,7 +116,7 @@ export function InvoiceModal({
 
       // Filter by client if specified
       const filtered = clientId
-        ? timeEntries.filter((entry) => entry.task?.client?.id === clientId)
+        ? timeEntries.filter((entry) => entry.client_id === clientId)
         : timeEntries;
 
       setAvailableTimeEntries(filtered);

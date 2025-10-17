@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useAuthStore } from "@/stores/auth";
 import { useInvoicesStore } from "@/stores/invoices";
 import { useClientsStore } from "@/stores/clients";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 import {
   Dialog,
   DialogContent,
@@ -48,6 +49,8 @@ export function QuickInvoiceModal({
   ]);
   const [loading, setLoading] = useState(false);
   const [selectedClientId, setSelectedClientId] = useState("");
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const [limitInfo, setLimitInfo] = useState<any>(null);
 
   const { profile } = useAuthStore();
   const { clients } = useClientsStore();
@@ -119,6 +122,20 @@ export function QuickInvoiceModal({
           unit_price: item.amount,
         }))
       );
+
+      // Check if invoice limit was reached
+      if (result.error === "invoice_limit_reached") {
+        setLimitInfo(result.limitInfo);
+        setShowUpgradePrompt(true);
+        setLoading(false);
+        return;
+      }
+
+      if (result.error) {
+        // Other errors are handled by the store's notify
+        setLoading(false);
+        return;
+      }
 
       if (!result.error) {
         notify.success("Invoice created! Ready to send.");
@@ -263,6 +280,19 @@ export function QuickInvoiceModal({
           </div>
         </form>
       </DialogContent>
+
+      {/* Upgrade Prompt */}
+      {showUpgradePrompt && limitInfo && (
+        <UpgradePrompt
+          isOpen={showUpgradePrompt}
+          onClose={() => {
+            setShowUpgradePrompt(false);
+            setLoading(false);
+          }}
+          currentCount={limitInfo.current}
+          limit={limitInfo.limit}
+        />
+      )}
     </Dialog>
   );
 }
